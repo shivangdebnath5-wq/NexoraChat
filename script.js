@@ -1220,3 +1220,162 @@ document.addEventListener('keydown', event => {
   if (wasOpen) document.getElementById('hub-settings-btn')?.focus();
 });
 window.toggleHubMoreMenu = toggleHubMoreMenu;
+
+/* =========================================================================
+   MOONLIGHT SPARKLE — ambient effects (animated starfield, lunar ambience,
+   interactive glow). Runs ONLY while data-theme="moonlight-sparkle"; it is
+   created when the theme is selected and fully removed when it is changed.
+   Respects prefers-reduced-motion and pauses while the tab is hidden.
+   ========================================================================= */
+(function moonlightSparkleFx() {
+  const THEME = 'moonlight-sparkle';
+  const GLOW_SEL = '.icon-btn, .settings-tab, .wizard-chip, .item-list li, button, .emoji-picker button, .status-option';
+  const PAL = [[245,213,224],[255,255,255],[226,195,217],[133,134,201]];   // moon rose, white, muted rose, periwinkle
+  const reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
+
+  let fx = null, cv = null, ctx = null, orbCursor = null;
+  let raf = 0, active = false, w = 0, h = 0, dpr = 1;
+  let stars = [], shoots = [], sprites = [], nextShoot = 0;
+  let px = -9999, py = -9999;                 // pointer in CSS px
+  let tx = .5, ty = .5, sx = .5, sy = .5;     // pointer target / smoothed (0..1) for parallax
+  let cx = 0, cy = 0;                         // smoothed cursor-glow position
+  let lastTarget = null, pending = false, resizeT = 0;
+
+  function makeSprites() {
+    sprites = PAL.map(([r, g, b]) => {
+      const o = document.createElement('canvas'); o.width = o.height = 64;
+      const c = o.getContext('2d'), gr = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, `rgba(${r},${g},${b},1)`);
+      gr.addColorStop(.22, `rgba(${r},${g},${b},.45)`);
+      gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
+      return o;
+    });
+  }
+
+  function seed() {
+    const n = Math.round(Math.min(240, Math.max(90, (w * h) / 9500)));
+    stars = [];
+    for (let i = 0; i < n; i++) {
+      const z = Math.pow(Math.random(), 1.8) * 1.1 + .25;        // depth: mostly small, a few large
+      stars.push({ x:Math.random(), y:Math.random(), z, ph:Math.random() * 6.283, sp:.5 + Math.random() * 1.8,
+                   c:(Math.random() * PAL.length) | 0, big:z > 1.05 && Math.random() < .7 });
+    }
+  }
+
+  function resize() {
+    if (!cv) return;
+    w = window.innerWidth; h = window.innerHeight; dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    seed();
+    if (reduceMq.matches) frame(0);        // static sky when motion is reduced
+  }
+
+  function frame(t) {
+    const sec = t / 1000;
+    sx += (tx - sx) * .05; sy += (ty - sy) * .05;
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i], pal = PAL[s.c];
+      let x = (((s.x + sec * .0015 * s.z) % 1) * w) - (sx - .5) * 30 * s.z;
+      let y = s.y * h - (sy - .5) * 20 * s.z;
+      const tw = .5 + .5 * Math.sin(sec * s.sp + s.ph);
+      let a = .22 + .78 * tw, r = .5 + s.z * .9;
+      const dx = x - px, dy = y - py, d2 = dx * dx + dy * dy;     // stars flare near the pointer
+      if (d2 < 22500) { const k = 1 - Math.sqrt(d2) / 150; a += k * .65; r *= 1 + k * .9; }
+      ctx.globalAlpha = Math.min(1, a);
+      if (s.big || r > 1.9) {
+        const size = r * 9; ctx.drawImage(sprites[s.c], x - size / 2, y - size / 2, size, size);
+        ctx.fillStyle = `rgb(${pal[0]},${pal[1]},${pal[2]})`;                  // 4-point sparkle
+        const L = r * 4.2 * (.6 + tw * .6);
+        ctx.fillRect(x - L, y - .45, L * 2, .9); ctx.fillRect(x - .45, y - L, .9, L * 2);
+      } else {
+        ctx.fillStyle = `rgb(${pal[0]},${pal[1]},${pal[2]})`;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+    if (!reduceMq.matches) {                                           // shooting stars
+      if (t > nextShoot) {
+        nextShoot = t + 4500 + Math.random() * 6500;
+        shoots.push({ x:w * (.35 + Math.random() * .65), y:Math.random() * h * .4, vx:-(7 + Math.random() * 4), vy:3 + Math.random() * 2.5, life:0 });
+      }
+      for (let i = shoots.length - 1; i >= 0; i--) {
+        const m = shoots[i]; m.x += m.vx; m.y += m.vy; m.life++;
+        const al = Math.max(0, 1 - m.life / 70), tx2 = m.x - m.vx * 9, ty2 = m.y - m.vy * 9;
+        const g = ctx.createLinearGradient(m.x, m.y, tx2, ty2);
+        g.addColorStop(0, `rgba(245,213,224,${.95 * al})`); g.addColorStop(1, 'rgba(133,134,201,0)');
+        ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx2, ty2); ctx.stroke();
+        if (m.life > 70 || m.x < -50 || m.y > h + 50) shoots.splice(i, 1);
+      }
+    }
+    if (orbCursor && px > -999) {                                      // soft light following the pointer
+      cx += (px - cx) * .12; cy += (py - cy) * .12;
+      orbCursor.style.transform = `translate3d(${cx - 260}px,${cy - 260}px,0)`;
+    }
+  }
+
+  function loop(t) { if (!active) return; frame(t); raf = requestAnimationFrame(loop); }
+  function start() { if (!raf && active && !reduceMq.matches && !document.hidden) raf = requestAnimationFrame(loop); }
+  function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
+
+  function flushGlow() {                                               // per-element glow position
+    pending = false;
+    const el = lastTarget && lastTarget.closest ? lastTarget.closest(GLOW_SEL) : null;
+    if (el) { const r = el.getBoundingClientRect(); el.style.setProperty('--gx', (px - r.left) + 'px'); el.style.setProperty('--gy', (py - r.top) + 'px'); }
+    if (reduceMq.matches && orbCursor) { cx = px; cy = py; orbCursor.style.transform = `translate3d(${cx - 260}px,${cy - 260}px,0)`; }
+  }
+  function onMove(e) {
+    if (!active || e.pointerType === 'touch') return;
+    px = e.clientX; py = e.clientY; tx = px / (w || 1); ty = py / (h || 1); lastTarget = e.target;
+    if (orbCursor && !orbCursor.classList.contains('on')) { cx = px; cy = py; orbCursor.classList.add('on'); }
+    if (!pending) { pending = true; requestAnimationFrame(flushGlow); }
+  }
+  function onDown(e) {                                                 // tap / click sparkle pulse
+    if (!active || reduceMq.matches) return;
+    const d = document.createElement('div'); d.className = 'moon-tap';
+    d.style.left = e.clientX + 'px'; d.style.top = e.clientY + 'px';
+    document.body.appendChild(d); setTimeout(() => d.remove(), 800);
+    if (e.pointerType === 'touch') { px = e.clientX; py = e.clientY; setTimeout(() => { px = py = -9999; }, 900); }
+  }
+  function onLeave() { px = py = -9999; if (orbCursor) orbCursor.classList.remove('on'); }
+  function onResize() { clearTimeout(resizeT); resizeT = setTimeout(resize, 150); }
+  function onVis() { if (document.hidden) stop(); else start(); }
+  function onMotionChange() { stop(); if (active) { if (reduceMq.matches) frame(0); else start(); } }
+
+  function activate() {
+    if (active || !document.body) return;
+    active = true;
+    fx = document.createElement('div'); fx.id = 'moon-fx'; fx.setAttribute('aria-hidden', 'true');
+    fx.innerHTML = '<canvas class="moon-stars"></canvas><div class="moon-mist moon-mist-a"></div><div class="moon-mist moon-mist-b"></div><div class="moon-orb"></div><div class="moon-cursor"></div>';
+    document.body.insertBefore(fx, document.body.firstChild);
+    cv = fx.querySelector('canvas'); ctx = cv.getContext('2d'); orbCursor = fx.querySelector('.moon-cursor');
+    makeSprites(); resize(); nextShoot = 2500;
+    document.addEventListener('pointermove', onMove, { passive:true });
+    document.addEventListener('pointerdown', onDown, { passive:true });
+    document.documentElement.addEventListener('pointerleave', onLeave);
+    window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', onVis);
+    if (reduceMq.addEventListener) reduceMq.addEventListener('change', onMotionChange);
+    start();
+  }
+  function deactivate() {
+    if (!active) return;
+    active = false; stop(); clearTimeout(resizeT);
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerdown', onDown);
+    document.documentElement.removeEventListener('pointerleave', onLeave);
+    window.removeEventListener('resize', onResize);
+    document.removeEventListener('visibilitychange', onVis);
+    if (reduceMq.removeEventListener) reduceMq.removeEventListener('change', onMotionChange);
+    if (fx) fx.remove();
+    fx = cv = ctx = orbCursor = null; stars = []; shoots = [];
+    document.querySelectorAll('.moon-tap').forEach(n => n.remove());
+  }
+  function sync() { (document.documentElement.getAttribute('data-theme') === THEME) ? activate() : deactivate(); }
+
+  new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
+})();
