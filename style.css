@@ -685,3 +685,123 @@
 @keyframes hollowFabRipple { 0% { transform:scale(1); opacity:.7; } 100% { transform:scale(1.55); opacity:0; } }
 @media (max-width: 720px) { .hollow-night-fab { right:14px; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); width:72px; height:72px; font-size:40px; } }
 @media (prefers-reduced-motion: reduce) { .hollow-night-fab, .hollow-night-fab::before, .hollow-night-fab::after { animation:none; } }
+
+/* =========================================================================
+   MOONLIGHT SPARKLE — enhanced theme (starfield, lunar ambience, interactive
+   glow, frosted glass). Everything is scoped to html[data-theme="moonlight-sparkle"]
+   so no other theme is affected. Palette (unchanged, used as gradients):
+   #210635 deep night · #420D4B plum · #7B337E magenta · #6667AB periwinkle
+   #8586c9 hover periwinkle · #F5D5E0 moon rose (text) · #e2c3d9 muted
+   ========================================================================= */
+
+/* ---- Ambient layer (created by script.js only while this theme is active) ---- */
+#moon-fx { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+  background:
+    radial-gradient(900px 700px at 86% -6%, rgba(245,213,224,.17), transparent 60%),
+    radial-gradient(1100px 850px at 4% 108%, rgba(123,51,126,.5), transparent 62%),
+    radial-gradient(800px 620px at 58% 62%, rgba(102,103,171,.22), transparent 66%),
+    linear-gradient(165deg, #210635 0%, #2a0a42 48%, #420D4B 100%); }
+#moon-fx .moon-stars { position:absolute; inset:0; width:100%; height:100%; }
+#moon-fx .moon-orb { position:absolute; top:7vh; right:8vw; width:clamp(70px,9vw,130px); aspect-ratio:1; border-radius:50%;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255,255,255,.95), rgba(245,213,224,.92) 38%, #e2c3d9 62%, #8586c9 100%);
+  box-shadow: 0 0 40px 6px rgba(245,213,224,.38), 0 0 130px 30px rgba(133,134,201,.3), inset -14px -10px 28px rgba(102,103,171,.55);
+  opacity:.92; animation: moonFloat 14s ease-in-out infinite, moonBreath 7s ease-in-out infinite; }
+#moon-fx .moon-orb::before, #moon-fx .moon-orb::after { content:''; position:absolute; border-radius:50%; background:rgba(102,103,171,.28); }
+#moon-fx .moon-orb::before { width:22%; height:22%; left:52%; top:22%; }
+#moon-fx .moon-orb::after { width:14%; height:14%; left:26%; top:58%; }
+#moon-fx .moon-mist { position:absolute; border-radius:50%; filter:blur(90px); will-change:transform; }
+#moon-fx .moon-mist-a { width:560px; height:420px; left:-140px; top:34%; background:rgba(123,51,126,.34); animation: mistDriftA 46s ease-in-out infinite alternate; }
+#moon-fx .moon-mist-b { width:620px; height:460px; right:-180px; bottom:-120px; background:rgba(102,103,171,.30); animation: mistDriftB 58s ease-in-out infinite alternate; }
+#moon-fx .moon-cursor { position:absolute; left:0; top:0; width:520px; height:520px; border-radius:50%; opacity:0; transition:opacity .4s ease; mix-blend-mode:screen; will-change:transform;
+  background: radial-gradient(circle, rgba(245,213,224,.15) 0%, rgba(133,134,201,.10) 38%, transparent 68%); }
+#moon-fx .moon-cursor.on { opacity:1; }
+.moon-tap { position:fixed; z-index:2000; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; pointer-events:none;
+  background: radial-gradient(circle, rgba(245,213,224,.9), rgba(133,134,201,.45) 55%, transparent 72%); animation: moonTap .75s ease-out forwards; }
+@keyframes moonFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-14px); } }
+@keyframes moonBreath { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.12); } }
+@keyframes mistDriftA { from { transform:translate3d(0,0,0) scale(1); } to { transform:translate3d(140px,-60px,0) scale(1.18); } }
+@keyframes mistDriftB { from { transform:translate3d(0,0,0) scale(1); } to { transform:translate3d(-150px,50px,0) scale(1.15); } }
+@keyframes moonTap { to { transform:scale(11); opacity:0; } }
+html[data-theme="moonlight-sparkle"] #auth-fx { display:none; }
+
+/* ---- Layout sits above the ambient layer ---- */
+html[data-theme="moonlight-sparkle"] body { background:#210635; }
+html[data-theme="moonlight-sparkle"] #app-screen,
+html[data-theme="moonlight-sparkle"] #auth-screen { position:relative; z-index:1; }
+html[data-theme="moonlight-sparkle"] h2,
+html[data-theme="moonlight-sparkle"] h3 { text-shadow:0 0 18px rgba(245,213,224,.32); }
+
+/* ---- Frosted glass surfaces ---- */
+html[data-theme="moonlight-sparkle"] #app-screen { background:transparent; border:1px solid rgba(245,213,224,.2);
+  box-shadow:0 24px 70px rgba(10,2,20,.62), 0 0 60px rgba(123,51,126,.22), inset 0 1px 0 rgba(255,255,255,.1); }
+html[data-theme="moonlight-sparkle"] .sidebar { border-right:1px solid rgba(245,213,224,.14);
+  background:linear-gradient(180deg, rgba(66,13,75,.46), rgba(33,6,53,.58));
+  -webkit-backdrop-filter:blur(22px) saturate(150%); backdrop-filter:blur(22px) saturate(150%); }
+html[data-theme="moonlight-sparkle"] .main-chat {
+  background:linear-gradient(160deg, rgba(33,6,53,.34), rgba(66,13,75,.30) 55%, rgba(123,51,126,.18));
+  -webkit-backdrop-filter:blur(14px) saturate(140%); backdrop-filter:blur(14px) saturate(140%); }
+html[data-theme="moonlight-sparkle"] .chat-header,
+html[data-theme="moonlight-sparkle"] .chat-input,
+html[data-theme="moonlight-sparkle"] .sidebar-header {
+  background:linear-gradient(135deg, rgba(66,13,75,.62), rgba(123,51,126,.34));
+  border-color:rgba(245,213,224,.14); box-shadow:inset 0 1px 0 rgba(255,255,255,.07); }
+html[data-theme="moonlight-sparkle"] .section { border-bottom-color:rgba(245,213,224,.12); }
+html[data-theme="moonlight-sparkle"] .card {
+  background:linear-gradient(145deg, rgba(66,13,75,.66), rgba(33,6,53,.74));
+  border:1px solid rgba(245,213,224,.2);
+  -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%);
+  box-shadow:0 18px 55px rgba(10,2,20,.6), 0 0 40px rgba(123,51,126,.2), inset 0 1px 0 rgba(255,255,255,.12); }
+html[data-theme="moonlight-sparkle"] .modal { background:rgba(20,4,34,.5); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+html[data-theme="moonlight-sparkle"] .emoji-picker,
+html[data-theme="moonlight-sparkle"] .extension-menu,
+html[data-theme="moonlight-sparkle"] .quick-status-popover,
+html[data-theme="moonlight-sparkle"] .add-friend-menu,
+html[data-theme="moonlight-sparkle"] .message-hover-bar {
+  background:linear-gradient(145deg, rgba(66,13,75,.82), rgba(33,6,53,.88)); border:1px solid rgba(245,213,224,.2);
+  -webkit-backdrop-filter:blur(18px) saturate(150%); backdrop-filter:blur(18px) saturate(150%); }
+html[data-theme="moonlight-sparkle"] .item-list li {
+  background:linear-gradient(135deg, rgba(66,13,75,.55), rgba(123,51,126,.22)); border-color:rgba(245,213,224,.14); }
+html[data-theme="moonlight-sparkle"] input, html[data-theme="moonlight-sparkle"] select, html[data-theme="moonlight-sparkle"] textarea {
+  background-color:rgba(123,51,126,.34); border-color:rgba(245,213,224,.2); }
+html[data-theme="moonlight-sparkle"] input:focus, html[data-theme="moonlight-sparkle"] textarea:focus {
+  border-color:#8586c9; box-shadow:0 0 0 3px rgba(133,134,201,.25), 0 0 18px rgba(245,213,224,.16); }
+html[data-theme="moonlight-sparkle"] .icon-btn { background-color:rgba(123,51,126,.4); border-color:rgba(245,213,224,.2); }
+
+/* ---- Gradient variants of the palette ---- */
+html[data-theme="moonlight-sparkle"] .message.sent {
+  background:linear-gradient(135deg, #6667AB 0%, #7B337E 100%); box-shadow:0 4px 18px rgba(102,103,171,.35), inset 0 1px 0 rgba(255,255,255,.16); }
+html[data-theme="moonlight-sparkle"] .message.received {
+  background:linear-gradient(135deg, rgba(66,13,75,.78), rgba(88,28,96,.62)); box-shadow:inset 0 0 0 1px rgba(245,213,224,.16), 0 2px 10px rgba(10,2,20,.3); }
+html[data-theme="moonlight-sparkle"] #send-btn,
+html[data-theme="moonlight-sparkle"] .wizard-actions button:not(.secondary),
+html[data-theme="moonlight-sparkle"] .dialog-actions button:not(.secondary),
+html[data-theme="moonlight-sparkle"] .card > button:not(.secondary):not(.modal-close-btn),
+html[data-theme="moonlight-sparkle"] .settings-tab.active,
+html[data-theme="moonlight-sparkle"] .wizard-chip.selected {
+  background-color:#6667AB; background-image:linear-gradient(135deg, #6667AB 0%, #7B337E 100%); color:#fff; border-color:rgba(245,213,224,.28);
+  box-shadow:0 4px 16px rgba(102,103,171,.32), inset 0 1px 0 rgba(255,255,255,.18); }
+
+/* ---- Interactive glow: light follows the pointer over interactive surfaces ---- */
+html[data-theme="moonlight-sparkle"] :is(.icon-btn, .settings-tab, .wizard-chip, .item-list li, button.secondary, .emoji-picker button, .status-option):hover {
+  background-image:radial-gradient(170px circle at var(--gx,50%) var(--gy,50%), rgba(245,213,224,.26), transparent 65%); }
+html[data-theme="moonlight-sparkle"] :is(#send-btn, .wizard-actions button:not(.secondary), .dialog-actions button:not(.secondary), .card > button:not(.secondary):not(.modal-close-btn), .settings-tab.active, .wizard-chip.selected):hover {
+  background-image:radial-gradient(150px circle at var(--gx,50%) var(--gy,50%), rgba(255,255,255,.34), transparent 62%), linear-gradient(135deg, #8586c9 0%, #9a46a0 100%);
+  box-shadow:0 6px 24px rgba(133,134,201,.5), 0 0 22px rgba(245,213,224,.2), inset 0 1px 0 rgba(255,255,255,.22); }
+html[data-theme="moonlight-sparkle"] .message.sent:hover { box-shadow:0 6px 24px rgba(133,134,201,.5), inset 0 1px 0 rgba(255,255,255,.2); }
+html[data-theme="moonlight-sparkle"] .card:hover { box-shadow:0 18px 55px rgba(10,2,20,.6), 0 0 55px rgba(133,134,201,.28), inset 0 1px 0 rgba(255,255,255,.14); }
+
+/* ---- Fallbacks & comfort ---- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-theme="moonlight-sparkle"] .sidebar { background:linear-gradient(180deg,#420D4B,#210635); }
+  html[data-theme="moonlight-sparkle"] .main-chat { background:linear-gradient(160deg,#2a0a42,#3a0f48); }
+  html[data-theme="moonlight-sparkle"] .card { background:linear-gradient(145deg,#420D4B,#2a0a42); }
+}
+@media (max-width: 720px) {
+  html[data-theme="moonlight-sparkle"] .sidebar, html[data-theme="moonlight-sparkle"] .main-chat { -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  #moon-fx .moon-cursor { display:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #moon-fx .moon-orb, #moon-fx .moon-mist { animation:none; }
+  .moon-tap { display:none; }
+}
