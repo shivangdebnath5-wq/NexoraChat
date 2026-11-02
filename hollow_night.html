@@ -96,7 +96,7 @@ const GL={zombie:'#e06b52',ghost:'#a99be8',skeleton:'#ffb347',vampire:'#ff2a3a',
 function tone(f=220,d=.08,t='square',v=.035){if(!snd)return;try{au=au||new(window.AudioContext||window.webkitAudioContext)();let o=au.createOscillator(),g=au.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(au.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,au.currentTime+d);o.stop(au.currentTime+d)}catch(e){}}
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';tt=110}
 const r=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
-const sv=()=>{try{localStorage.setItem('hollowNight2',JSON.stringify({ch:inBar?barNext:ch,pump,hp:P.hp,sh:shards,bag}))}catch(e){}};
+let nosv=1;const sv=()=>{if(nosv)return;try{localStorage.setItem('hollowNight2',JSON.stringify({ch:inBar?barNext:ch,pump,hp:P.hp,sh:shards,bag}))}catch(e){}};
 const ld=()=>{try{return JSON.parse(localStorage.getItem('hollowNight2'))}catch(e){return null}};
 function mk(k,x,y,sz=1,hp){return{k,x,y,sz,hp:hp||S[k].hp,ph:rn()*9,hit:0,dir:rn()*6.28,cd:60+rn()*60,st:'walk',tm:0,cy:0,m:0}}
 function loadLevel(n,keep=true){inBar=false;ch=n;let l=L[n];walls=[...B,...l.w].map(a=>({x:a[0]*T,y:a[1]*T,w:a[2]*T,h:a[3]*T}));
@@ -106,7 +106,7 @@ function loadLevel(n,keep=true){inBar=false;ch=n;let l=L[n];walls=[...B,...l.w].
  l.p.forEach(p=>items.push({type:'pumpkin',x:p[0]*T+24,y:p[1]*T+24,got:false}));
  E=l.e.map(e=>mk(e[0],e[1]*T+24,e[2]*T+24));proj=[];fx=[];FREE=[];for(let ty=0;ty<11;ty++)for(let tx=0;tx<20;tx++)FREE.push(!bl(tx*T+24,ty*T+24,1));DF=null;dfKey=-1;P.poison=0;P.burn=0;darkT=0;
  $('chapter').textContent=n+1;$('objective').textContent=l.o;buildDecor(n);hud();sv()}
-function start(nw){if(nw){pump=0;shards=0;veilT=0;bag={potion:0,ward:0,oldkey:0,veil:0};P=null;loadLevel(0,false)}else{let s=ld();if(s){pump=s.pump||0;shards=s.sh||0;bag=Object.assign({potion:0,ward:0,oldkey:0,veil:0},s.bag);loadLevel(s.ch||0,false);P.hp=M.max(2,s.hp||4)}else loadLevel(0,false)}
+function start(nw){nosv=0;if(nw){pump=0;shards=0;veilT=0;bag={potion:0,ward:0,oldkey:0,veil:0};P=null;loadLevel(0,false)}else{let s=ld();if(s){pump=s.pump||0;shards=s.sh||0;bag=Object.assign({potion:0,ward:0,oldkey:0,veil:0},s.bag);loadLevel(s.ch||0,false);P.hp=M.max(2,s.hp||4)}else loadLevel(0,false)}
  mode='play';$('overlay').style.display='none';$('hud').style.display='flex';toast(L[ch].n);tone(160,.18,'triangle')}
 function hud(){let h=M.max(0,P.hp);$('health').textContent='♥ '.repeat(h)+'♡ '.repeat(4-h);let s=M.ceil(P.stamina/17);$('stamina').textContent='▰'.repeat(s)+'▱'.repeat(6-s);$('pumpkins').textContent=pump;$('shards').textContent=shards;$('bag').textContent=[bag.potion&&'\u{1F9EA}'+bag.potion,bag.ward&&'\u{1F6E1}'+bag.ward,bag.oldkey&&'\u{1F5DD}'+bag.oldkey,bag.veil&&'\u{1F47B}'+bag.veil].filter(Boolean).join(' ')||'-';let sh=(veilT>0?'<span style="color:#b58cff;border:1px solid #b58cff;padding:0 6px;margin-right:6px">\u{1F47B} VEIL '+M.ceil(veilT/60)+'s</span>':'')+(P.poison>0?'<span style="color:#7dff5a;border:1px solid #7dff5a;padding:0 6px;margin-right:6px">☠ POISON '+M.ceil(P.poison/60)+'s</span>':'')+(P.burn>0?'<span style="color:#ff9a3a;border:1px solid #ff9a3a;padding:0 6px">🔥 BURNING '+M.ceil(P.burn/60)+'s</span>':'');if(sh!==lastSh){lastSh=sh;$('status').innerHTML=sh;$('statusBox').style.display=sh?'':'none'}}
 const bl=(x,y,r)=>walls.some(w=>x+r>w.x&&x-r<w.x+w.w&&y+r>w.y&&y-r<w.y+w.h);
@@ -222,7 +222,7 @@ hollow(e,d,a,al,sp,ma){let p2=e.hp<=46,p3=e.hp<=23;e.tm++;
  else if(e.st==='scream'){if(e.tm===30||e.tm===55){let off=e.tm===55?.2:0;for(let i=0;i<14;i++){let g=i*.4488+off;proj.push({x:e.x,y:e.y,vx:cos(g)*2.5,vy:sin(g)*2.5,f:0,l:150,o:'#ff1a2a',z:6,dm:1})}}if(e.tm>85){e.st='stun';e.tm=0}}
  else if(e.st==='stun'){if(e.tm>(p3?55:75)){e.st='walk';e.tm=0}}}
 };
-function update(){if(mode!=='play')return;fr++;if(darkT>0)darkT--;if(veilT>0)veilT--;
+function update(){if(mode!=='play')return;fr++;if(fr%300===0)sv();if(darkT>0)darkT--;if(veilT>0)veilT--;
  let dx=0,dy=0;if(keys.arrowleft||keys.a)dx--;if(keys.arrowright||keys.d)dx++;if(keys.arrowup||keys.w)dy--;if(keys.arrowdown||keys.s)dy++;let mvg=dx||dy;
  if(mvg){let l=hypot(dx,dy);dx/=l;dy/=l;P.face=atan2(dy,dx)}
  let sp=keys.Shift&&mvg&&P.stamina>0;if(sp)P.stamina=M.max(0,P.stamina-.65);else P.stamina=M.min(100,P.stamina+.27);let v=(sp?3.2:2.05)*(P.poison>0?.8:1);
@@ -237,7 +237,7 @@ function update(){if(mode!=='play')return;fr++;if(darkT>0)darkT--;if(veilT>0)vei
   if(b.f){let h=E.find(e=>!e.ghost&&hypot(e.x-b.x,e.y-b.y)<S[e.k].r*e.sz+5);if(h){hurt(h,h.st==='stun'?2:1);return 0}}
   else if(hypot(P.x-b.x,P.y-b.y)<P.r+3){dmg(1,b.st);return 0}return 1});
  fx.forEach(f=>{f.x+=f.vx;f.y+=f.vy;f.l--});fx=fx.filter(f=>f.l>0);
- items.forEach(i=>{if(i.got||i.hid)return;if(hypot(i.x-P.x,i.y-P.y)<22){if(i.type==='pumpkin'){i.got=true;pump++;tone(520,.07,'sine');toast('PUMPKIN COLLECTED +1');if(P.poison>0||P.burn>0){P.poison=0;P.burn=0;toast('THE PUMPKIN CLEANSES YOU')}if(pump%3===0&&P.hp<4){P.hp++;toast('THE PUMPKINS MEND A HEART')}}else if(i.type==='shard'){i.got=true;shards+=i.n;tone(900,.06,'sine');burst(i.x,i.y,'#7fe8ff',5);if(!tt)toast('+'+i.n+' SHARD'+(i.n>1?'S':''))}else if(!tt)toast('PRESS E TO PICK UP THE KEY')}});
+ items.forEach(i=>{if(i.got||i.hid)return;if(hypot(i.x-P.x,i.y-P.y)<22){if(i.type==='pumpkin'){i.got=true;pump++;sv();tone(520,.07,'sine');toast('PUMPKIN COLLECTED +1');if(P.poison>0||P.burn>0){P.poison=0;P.burn=0;toast('THE PUMPKIN CLEANSES YOU')}if(pump%3===0&&P.hp<4){P.hp++;toast('THE PUMPKINS MEND A HEART')}}else if(i.type==='shard'){i.got=true;shards+=i.n;sv();tone(900,.06,'sine');burst(i.x,i.y,'#7fe8ff',5);if(!tt)toast('+'+i.n+' SHARD'+(i.n>1?'S':''))}else if(!tt)toast('PRESS E TO PICK UP THE KEY')}});
  let key=items.find(i=>i.type==='key');if(hypot(P.x-ex.x,P.y-ex.y)<34){if(key.got)next();else if(bag.oldkey>0&&!L[ch].boss){bag.oldkey--;key.got=true;tone(620,.15,'triangle');toast('THE OLD KEY OPENS THE GATE');sv();next()}else if(!tt)toast(L[ch].boss?'THE GATE ONLY OPENS WITH THE BOSS KEY':'THE GATE IS LOCKED — FIND THE KEY')}
  hud()}
 function tile(x,y,a){let p=PAL[ch];r(x,y,T,T,a?p[1]:p[0]);r(x+2,y+2,T-4,T-4,a?p[0]:p[1]);if((x/T*7+y/T*13)%5===0){r(x+9,y+12,3,3,'#3a3547');r(x+31,y+35,2,2,'#4a2f3c')}}
@@ -468,8 +468,9 @@ window.addShards=function(n){shards+=Math.round(+n)||0;hud();console.log('Shards
 function menuBg(){ctx.clearRect(0,0,W,H);for(let y=0;y<11;y++)for(let x=0;x<20;x++)tile(x*T,y*T,(x+y)%2===0);ctx.fillStyle='#d4c0b4';ctx.beginPath();ctx.arc(760,110,55,0,7);ctx.fill();for(let i=0;i<14;i++)r((i*83+fr*.15)%W,420+(i%4)*18,3,3,'#81738c')}
 function loop(){fr++;if(tt>0&&!--tt)$('toast').style.display='none';if(mode==='menu')menuBg();else{update();draw()}requestAnimationFrame(loop)}
 function pause(){if(mode==='play'){mode='paused';over('PAUSED','PAUSED','The night can wait.','RESUME',()=>{mode='play';$('overlay').style.display='none';$('hud').style.display='flex'})}}
-$('start').onclick=()=>start(true);$('continue').onclick=()=>start(false);let sv0=ld();$('continue').disabled=!sv0;$('continue').style.opacity=sv0?'1':'.35';
+$('start').onclick=()=>{if(ld()&&!confirm('Start a new game? Your saved progress will be erased.'))return;start(true)};$('continue').onclick=()=>start(false);let sv0=ld();$('continue').disabled=!sv0;if(sv0)$('continue').textContent='CONTINUE — CHAPTER '+((sv0.ch||0)+1)+' · \u25C6'+(sv0.sh||0)+' · \u{1F383}'+(sv0.pump||0);$('continue').style.opacity=sv0?'1':'.35';
 document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;keys.Shift=e.shiftKey;if(e.key.startsWith('Arrow')||e.key===' ')e.preventDefault();if(e.key.toLowerCase()==='e'&&mode==='play'&&!e.repeat)interact();if(mode==='play'&&!e.repeat){let q=e.key.toLowerCase();if(q==='h')useItem('potion');if(q==='v')useItem('veil');if(q==='i')openBag()}else if(mode==='bag'&&!e.repeat&&e.key.toLowerCase()==='i')closeShop();{}if(e.key==='Escape'){if(mode==='shop'||mode==='bag')closeShop();else pause()}});
+const saveNow=()=>{if(P&&(mode==='play'||mode==='paused'||mode==='shop'||mode==='bag'||mode==='trans'||mode==='reward'))sv()};addEventListener('pagehide',saveNow);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveNow()});
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;keys.Shift=e.shiftKey});
 $('bagBtn').onclick=openBag;$('soundLabel').onclick=()=>{snd=!snd;$('soundLabel').textContent='SOUND: '+(snd?'ON':'OFF');tone(420,.06)};$('soundLabel').style.cursor='pointer';
 window.goLevel=function(n){n=Math.round(+n);if(!(n>=1&&n<=L.length)){console.log('Use goLevel(1-'+L.length+')');return}loadLevel(n-1,false);P.hp=4;mode='play';$('overlay').style.display='none';$('hud').style.display='flex';toast(L[ch].n);console.log('Jumped to level '+n+': '+L[ch].n)};
