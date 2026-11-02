@@ -26,6 +26,11 @@ button.secondary{background:#24263b;border-color:#77708e;box-shadow:0 4px #11132
 .help{font-size:21px;color:var(--muted);line-height:1.35;margin-top:18px}
 .footer{display:flex;justify-content:space-between;gap:10px;padding:9px 15px;color:#8e8998;font-size:18px;border-top:1px solid var(--line);background:#101320;flex-wrap:wrap}
 #toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#171525ed;border:1px solid #9a78c8;padding:8px 14px;font-size:22px;display:none;white-space:nowrap;z-index:3}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+.rwd .ring{position:relative;width:176px;height:176px;margin:8px auto 4px}
+.rwd .ring img{position:absolute;inset:0;width:100%;height:100%;animation:spf 2.4s ease-in-out infinite}
+.rwd .ring i{position:absolute;left:23.1%;top:23.1%;width:53.8%;height:53.8%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#6a5acd,#1b1240 72%);display:grid;place-items:center;font-style:normal;font-size:40px}
+@keyframes spf{0%,100%{filter:drop-shadow(0 0 6px #8a5bff)}50%{filter:drop-shadow(0 0 18px #22d3ee)}}
 @media(max-width:600px){body{padding:6px}.panel{padding:18px 12px}.help{font-size:18px}.hud{font-size:18px;gap:9px}button{font-size:8px;padding:12px}}
 </style>
 </head>
@@ -118,7 +123,15 @@ function hurt(e,n){e.hit=6;e.hp-=n;burst(e.x,e.y,e.k==='slime'?'#6bff6b':'#c33',
 function kill(e){E=E.filter(o=>o!==e);burst(e.x,e.y,GL[e.k],18);tone(120,.15,'sawtooth');
  if(e.k==='jack'){for(let i=0;i<4;i++){let g=i*1.5708+.785;proj.push({x:e.x,y:e.y,vx:cos(g)*2.4,vy:sin(g)*2.4,f:0,l:60,o:'#ffb03a',z:5})}}
  if(e.k==='slime'&&e.sz>.7){E.push(mk('slime',e.x-14,e.y,.6,1),mk('slime',e.x+14,e.y,.6,1))}
- if(S[e.k].boss){E=[];proj=proj.filter(b=>b.f);let k=items.find(i=>i.type==='key');k.hid=false;k.x=e.x;k.y=e.y;shake=20;toast(e.k==='reaper'?'THE REAPER CRUMBLES — TAKE THE KEY':e.k==='hollow'?'THE HOLLOW COLLAPSES — TAKE THE KEY':'THE BEAST FALLS — TAKE THE KEY');$('objective').textContent='Press E to take the key, then escape.'}}
+ if(e.k==='hollow')setTimeout(reward,1100);if(S[e.k].boss){E=[];proj=proj.filter(b=>b.f);let k=items.find(i=>i.type==='key');k.hid=false;k.x=e.x;k.y=e.y;shake=20;toast(e.k==='reaper'?'THE REAPER CRUMBLES — TAKE THE KEY':e.k==='hollow'?'THE HOLLOW COLLAPSES — TAKE THE KEY':'THE BEAST FALLS — TAKE THE KEY');$('objective').textContent='Press E to take the key, then escape.'}}
+function confetti(n){let c=document.createElement('canvas');c.id='confetti';c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);let g=c.getContext('2d'),cl=['#c06bff','#7a5cff','#22d3ee','#ff4a7a','#ffd23a','#fff'],ps=[],t=0;
+ for(let i=0;i<n;i++)ps.push({x:rn()*c.width,y:-20-rn()*c.height*.6,vx:(rn()-.5)*3,vy:2+rn()*4,w:6+rn()*6,h:4+rn()*5,a:rn()*6.28,va:(rn()-.5)*.3,c:cl[i%6]});
+ (function f(){g.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx+sin(p.a)*.6;p.y+=p.vy;p.a+=p.va;g.save();g.translate(p.x,p.y);g.rotate(p.a);g.fillStyle=p.c;g.fillRect(-p.w/2,-p.h/2,p.w,p.h);g.restore()});if(++t<280)requestAnimationFrame(f);else c.remove()})()}
+function reward(){if(mode!=='play')return;mode='reward';try{localStorage.setItem('nexora_spectral_flame','1')}catch(e){}confetti(170);tone(660,.3,'triangle');
+ $('overlay').style.display='grid';$('hud').style.display='none';
+ $('overlay').innerHTML='<div class="panel"><div class="eyebrow">HOLLOW NIGHT // VICTORY</div><h1>CONGRATULATIONS!</h1><div class="subtitle">You have beaten the Hollow.</div><button id="rw1">CLAIM REWARD</button></div>';
+ $('rw1').onclick=()=>{confetti(220);tone(880,.35,'triangle');$('overlay').innerHTML='<div class="panel rwd"><div class="eyebrow">EXCLUSIVE REWARD // NEXORA</div><h1>SPECTRAL FLAME</h1><div class="ring"><img src="spectral-flame-frame.png" alt=""><i>&#128123;</i></div><div class="subtitle">An exclusive profile frame is waiting for you in Nexora.</div><button id="rw2">OPEN NEXORA</button><button class="secondary" id="rw3">KEEP PLAYING</button></div>';
+  $('rw2').onclick=()=>{location.href='index.html'};$('rw3').onclick=()=>{mode='play';$('overlay').style.display='none';$('hud').style.display='flex'}}}
 function dot(k){if(P.hp>1){P.hp--;shake=4;tone(k==='burn'?200:130,.12,'sawtooth',.04);toast(k==='burn'?'THE FLAMES BURN YOU':'THE POISON SPREADS');hud()}}
 function dmg(n=1,st){if(P.inv>0||mode!=='play')return;P.hp-=n;P.inv=90;shake=8;tone(90,.22,'sawtooth',.06);toast('THE DARKNESS FOUND YOU');if(st==='poison'){P.poison=300;P.pt=100;toast('POISONED!')}else if(st==='burn'){P.burn=210;P.bt=70;toast('YOU ARE BURNING!')}hud();
  if(P.hp<=0){P.hp=0;hud();mode='dead';over('GAME OVER','YOU WERE LOST','The night claims another wanderer.','TRY AGAIN',()=>{loadLevel(ch,false);mode='play';$('overlay').style.display='none';$('hud').style.display='flex'})}}
