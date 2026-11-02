@@ -815,7 +815,7 @@ html[data-theme="moonlight-sparkle"] .card:hover { box-shadow:0 18px 55px rgba(1
 .spectral-wrap::before { content:''; position:absolute; inset:-14%; border-radius:50%; z-index:0; pointer-events:none; opacity:.85; filter:blur(4px);
   background:conic-gradient(from 0deg,#8b5cf6,#22d3ee,#ec4899,#a855f7,#22d3ee,#8b5cf6); animation:spectralSpin 4s linear infinite; }
 .spectral-wrap::after { content:''; position:absolute; left:50%; top:50%; width:185%; height:185%; z-index:2; pointer-events:none;
-  background:url('spectral-flame-frame.png') center/100% 100% no-repeat; transform:translate(-50%,-50%);
+  background:url('spectral-flame-frame.png?v=2') center/100% 100% no-repeat; transform:translate(-50%,-50%);
   animation:spectralFlame 2.6s ease-in-out infinite; }
 .message-wrapper.msg-grouped .spectral-wrap { visibility:hidden; }
 @keyframes spectralSpin { to { transform:rotate(360deg); } }
