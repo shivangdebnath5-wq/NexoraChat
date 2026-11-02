@@ -1379,3 +1379,32 @@ window.toggleHubMoreMenu = toggleHubMoreMenu;
   new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
   if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
 })();
+
+/* ===== Hollow Night reward: beating The Hollow (level 15) unlocks the exclusive Spectral Flame frame =====
+   The game sets localStorage 'nexora_spectral_flame' = '1'. Here we add the frame to the signed-in user's
+   inventory (once), make it selectable in Settings, and show an "Equip" notice. */
+FRAME_NAMES['frame-spectral'] = 'Spectral Flame';
+function ensureSpectralOption() {
+  const select = document.getElementById('frame-select');
+  if (!select || [...select.options].some(option => option.value === 'frame-spectral')) return;
+  const option = document.createElement('option'); option.value = 'frame-spectral'; option.textContent = '✦ Spectral Flame (Exclusive)'; select.appendChild(option);
+}
+function showSpectralToast() {
+  document.querySelectorAll('.spectral-toast').forEach(node => node.remove());
+  const toast = document.createElement('div'); toast.className = 'spectral-toast';
+  toast.innerHTML = '<img src="spectral-flame-frame.png" alt=""><div><strong>Exclusive reward unlocked!</strong><span>Spectral Flame profile frame — for beating The Hollow.</span></div><button type="button">Equip</button>';
+  toast.querySelector('button').onclick = () => { changeProfileFrame('frame-spectral'); ensureSpectralOption(); const select = document.getElementById('frame-select'); if (select) select.value = 'frame-spectral'; toast.remove(); };
+  document.body.appendChild(toast); setTimeout(() => toast.remove(), 12000);
+}
+function grantSpectralFlame(announce) {
+  let earned = false; try { earned = localStorage.getItem('nexora_spectral_flame') === '1'; } catch (e) {}
+  if (!currentUser || !earned) return;
+  const profile = getQuestProfile();
+  if (!profile.inventory.includes('frame-spectral')) { profile.inventory.push('frame-spectral'); saveQuestProfile(profile); if (announce) showSpectralToast(); }
+  ensureSpectralOption();
+}
+const loadAppWithSpectral = loadApp;
+loadApp = function() { loadAppWithSpectral.apply(this, arguments); grantSpectralFlame(true); };
+const openSettingsWithSpectral = openSettings;
+openSettings = function() { ensureSpectralOption(); openSettingsWithSpectral.apply(this, arguments); };
+window.addEventListener('storage', event => { if (event.key === 'nexora_spectral_flame') grantSpectralFlame(true); });
