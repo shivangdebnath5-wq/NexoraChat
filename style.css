@@ -807,22 +807,27 @@ html[data-theme="moonlight-sparkle"] .card:hover { box-shadow:0 18px 55px rgba(1
 }
 
 /* ===== Spectral Flame — exclusive profile frame (reward for beating The Hollow in Hollow Night, level 15) =====
-   script.js wraps any avatar that has the frame-spectral class in .spectral-wrap, which draws the ring art
-   (::after) over the photo and an animated spectral aura (::before) behind it. The photo itself stays round. */
-.spectral-wrap { position:relative; display:inline-block; flex:0 0 auto; line-height:0; vertical-align:middle; isolation:isolate; }
+   script.js wraps any avatar that has the frame-spectral class in .spectral-wrap. The ring art is drawn exactly as
+   designed (::after, no stretching or scaling); three <i> layers add electricity flowing around the glass ring. */
+.spectral-wrap { --t:2px; position:relative; display:inline-block; flex:0 0 auto; line-height:0; vertical-align:middle; isolation:isolate; }
 .spectral-wrap > img { margin:0 !important; position:relative; z-index:1; }
-.spectral-wrap.spectral-lg { display:block; width:70px; margin:34px auto 44px auto; }
-.spectral-wrap::before { content:''; position:absolute; inset:-14%; border-radius:50%; z-index:0; pointer-events:none; opacity:.85; filter:blur(4px);
-  background:conic-gradient(from 0deg,#8b5cf6,#22d3ee,#ec4899,#a855f7,#22d3ee,#8b5cf6); animation:spectralSpin 4s linear infinite; }
-.spectral-wrap::after { content:''; position:absolute; left:50%; top:50%; width:185%; height:185%; z-index:2; pointer-events:none;
-  background:url('spectral-flame-frame.png?v=2') center/100% 100% no-repeat; transform:translate(-50%,-50%);
-  animation:spectralFlame 2.6s ease-in-out infinite; }
+.spectral-wrap.spectral-lg { --t:3px; display:block; width:70px; margin:34px auto 44px auto; }
+.spectral-wrap::before { content:''; position:absolute; inset:0; border-radius:50%; z-index:0; pointer-events:none; animation:spectralAura 2.4s ease-in-out infinite; }
+.spectral-wrap::after { content:''; position:absolute; left:50%; top:50%; width:185%; height:185%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
+  background:url('spectral-flame-frame.png?v=2') center/100% 100% no-repeat; animation:spectralSurge 2.4s ease-in-out infinite; }
+/* electricity: bright comets racing around the ring, jagged by an SVG displacement filter, flickering like current */
+.spectral-wrap .volt { position:absolute; inset:-4%; z-index:3; pointer-events:none; border-radius:50%;
+  -webkit-mask:radial-gradient(farthest-side,#0000 calc(100% - var(--t)),#000 calc(100% - var(--t) + .5px)); mask:radial-gradient(farthest-side,#0000 calc(100% - var(--t)),#000 calc(100% - var(--t) + .5px));
+  filter:url(#spectral-volt) drop-shadow(0 0 3px #22d3ee); mix-blend-mode:screen; }
+.spectral-wrap .v1 { background:conic-gradient(from 0deg,transparent 0deg 215deg,#22d3ee 290deg,#fff 352deg,transparent 360deg); animation:voltSpin 1.5s linear infinite,voltFlicker 2.3s steps(1) infinite; }
+.spectral-wrap .v2 { background:conic-gradient(from 90deg,transparent 0deg 260deg,#c084fc 320deg,#fff 356deg,transparent 360deg); animation:voltSpin 2.3s linear infinite reverse,voltFlicker 1.7s steps(1) infinite .4s; }
+.spectral-wrap .sp { inset:-9%; -webkit-mask:none; mask:none; filter:drop-shadow(0 0 3px #fff); animation:voltSpin 3.1s linear infinite,voltFlicker 1.3s steps(1) infinite .2s;
+  background:radial-gradient(circle at 50% 0,#fff 0 1.4px,#0000 2.6px),radial-gradient(circle at 100% 50%,#a5f3fc 0 1.2px,#0000 2.4px),radial-gradient(circle at 15% 85%,#e9d5ff 0 1.2px,#0000 2.4px); }
 .message-wrapper.msg-grouped .spectral-wrap { visibility:hidden; }
-@keyframes spectralSpin { to { transform:rotate(360deg); } }
-@keyframes spectralFlame {
-  0%,100% { transform:translate(-50%,-50%) scale(1);    filter:drop-shadow(0 0 3px #8b5cf6) drop-shadow(0 0 8px #6366f1aa); }
-  50%     { transform:translate(-50%,-50%) scale(1.06); filter:drop-shadow(0 0 5px #c084fc) drop-shadow(0 0 14px #22d3eeaa); }
-}
+@keyframes voltSpin { to { transform:rotate(360deg); } }
+@keyframes voltFlicker { 0%,100%{opacity:1} 7%{opacity:.5} 9%{opacity:1} 43%{opacity:.8} 46%{opacity:.35} 48%{opacity:1} 78%{opacity:.65} 80%{opacity:1} }
+@keyframes spectralAura { 0%,100%{ box-shadow:0 0 5px 1px #7c3aed99; } 50%{ box-shadow:0 0 9px 3px #22d3ee88; } }
+@keyframes spectralSurge { 0%,100%{ filter:drop-shadow(0 0 3px #8b5cf6) drop-shadow(0 0 7px #6366f188); } 46%{ filter:drop-shadow(0 0 3px #8b5cf6) drop-shadow(0 0 7px #6366f188); } 50%{ filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 14px #22d3ee); } 54%{ filter:drop-shadow(0 0 4px #c084fc) drop-shadow(0 0 9px #22d3eecc); } }
 .spectral-toast { position:fixed; right:18px; bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:5000; display:flex; align-items:center; gap:12px; max-width:min(380px,calc(100vw - 36px)); padding:12px 14px; border-radius:16px; color:#f5f0ff; background:linear-gradient(135deg,#1b1240f2,#0f1530f2); border:1px solid #8b5cf6; box-shadow:0 10px 30px rgba(20,8,60,.55),0 0 22px #8b5cf666; animation:spectralToastIn .45s cubic-bezier(.2,.9,.3,1.2); }
 .spectral-toast img { width:54px; height:54px; flex:0 0 auto; filter:drop-shadow(0 0 6px #a855f7); }
 .spectral-toast div { display:flex; flex-direction:column; gap:2px; font-size:13px; line-height:1.3; min-width:0; }
