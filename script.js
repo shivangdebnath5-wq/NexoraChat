@@ -1408,3 +1408,24 @@ loadApp = function() { loadAppWithSpectral.apply(this, arguments); grantSpectral
 const openSettingsWithSpectral = openSettings;
 openSettings = function() { ensureSpectralOption(); openSettingsWithSpectral.apply(this, arguments); };
 window.addEventListener('storage', event => { if (event.key === 'nexora_spectral_flame') grantSpectralFlame(true); });
+
+
+/* Spectral Flame: wrap framed avatars so the ring art can sit around the (still round) photo. */
+(function () {
+  let queued = false;
+  function sync() {
+    queued = false;
+    document.querySelectorAll('img.frame-spectral').forEach(img => {
+      if (img.parentElement && img.parentElement.classList.contains('spectral-wrap')) return;
+      const wrap = document.createElement('span'); wrap.className = 'spectral-wrap' + (img.classList.contains('avatar-large') ? ' spectral-lg' : '');
+      img.parentNode.insertBefore(wrap, img); wrap.appendChild(img);
+    });
+    document.querySelectorAll('.spectral-wrap').forEach(wrap => {
+      const img = wrap.querySelector(':scope > img');
+      if (!img || !img.classList.contains('frame-spectral')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
+    });
+  }
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
+  new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+  queue();
+})();
