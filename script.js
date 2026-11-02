@@ -1392,7 +1392,7 @@ function ensureSpectralOption() {
 function showSpectralToast() {
   document.querySelectorAll('.spectral-toast').forEach(node => node.remove());
   const toast = document.createElement('div'); toast.className = 'spectral-toast';
-  toast.innerHTML = '<img src="spectral-flame-frame.png" alt=""><div><strong>Exclusive reward unlocked!</strong><span>Spectral Flame profile frame — for beating The Hollow.</span></div><button type="button">Equip</button>';
+  toast.innerHTML = '<img src="spectral-flame-frame.png?v=2" alt=""><div><strong>Exclusive reward unlocked!</strong><span>Spectral Flame profile frame — for beating The Hollow.</span></div><button type="button">Equip</button>';
   toast.querySelector('button').onclick = () => { changeProfileFrame('frame-spectral'); ensureSpectralOption(); const select = document.getElementById('frame-select'); if (select) select.value = 'frame-spectral'; toast.remove(); };
   document.body.appendChild(toast); setTimeout(() => toast.remove(), 12000);
 }
