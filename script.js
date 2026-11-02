@@ -1418,13 +1418,14 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     document.querySelectorAll('img.frame-spectral').forEach(img => {
       if (img.parentElement && img.parentElement.classList.contains('spectral-wrap')) return;
       const wrap = document.createElement('span'); wrap.className = 'spectral-wrap' + (img.classList.contains('avatar-large') ? ' spectral-lg' : '');
-      img.parentNode.insertBefore(wrap, img); wrap.appendChild(img);
+      img.parentNode.insertBefore(wrap, img); wrap.appendChild(img); wrap.insertAdjacentHTML('beforeend', '<i class="volt v1"></i><i class="volt v2"></i><i class="volt sp"></i>');
     });
     document.querySelectorAll('.spectral-wrap').forEach(wrap => {
       const img = wrap.querySelector(':scope > img');
       if (!img || !img.classList.contains('frame-spectral')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
     });
   }
+  if (!document.getElementById('spectral-volt-defs')) document.body.insertAdjacentHTML('beforeend', '<svg id="spectral-volt-defs" width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="spectral-volt" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="3" result="n"><animate attributeName="seed" values="1;5;2;8;4;7" dur="0.6s" repeatCount="indefinite" calcMode="discrete"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter></svg>');
   function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
   new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
   queue();
