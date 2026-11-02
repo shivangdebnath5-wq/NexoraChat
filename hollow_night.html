@@ -381,7 +381,8 @@ document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;keys.Shif
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;keys.Shift=e.shiftKey});
 $('soundLabel').onclick=()=>{snd=!snd;$('soundLabel').textContent='SOUND: '+(snd?'ON':'OFF');tone(420,.06)};$('soundLabel').style.cursor='pointer';
 window.goLevel=function(n){n=Math.round(+n);if(!(n>=1&&n<=L.length)){console.log('Use goLevel(1-'+L.length+')');return}loadLevel(n-1,false);P.hp=4;mode='play';$('overlay').style.display='none';$('hud').style.display='flex';toast(L[ch].n);console.log('Jumped to level '+n+': '+L[ch].n)};
-console.log('Hollow Night: type goLevel(1-'+L.length+') in the console to jump to any level.');
+window.killBoss=function(){let b=E.find(e=>S[e.k].boss);if(!b||mode!=='play'){console.log('No boss to kill right now.');return}b.hp=0;kill(b);console.log('Killed '+S[b.k].nm)};
+console.log('Hollow Night: type goLevel(1-'+L.length+') in the console to jump to any level, killBoss() to kill the current boss.');
 P=null;loadLevel(0,false);mode='menu';loop();
 })();
 </script>
