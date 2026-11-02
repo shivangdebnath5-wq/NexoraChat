@@ -47,7 +47,7 @@ button.secondary{background:#24263b;border-color:#77708e;box-shadow:0 4px #11132
    <div class="stat">STAMINA <b id="stamina"></b></div>
    <div class="stat">PUMPKINS <b id="pumpkins">0</b></div>
    <div class="stat">SHARDS <b id="shards">0</b></div>
-   <div class="stat">ITEMS <b id="bag">-</b></div>
+   <div class="stat" id="bagBtn" style="cursor:pointer" title="Open bag (I)">ITEMS <b id="bag">-</b></div>
    <div class="stat" id="statusBox" style="display:none">STATUS <b id="status"></b></div>
   </div>
  </div>
@@ -61,7 +61,7 @@ button.secondary{background:#24263b;border-color:#77708e;box-shadow:0 4px #11132
     <div class="subtitle">The village remembers.</div>
     <button id="start">NEW GAME</button>
     <button class="secondary" id="continue">CONTINUE</button>
-    <div class="help">WASD / ARROWS — MOVE &nbsp; SHIFT — SPRINT<br>SPACE — FIRE SPIRIT BOLT &nbsp; E — INTERACT<br>3 PUMPKINS = 1 HEART &nbsp; H — POTION &nbsp; V — GHOST VEIL &nbsp; ESC — PAUSE</div>
+    <div class="help">WASD / ARROWS — MOVE &nbsp; SHIFT — SPRINT<br>SPACE — FIRE SPIRIT BOLT &nbsp; E — INTERACT<br>3 PUMPKINS = 1 HEART &nbsp; I — BAG &nbsp; H — POTION &nbsp; V — GHOST VEIL &nbsp; ESC — PAUSE</div>
    </div>
   </div>
  </div>
@@ -394,6 +394,10 @@ function useItem(k){if(bag[k]<1){toast(k==='potion'?'NO HEALING POTIONS':'NO GHO
  if(k==='potion'){if(P.hp>=4&&!P.poison&&!P.burn){toast('YOU ARE ALREADY WELL');return}bag.potion--;P.hp=M.min(4,P.hp+2);P.poison=0;P.burn=0;tone(560,.15,'triangle');burst(P.x,P.y,'#7dff5a',12);toast('HEALING POTION — HEARTS RESTORED')}
  else{if(veilT>0){toast('THE VEIL IS ALREADY ACTIVE');return}bag.veil--;veilT=2700;tone(300,.3,'sine');burst(P.x,P.y,'#b58cff',14);toast('GHOST VEIL — ENEMIES LOSE YOUR SCENT')}
  hud();sv()}
+function openBag(){if(mode!=='play')return;mode='bag';renderBag('Your belongings.')}
+function renderBag(msg){$('overlay').style.display='grid';$('hud').style.display='none';let own=SHOP.filter(i=>bag[i[0]]>0),use={potion:1,veil:1};
+ $('overlay').innerHTML='<div class="panel shop"><div class="eyebrow">YOUR BAG</div><h1>ITEMS</h1><div class="subtitle">'+msg+' &nbsp; \u25C6 '+shards+' SHARDS</div>'+(own.length?own.map(i=>'<div class="row"><div><b>'+i[1]+'</b> <span class="own">x'+bag[i[0]]+'</span><small>'+i[2]+'</small></div>'+(use[i[0]]?'<button data-u="'+i[0]+'">USE</button>':'<span class="own">AUTO</span>')+'</div>').join(''):'<div class="row"><div><small>Empty. Kill enemies for shards, then visit the SHOP in the Lantern Inn after each boss.</small></div></div>')+'<button class="secondary" id="shopClose">CLOSE (I)</button></div>';
+ document.querySelectorAll('.shop [data-u]').forEach(b=>b.onclick=()=>{let k=b.dataset.u,n=bag[k],hp=P.hp,v=veilT;useItem(k);renderBag(bag[k]<n?(k==='potion'?'You feel better.':'The veil wraps around you.'):'Cannot use that right now.')});$('shopClose').onclick=closeShop}
 function openShop(){mode='shop';renderShop('"Welcome, traveller. Shards only."')}
 function renderShop(msg){$('overlay').style.display='grid';$('hud').style.display='none';$('overlay').innerHTML='<div class="panel shop"><div class="eyebrow">THE LANTERN INN // SHOP</div><h1>SHOP</h1><div class="subtitle">'+msg+' &nbsp; \u25C6 '+shards+' SHARDS</div>'+SHOP.map(i=>'<div class="row"><div><b>'+i[1]+'</b> <span class="own">x'+bag[i[0]]+'</span><small>'+i[2]+'</small></div><button data-i="'+i[0]+'"'+(shards<i[3]?' class="secondary"':'')+'>\u25C6 '+i[3]+' BUY</button></div>').join('')+'<button class="secondary" id="shopClose">LEAVE SHOP</button></div>';
  document.querySelectorAll('.shop [data-i]').forEach(b=>b.onclick=()=>buy(b.dataset.i));$('shopClose').onclick=closeShop}
@@ -442,9 +446,9 @@ function menuBg(){ctx.clearRect(0,0,W,H);for(let y=0;y<11;y++)for(let x=0;x<20;x
 function loop(){fr++;if(tt>0&&!--tt)$('toast').style.display='none';if(mode==='menu')menuBg();else{update();draw()}requestAnimationFrame(loop)}
 function pause(){if(mode==='play'){mode='paused';over('PAUSED','PAUSED','The night can wait.','RESUME',()=>{mode='play';$('overlay').style.display='none';$('hud').style.display='flex'})}}
 $('start').onclick=()=>start(true);$('continue').onclick=()=>start(false);let sv0=ld();$('continue').disabled=!sv0;$('continue').style.opacity=sv0?'1':'.35';
-document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;keys.Shift=e.shiftKey;if(e.key.startsWith('Arrow')||e.key===' ')e.preventDefault();if(e.key.toLowerCase()==='e'&&mode==='play'&&!e.repeat)interact();if(mode==='play'&&!e.repeat){let q=e.key.toLowerCase();if(q==='h')useItem('potion');if(q==='v')useItem('veil')}if(e.key==='Escape'){if(mode==='shop')closeShop();else pause()}});
+document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;keys.Shift=e.shiftKey;if(e.key.startsWith('Arrow')||e.key===' ')e.preventDefault();if(e.key.toLowerCase()==='e'&&mode==='play'&&!e.repeat)interact();if(mode==='play'&&!e.repeat){let q=e.key.toLowerCase();if(q==='h')useItem('potion');if(q==='v')useItem('veil');if(q==='i')openBag()}else if(mode==='bag'&&!e.repeat&&e.key.toLowerCase()==='i')closeShop();{}if(e.key==='Escape'){if(mode==='shop'||mode==='bag')closeShop();else pause()}});
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;keys.Shift=e.shiftKey});
-$('soundLabel').onclick=()=>{snd=!snd;$('soundLabel').textContent='SOUND: '+(snd?'ON':'OFF');tone(420,.06)};$('soundLabel').style.cursor='pointer';
+$('bagBtn').onclick=openBag;$('soundLabel').onclick=()=>{snd=!snd;$('soundLabel').textContent='SOUND: '+(snd?'ON':'OFF');tone(420,.06)};$('soundLabel').style.cursor='pointer';
 window.goLevel=function(n){n=Math.round(+n);if(!(n>=1&&n<=L.length)){console.log('Use goLevel(1-'+L.length+')');return}loadLevel(n-1,false);P.hp=4;mode='play';$('overlay').style.display='none';$('hud').style.display='flex';toast(L[ch].n);console.log('Jumped to level '+n+': '+L[ch].n)};
 window.killBoss=function(){let b=E.find(e=>S[e.k].boss);if(!b||mode!=='play'){console.log('No boss to kill right now.');return}b.hp=0;kill(b);console.log('Killed '+S[b.k].nm)};
 console.log('Hollow Night: type goLevel(1-'+L.length+') in the console to jump to any level, killBoss() to kill the current boss.');
