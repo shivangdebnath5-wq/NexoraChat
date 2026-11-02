@@ -805,3 +805,35 @@ html[data-theme="moonlight-sparkle"] .card:hover { box-shadow:0 18px 55px rgba(1
   #moon-fx .moon-orb, #moon-fx .moon-mist { animation:none; }
   .moon-tap { display:none; }
 }
+
+/* ===== Spectral Flame — exclusive profile frame (reward for beating The Hollow in Hollow Night, level 15) =====
+   The ring art is drawn as a border-image with an outset, so it surrounds the photo without changing layout.
+   Effects: breathing flame ring + pulsing violet/cyan aura. */
+.avatar.frame-spectral, .avatar-large.frame-spectral {
+  --o:13px;
+  border:1px solid transparent !important;
+  border-image-source:url('spectral-flame-frame.png');
+  border-image-slice:33.3333%;
+  border-image-width:33.3333%;
+  border-image-repeat:stretch;
+  border-image-outset:var(--o);
+  overflow:visible;
+  animation:spectralFlame 2.8s ease-in-out infinite;
+}
+.avatar.frame-spectral[style*="26px"] { --o:10px; }
+.avatar-large.frame-spectral { --o:28px; margin:32px auto 42px auto !important; }
+@keyframes spectralFlame {
+  0%,100% { border-image-outset:var(--o); filter:drop-shadow(0 0 3px #8b5cf6) drop-shadow(0 0 7px #6366f1aa); box-shadow:0 0 6px 1px #a855f7aa; }
+  50%     { border-image-outset:calc(var(--o) * 1.12); filter:drop-shadow(0 0 5px #c084fc) drop-shadow(0 0 13px #22d3eeaa); box-shadow:0 0 11px 3px #22d3ee88; }
+}
+.spectral-toast { position:fixed; right:18px; bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:5000; display:flex; align-items:center; gap:12px; max-width:min(380px,calc(100vw - 36px)); padding:12px 14px; border-radius:16px; color:#f5f0ff; background:linear-gradient(135deg,#1b1240f2,#0f1530f2); border:1px solid #8b5cf6; box-shadow:0 10px 30px rgba(20,8,60,.55),0 0 22px #8b5cf666; animation:spectralToastIn .45s cubic-bezier(.2,.9,.3,1.2); }
+.spectral-toast img { width:54px; height:54px; flex:0 0 auto; filter:drop-shadow(0 0 6px #a855f7); }
+.spectral-toast div { display:flex; flex-direction:column; gap:2px; font-size:13px; line-height:1.3; min-width:0; }
+.spectral-toast strong { font-size:14px; }
+.spectral-toast span { color:#c9bff0; }
+.spectral-toast button { flex:0 0 auto; border:0; border-radius:10px; padding:8px 12px; font-weight:700; cursor:pointer; color:#fff; background:linear-gradient(135deg,#7c3aed,#06b6d4); }
+@keyframes spectralToastIn { from { opacity:0; transform:translateY(16px) scale(.96); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce) {
+  .avatar.frame-spectral, .avatar-large.frame-spectral { animation:none; filter:drop-shadow(0 0 5px #a855f7); }
+  .spectral-toast { animation:none; }
+}
