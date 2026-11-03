@@ -974,3 +974,6 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 .profile-trophy:hover .profile-trophy-name, .profile-trophy:active .profile-trophy-name { letter-spacing:.07em; text-shadow:0 0 22px rgba(255,60,100,.95); }
 @keyframes trophyFloat { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
 @media (prefers-reduced-motion: reduce) { .profile-trophy-art { animation:none; } .profile-trophy, .profile-trophy-art img, .profile-trophy-name { transition:none; } }
+
+/* status (e.g. "Studying") sits on the same line as the You / Friend tag */
+.profile-handle .profile-status { margin-top:0; }
