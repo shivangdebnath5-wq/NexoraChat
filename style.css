@@ -839,3 +839,117 @@ html[data-theme="moonlight-sparkle"] .card:hover { box-shadow:0 18px 55px rgba(1
   .spectral-wrap::before, .spectral-wrap::after, .spectral-wrap .volt { animation:none; }
   .spectral-toast { animation:none; }
 }
+
+/* =========================================================================
+   USER PROFILE (profile.js) — token-based so every Nexora theme just works.
+   The panel is laid over .main-chat; the sidebar stays usable on desktop and
+   the mobile drawer is closed when a profile opens.
+   ========================================================================= */
+.main-chat { position:relative; }
+.main-chat > .profile-view { position:absolute; inset:0; z-index:30; display:flex; flex-direction:column; min-height:0; background:var(--bg-main); color:var(--text-main); animation:profileIn .22s ease both; }
+@keyframes profileIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* Hide (not remove) the chat underneath, so DM/Hub state and scroll position are kept and it can't show through translucent themes or take focus. */
+.main-chat.profile-open > *:not(.profile-view) { visibility:hidden; }
+.profile-topbar { flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--bg-card); border-bottom:1px solid var(--border); }
+.profile-topbar-title { font-weight:600; font-size:15px; }
+.profile-view .profile-back-btn { width:38px; min-width:38px; height:38px; flex:0 0 auto; margin:0; padding:0; }
+.profile-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:20px 16px 36px; }
+
+.profile-card { max-width:720px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; box-shadow:0 10px 30px var(--shadow); overflow:hidden; }
+.profile-banner { height:120px; background:radial-gradient(circle at 18% 20%, rgba(255,255,255,.28), transparent 55%), linear-gradient(135deg, var(--primary) 0%, var(--bg-sidebar) 150%); }
+
+.profile-head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px 18px; align-items:end; padding:0 24px 12px; margin-top:-46px; }
+.profile-avatar-wrap { position:relative; width:104px; height:104px; }
+.profile-avatar-wrap .profile-avatar { width:104px; height:104px; margin:0; border:4px solid var(--bg-card); background:var(--input-bg); }
+.profile-avatar-wrap .status-badge { right:5px; bottom:5px; width:24px; height:24px; border-width:4px; }
+.profile-avatar-wrap .status-badge .status-icon { display:flex; width:100%; height:100%; }
+.profile-view .profile-avatar-edit { position:absolute; left:2px; bottom:2px; width:30px; height:30px; padding:0; margin:0; border-radius:50%; font-size:14px; line-height:1; border:3px solid var(--bg-card); }
+
+.profile-ident { min-width:0; padding-bottom:6px; }
+.profile-name { margin:0; font-size:22px; line-height:1.2; word-break:break-word; outline:none; }
+.profile-handle { min-height:20px; margin-top:2px; color:var(--text-muted); font-size:14px; display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.profile-badge { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 9px; border-radius:999px; background:var(--input-bg); border:1px solid var(--border); color:var(--text-main); }
+.profile-status { display:flex; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:var(--text-muted); }
+.profile-status-dot { width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+
+.profile-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; padding-bottom:6px; }
+#profile-view button.profile-btn { width:auto; margin:0; padding:10px 18px; }
+#profile-view button.profile-btn:disabled { opacity:.55; cursor:not-allowed; }
+
+.profile-note { display:none; margin:6px 24px 0; padding:10px 14px; border-radius:10px; font-size:13px; line-height:1.4; background:var(--input-bg); border:1px solid var(--border); }
+.profile-note.show { display:block; }
+.profile-note.ok { border-color:var(--status-online); }
+.profile-note.warn { border-color:var(--status-idle); }
+
+.profile-body { display:grid; gap:20px; padding:14px 24px 26px; }
+.profile-section h3, .profile-label { margin:0 0 8px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); }
+.profile-bio { margin:0; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+.profile-muted { color:var(--text-muted); margin:0; }
+.profile-details { margin:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+.profile-detail { background:var(--input-bg); border:1px solid var(--border); border-radius:12px; padding:12px 14px; min-width:0; }
+.profile-detail dt { margin:0 0 4px; font-size:12px; color:var(--text-muted); }
+.profile-detail dd { margin:0; font-size:14px; word-break:break-word; }
+.profile-private { margin-left:6px; font-size:10px; font-weight:600; opacity:.8; }
+.profile-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.profile-chip { padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--input-bg); color:var(--text-main); font-size:13px; line-height:1.3; }
+.profile-chip.selectable { cursor:pointer; user-select:none; padding:8px 14px; }
+.profile-chip.selectable:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.profile-chip.selectable.selected { background:var(--primary); color:#fff; border-color:var(--primary); }
+.profile-empty { display:flex; flex-direction:column; gap:6px; align-items:center; text-align:center; padding:36px 12px; color:var(--text-muted); }
+.profile-empty strong { color:var(--text-main); font-size:16px; }
+
+.profile-edit { display:grid; gap:4px; }
+.profile-edit label { font-size:13px; font-weight:600; margin-top:6px; }
+.profile-hint { font-weight:400; font-size:12px; color:var(--text-muted); margin-left:6px; }
+.profile-edit input { margin-bottom:6px; }
+.profile-textarea { width:100%; min-height:96px; resize:vertical; padding:12px 14px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font:inherit; font-size:14px; line-height:1.5; outline:none; }
+.profile-textarea:focus, .profile-edit input:focus { border-color:var(--primary); }
+.profile-counter { text-align:right; font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+.profile-edit-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+
+/* ---- Clickable avatars / usernames elsewhere in Nexora ---- */
+[data-profile-user],
+.sidebar-header .user-name-block,
+#friends-list li .avatar-container,
+#requests-list li > span:first-child,
+#chat-header.has-profile-link #chat-header-avatar-container,
+#chat-header.has-profile-link #chat-title,
+.message-body-row > img.avatar,
+.hub-message-name,
+.hub-member-chip { cursor:pointer; }
+.sidebar-header .user-name-block:hover strong,
+#requests-list li > span:first-child:hover,
+#chat-header.has-profile-link #chat-title:hover,
+.hub-message-name:hover { text-decoration:underline; }
+.message-body-row > img.avatar:hover,
+#friends-list li .avatar-container:hover .avatar { box-shadow:0 0 0 2px var(--primary); }
+
+/* ---- Responsive ---- */
+@media (max-width: 720px) {
+  .profile-scroll { padding:12px 10px 28px; }
+  .profile-card { border-radius:14px; }
+  .profile-banner { height:96px; }
+  .profile-head { grid-template-columns:1fr; justify-items:center; text-align:center; padding:0 16px 10px; margin-top:-52px; }
+  .profile-handle, .profile-status { justify-content:center; }
+  .profile-actions { justify-content:center; width:100%; }
+  #profile-view .profile-actions button.profile-btn { flex:1 1 130px; }
+  .profile-note { margin:6px 16px 0; }
+  .profile-body { padding:12px 16px 22px; }
+  .profile-edit-actions button { flex:1 1 130px; }
+}
+@media (max-width: 360px) { .profile-name { font-size:19px; } .profile-avatar-wrap, .profile-avatar-wrap .profile-avatar { width:92px; height:92px; } }
+@media (prefers-reduced-motion: reduce) { .main-chat > .profile-view { animation:none; } }
+
+/* ---- Theme touches (colours still come from each theme's own variables) ---- */
+html[data-theme="moonlight-sparkle"] .main-chat > .profile-view { background:transparent; }
+html[data-theme="moonlight-sparkle"] .profile-topbar { background:linear-gradient(135deg, rgba(66,13,75,.62), rgba(123,51,126,.34)); border-color:rgba(245,213,224,.14); }
+html[data-theme="moonlight-sparkle"] .profile-card { background:linear-gradient(145deg, rgba(66,13,75,.66), rgba(33,6,53,.74)); border-color:rgba(245,213,224,.2); -webkit-backdrop-filter:blur(22px) saturate(150%); backdrop-filter:blur(22px) saturate(150%); box-shadow:0 18px 55px rgba(10,2,20,.6), 0 0 40px rgba(123,51,126,.2), inset 0 1px 0 rgba(255,255,255,.12); }
+html[data-theme="moonlight-sparkle"] .profile-banner { background:radial-gradient(circle at 18% 20%, rgba(245,213,224,.3), transparent 55%), linear-gradient(135deg,#6667AB 0%,#7B337E 60%,#420D4B 100%); }
+html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secondary) { background-color:#6667AB; background-image:linear-gradient(135deg,#6667AB 0%,#7B337E 100%); }
+[data-theme="durga-puja"] .main-chat > .profile-view { background:transparent; }
+[data-theme="halloween"] .main-chat > .profile-view { background:transparent; }
+[data-theme="durga-puja"] .profile-banner { background:var(--durga-gradient); }
+[data-theme="halloween"] .profile-banner { background:var(--halloween-gradient); }
+[data-theme="durga-puja"] #profile-view button.profile-btn:not(.secondary), [data-theme="durga-puja"] .profile-chip.selectable.selected { background:var(--durga-gradient); color:#171719; border-color:#D6A84B; }
+[data-theme="halloween"] #profile-view button.profile-btn:not(.secondary), [data-theme="halloween"] .profile-chip.selectable.selected { background:var(--halloween-gradient); color:#FFF2DE; border-color:#C56B2D; }
