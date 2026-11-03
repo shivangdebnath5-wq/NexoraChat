@@ -963,10 +963,14 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 .profile-trophies-empty svg { color:var(--primary); opacity:.85; margin-bottom:4px; }
 .profile-trophies-empty strong { color:var(--text-main); font-size:15px; }
 .profile-trophies-empty span { font-size:13px; }
-/* a trophy card: big image with its title underneath */
-.profile-trophies { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px; }
-.profile-trophy { display:flex; flex-direction:column; align-items:center; gap:10px; padding:16px 10px 14px; border:1px solid var(--border); border-radius:14px; background:var(--input-bg); text-align:center; word-break:break-word; }
-.profile-trophy img { width:100%; max-width:130px; height:140px; object-fit:contain; filter:drop-shadow(0 6px 16px rgba(255,40,80,.35)); transition:transform .25s ease; }
-.profile-trophy:hover img { transform:translateY(-3px) scale(1.04); }
-.profile-trophy span { font-size:13px; font-weight:700; letter-spacing:.02em; }
-@media (prefers-reduced-motion: reduce) { .profile-trophy img { transition:none; } }
+/* a trophy card: big image with its title underneath — it floats gently, and grows + glows when hovered */
+.profile-trophies { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px; }
+.profile-trophy { display:flex; flex-direction:column; align-items:center; gap:12px; padding:20px 12px 16px; border:1px solid var(--border); border-radius:16px; background:var(--input-bg); text-align:center; word-break:break-word; cursor:default; overflow:visible; transition:border-color .3s ease, box-shadow .3s ease, transform .3s ease; }
+.profile-trophy-art { display:block; animation:trophyFloat 4.2s ease-in-out infinite; }
+.profile-trophy-art img { display:block; width:100%; max-width:130px; height:140px; margin:0 auto; object-fit:contain; transform-origin:50% 60%; filter:drop-shadow(0 6px 16px rgba(255,40,80,.35)); transition:transform .45s cubic-bezier(.2,.9,.25,1.2), filter .45s ease; }
+.profile-trophy-name { font-family:'Metal Mania', Impact, fantasy; font-weight:400; font-size:21px; line-height:1.15; letter-spacing:.04em; color:var(--text-main); text-shadow:0 0 14px rgba(255,40,80,.55); transition:text-shadow .3s ease, letter-spacing .3s ease; }
+.profile-trophy:hover, .profile-trophy:active { border-color:rgba(255,60,100,.7); box-shadow:0 0 26px rgba(255,40,80,.28), inset 0 0 24px rgba(255,40,80,.08); transform:translateY(-2px); }
+.profile-trophy:hover .profile-trophy-art img, .profile-trophy:active .profile-trophy-art img { transform:scale(1.22); filter:drop-shadow(0 10px 26px rgba(255,50,90,.75)) brightness(1.08); }
+.profile-trophy:hover .profile-trophy-name, .profile-trophy:active .profile-trophy-name { letter-spacing:.07em; text-shadow:0 0 22px rgba(255,60,100,.95); }
+@keyframes trophyFloat { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .profile-trophy-art { animation:none; } .profile-trophy, .profile-trophy-art img, .profile-trophy-name { transition:none; } }
