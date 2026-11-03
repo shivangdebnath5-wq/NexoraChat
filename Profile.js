@@ -453,6 +453,8 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     if (!username) return;
     e.preventDefault();
     e.stopPropagation();                      // capture phase: stops the row's DM-open / popover handlers for this click only
+    const modal = e.target.closest('.modal');   // e.g. Hub member chips inside Hub settings: close that dialog the same way its Close button does
+    if (modal) modal.classList.add('hidden');
     openProfile(username);
   }
 
