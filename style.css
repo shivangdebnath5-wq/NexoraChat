@@ -1020,3 +1020,23 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 .profile-badge-card-img { width:64px; height:64px; object-fit:contain; filter:drop-shadow(0 2px 8px rgba(168,85,247,.6)); }
 @keyframes badgeGlow { 0%, 100% { opacity:.55; } 50% { opacity:.9; } }
 @media (prefers-reduced-motion: reduce) { .profile-badge-glow { animation:none; } .profile-badge-feature img { transition:none; } }
+
+/* ---- Diwali countdown strip: slim bar under the home greeting ---- */
+.diwali-strip { display:none; align-items:center; gap:10px; flex:0 0 auto; min-width:0; padding:6px 20px; background:linear-gradient(90deg, rgba(255,160,40,.14), rgba(255,160,40,.04) 70%); border-bottom:1px solid var(--border); font-size:12.5px; color:var(--text-main); }
+.chat-header.is-home ~ .diwali-strip.show { display:flex; animation:homeHeaderIn .5s cubic-bezier(.22,1,.36,1) both; }
+.diwali-diya { display:inline-flex; flex:0 0 auto; }
+.diwali-diya svg { display:block; overflow:visible; }
+.diya-flame { transform-box:fill-box; transform-origin:50% 100%; animation:diyaFlicker 1.6s ease-in-out infinite; }
+.diya-glow { animation:diyaGlow 2.4s ease-in-out infinite; }
+.diwali-text { display:flex; align-items:baseline; gap:6px; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.diwali-text strong { font-size:13.5px; font-weight:700; color:var(--text-main); }
+.diwali-sub { color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; }
+.diwali-link { width:auto; margin:0 0 0 auto; padding:2px 8px; flex:0 0 auto; background:none; box-shadow:none; border:0; border-radius:6px; color:var(--primary); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.diwali-link:hover { text-decoration:underline; }
+.diwali-link:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.diwali-strip.is-today { background:linear-gradient(90deg, rgba(255,170,40,.3), rgba(255,120,30,.08) 75%); border-bottom-color:rgba(255,170,40,.5); }
+.diwali-strip.is-today .diwali-text strong { font-size:15px; background:linear-gradient(90deg,#ff9a1f,#ffd35a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+@keyframes diyaFlicker { 0%,100% { transform:scale(1,1) skewX(0); } 25% { transform:scale(.92,1.08) skewX(-3deg); } 50% { transform:scale(1.05,.95) skewX(2deg); } 75% { transform:scale(.96,1.05) skewX(-2deg); } }
+@keyframes diyaGlow { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+@media (max-width: 560px) { .diwali-strip { padding:6px 12px; gap:8px; } .diwali-sub { display:none; } }
+@media (prefers-reduced-motion: reduce) { .diya-flame, .diya-glow, .chat-header.is-home ~ .diwali-strip.show { animation:none; } }
