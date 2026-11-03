@@ -272,8 +272,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
         </div>
         <div class="profile-ident">
           <h2 class="profile-name" tabindex="-1">${esc(title)}</h2>
-          <div class="profile-handle">${m.profileName ? '@' + esc(m.username) : ''}${badge}</div>
-          ${m.known ? statusRow : ''}
+          <div class="profile-handle">${m.profileName ? '<span class="profile-at">@' + esc(m.username) + '</span>' : ''}${badge}${m.known ? statusRow : ''}</div>
         </div>
         <div class="profile-actions">${actionsHTML(m)}</div>
       </div>
