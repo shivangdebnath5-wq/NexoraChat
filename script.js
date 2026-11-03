@@ -1,1432 +1,1003 @@
-/* NexoraChat interaction upgrade. Existing inline functions remain the data layer. */
-
-// Loads the real-time RTDB presence module (see presence.js). Dynamic
-// import() works fine from this classic script; presence.js itself waits
-// for the Firebase app to exist, so load order relative to index.html's
-// <script type="module"> block doesn't matter. Entirely additive: if this
-// fails for any reason, getUserPresence()'s existing fallback in index.html
-// keeps the app working exactly as before.
-import('./presence.js').catch(err => console.warn('Presence module failed to load:', err));
-
-const baseExtensionHTML = extensionHTML;
-const baseUpdateExtension = updateExtension;
-
-function getPinnedChats() { return JSON.parse(localStorage.getItem(`pinned_chats_${currentUser}`) || '[]'); }
-function savePinnedChats(pins) { localStorage.setItem(`pinned_chats_${currentUser}`, JSON.stringify(pins)); }
-function togglePinnedChat(friend, event) {
-  event?.stopPropagation();
-  const pins = getPinnedChats(); const index = pins.indexOf(friend);
-  if (index >= 0) pins.splice(index, 1); else pins.unshift(friend);
-  savePinnedChats(pins); renderSidebar();
+/* Upgrade layer: pins, playable game cards and responsive layout */
+#mobile-conversations { display:none; }
+.brand-logo { display:block; width:min(100%, 260px); height:auto; max-height:150px; margin:0 auto 20px; object-fit:contain; background:#000; padding:10px; border-radius:14px; }
+.pin-chat-btn { width:30px !important; height:30px !important; padding:0 !important; margin:0 0 0 6px !important; border:0 !important; background:transparent !important; color:var(--text-muted) !important; font-size:14px !important; }
+.pin-chat-btn:hover, .pin-chat-btn.pinned { color:#f59e0b !important; background:var(--input-bg) !important; }
+.pinned-chat { border-left:3px solid #f59e0b !important; }
+.pinned-chat::after { content:'Pinned'; margin-left:auto; margin-right:4px; color:#b45309; font-size:10px; font-weight:700; }
+.game-card { min-width:270px; overflow:hidden; }
+.game-status { color:var(--text-muted); font-size:12px; margin:6px 0 10px; }
+.game-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.game-actions button { width:auto; padding:7px 10px; margin:0; font-size:12px; }
+.game-actions input { margin:0; min-width:130px; padding:8px; font-size:12px; }
+.game-board { display:grid; grid-template-columns:repeat(3, 1fr); gap:5px; max-width:240px; margin-top:10px; }
+.game-board button { aspect-ratio:1; padding:0; margin:0; background:var(--input-bg); color:var(--text-main); font-size:28px; border:1px solid var(--border); }
+.game-board button:hover { border-color:var(--primary); background:color-mix(in srgb, var(--primary) 12%, var(--input-bg)); }
+.chess-board { grid-template-columns:repeat(8, 1fr); gap:0; width:264px; max-width:100%; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.chess-board button { border:0; border-radius:0; font-size:20px; min-height:32px; }
+.chess-board button:nth-child(16n + 1), .chess-board button:nth-child(16n + 3), .chess-board button:nth-child(16n + 5), .chess-board button:nth-child(16n + 7), .chess-board button:nth-child(16n + 10), .chess-board button:nth-child(16n + 12), .chess-board button:nth-child(16n + 14), .chess-board button:nth-child(16n + 16) { background:#e8dcc6; }
+.chess-board button:nth-child(16n + 2), .chess-board button:nth-child(16n + 4), .chess-board button:nth-child(16n + 6), .chess-board button:nth-child(16n + 8), .chess-board button:nth-child(16n + 9), .chess-board button:nth-child(16n + 11), .chess-board button:nth-child(16n + 13), .chess-board button:nth-child(16n + 15) { background:#a87b5d; }
+.chess-board button.selected { outline:3px solid #fbbf24; outline-offset:-3px; }
+.game-prompt { padding:9px 10px; background:var(--input-bg); border-radius:9px; font-size:13px; margin:8px 0; }
+.game-log { max-height:100px; overflow:auto; margin-top:8px; font-size:12px; color:var(--text-muted); }
+.game-log div { padding:3px 0; border-bottom:1px solid var(--border); }
+.header-actions { position:relative; display:flex; align-items:center; }
+#pinned-messages-btn { width:38px; height:38px; padding:0; margin:0; font-size:15px; }
+.pinned-messages-menu { position:absolute; right:0; top:46px; width:280px; max-height:320px; overflow-y:auto; padding:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; box-shadow:0 12px 28px var(--shadow); z-index:120; }
+.pinned-menu-title { display:flex; align-items:center; justify-content:space-between; padding:6px 7px 9px; font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+.pinned-message-item { width:100%; padding:10px; margin:0 0 4px; justify-content:flex-start; text-align:left; color:var(--text-main); background:var(--input-bg); border:1px solid transparent; border-radius:9px; font-size:12px; overflow:hidden; }
+.pinned-message-item:hover { border-color:var(--primary); background:var(--bg-card); }
+.pinned-message-item small { display:block; margin-top:3px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pinned-message-empty { padding:18px 10px; color:var(--text-muted); font-size:13px; text-align:center; }
+.pin-message-popover { width:30px !important; height:30px !important; padding:0 !important; margin:0 !important; background:var(--bg-card) !important; color:var(--text-main) !important; border:1px solid var(--border) !important; border-radius:50% !important; font-size:13px !important; box-shadow:0 2px 5px var(--shadow); }
+.pin-message-popover:hover, .pin-message-popover.is-pinned { color:#b45309 !important; background:#fef3c7 !important; }
+.message-wrapper.message-pinned .message { outline:2px solid rgba(245, 158, 11, .55); outline-offset:2px; }
+.message-wrapper.pin-jump .message { animation:pinJump 1.5s ease; }
+@keyframes pinJump { 0%,100% { transform:scale(1); } 35% { transform:scale(1.035); box-shadow:0 0 0 6px rgba(245,158,11,.22); } }
+.smart-context-card { max-width:330px; margin:7px 36px 0; padding:10px; border:1px solid color-mix(in srgb, var(--primary) 28%, var(--border)); border-radius:12px; background:color-mix(in srgb, var(--primary) 7%, var(--bg-card)); box-shadow:0 3px 10px rgba(15,23,42,.07); }
+.message-wrapper.sent .smart-context-card { align-self:flex-end; }
+.message-wrapper.received .smart-context-card { align-self:flex-start; }
+.smart-context-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; font-size:12px; font-weight:700; color:var(--primary); }
+.smart-context-heading button { width:auto; padding:1px 4px; margin:0; color:var(--text-muted); background:transparent; border:0; font-size:15px; }
+.smart-context-text { margin-bottom:8px; font-size:12px; color:var(--text-main); }
+.smart-context-actions { display:flex; flex-wrap:wrap; gap:5px; }
+.smart-context-actions button { width:auto; padding:6px 8px; margin:0; color:var(--text-main); background:var(--bg-card); border:1px solid var(--border); border-radius:7px; font-size:11px; }
+.smart-context-actions button:hover { color:#fff; background:var(--primary); border-color:var(--primary); }
+.hub-list-title { display:flex; align-items:center; justify-content:space-between; margin:12px 0 6px; color:var(--text-muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }.hub-row { cursor:pointer; }.hub-icon { width:34px; height:34px; border-radius:10px; object-fit:cover; background:var(--hub-accent, var(--primary)); color:#fff; display:grid; place-items:center; font-size:16px; }.hub-row small { display:block; color:var(--text-muted); font-size:11px; }.hub-modal .card { max-width:440px; }.hub-modal textarea { width:100%; min-height:70px; padding:12px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); border-radius:8px; resize:vertical; }.hub-form-label { display:block; margin:9px 0 5px; color:var(--text-muted); font-size:12px; }.hub-member-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }.hub-member-chip { display:flex; align-items:center; gap:5px; padding:5px 8px; border:1px solid var(--border); border-radius:99px; background:var(--input-bg); font-size:12px; }.hub-member-chip button { width:auto; padding:0 3px; margin:0; background:transparent; color:#ef4444; font-size:14px; }.hub-chat-bg { background-size:cover !important; background-position:center !important; }.hub-header-meta { display:block; margin-top:2px; color:var(--text-muted); font-size:11px; font-weight:400; }.hub-message-name { margin-bottom:3px; color:var(--primary); font-size:11px; font-weight:700; }
+.hub-banner-info { display:none; align-items:center; gap:12px; min-width:0; flex:1; }.hub-banner-info.visible { display:flex; }.hub-banner-icon { width:44px; height:44px; flex:0 0 44px; border-radius:12px; object-fit:cover; background:linear-gradient(145deg,var(--hub-accent, var(--primary)),#7c3aed); border:1px solid rgba(255,255,255,.3); }.hub-banner-icon.fallback { display:grid; place-items:center; color:#fff; font-weight:800; font-size:20px; }.hub-banner-copy { min-width:0; }.hub-banner-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-main); font-size:17px; font-weight:750; }.hub-banner-meta { display:block; margin-top:3px; color:var(--text-muted); font-size:12px; }.main-chat.hub-active .chat-header { min-height:80px; padding:14px 20px; }.main-chat.hub-active #chat-header > .user-profile-info { display:none; }.main-chat.hub-active #mobile-conversations { align-self:center; }.main-chat.hub-active .header-actions { margin-left:auto; }.main-chat.hub-active #pinned-messages-btn { margin-right:8px; }.header-actions { gap:6px; }.header-actions #pinned-messages-btn { margin-right:5px; }
+/* Hub creation wizard */
+.hub-wizard-card { max-width:520px; display:flex; flex-direction:column; max-height:88vh; }
+.hub-wizard-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.hub-wizard-head h3 { margin:2px 0 0; text-align:left; }
+.hub-wizard-kicker { color:var(--primary); font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+.hub-wizard-close { width:34px; height:34px; flex:0 0 34px; border-radius:50%; font-size:16px; }
+.hub-wizard-progress { display:flex; align-items:center; gap:4px; margin:14px 0 16px; }
+.hub-wizard-dot { flex:0 0 auto; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; color:var(--text-muted); background:var(--input-bg); border:1px solid var(--border); }
+.hub-wizard-dot.active { color:#fff; background:var(--primary); border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+.hub-wizard-dot.done { color:#fff; background:color-mix(in srgb, var(--primary) 65%, var(--input-bg)); border-color:var(--primary); }
+.hub-wizard-line { flex:1 1 auto; height:2px; min-width:6px; background:var(--border); }
+.hub-wizard-body { flex:1 1 auto; overflow-y:auto; padding-right:2px; }
+.hub-wizard-help { margin:0 0 12px; color:var(--text-muted); font-size:12.5px; line-height:1.45; }
+.hub-wizard-footer { margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
+.hub-wizard-footer-inner { display:flex; gap:8px; }
+.hub-wizard-footer-inner button { width:auto; flex:1 1 0; margin:0; }
+.hub-wizard-avatar-row { display:flex; align-items:center; gap:12px; margin-bottom:4px; }
+.hub-wizard-avatar-field { flex:1 1 auto; min-width:0; }
+.hub-image-preview { display:grid; place-items:center; overflow:hidden; background:var(--input-bg); border:1px dashed var(--border); color:var(--text-muted); font-size:11px; text-align:center; }
+.hub-image-preview img { width:100%; height:100%; object-fit:cover; }
+.hub-image-preview-round { width:56px; height:56px; border-radius:50%; flex:0 0 56px; }
+.hub-image-preview-banner { width:100%; height:74px; border-radius:10px; margin:6px 0; }
+.hub-image-preview-small { width:38px; height:38px; margin:0; }
+.hub-image-preview-banner.hub-image-preview-small { width:64px; height:38px; }
+.hub-category-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.hub-category-card { display:flex; flex-direction:column; align-items:flex-start; gap:6px; width:100%; min-height:64px; margin:0; padding:10px; color:var(--text-main); background:var(--input-bg); border:1px solid var(--border); border-radius:12px; font-size:12.5px; font-weight:650; text-align:left; box-shadow:none; }
+.hub-category-card:hover { background:color-mix(in srgb, var(--primary) 9%, var(--input-bg)); border-color:color-mix(in srgb, var(--primary) 58%, var(--border)); }
+.hub-category-card.selected { border-color:var(--primary); box-shadow:0 0 0 2px color-mix(in srgb, var(--primary) 23%, transparent); }
+.hub-category-emoji { font-size:20px; }
+.hub-feature-list { display:flex; flex-direction:column; gap:8px; }
+.hub-feature-chip { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; font-size:13px; color:var(--text-main); transition:background-color .2s ease, border-color .2s ease; }
+.hub-feature-chip:has(input:checked) { border-color:color-mix(in srgb, var(--primary) 45%, var(--border)); background:color-mix(in srgb, var(--primary) 7%, var(--input-bg)); }
+.hub-feature-chip-label { min-width:0; }
+.hub-toggle { position:relative; width:42px; height:24px; flex:0 0 42px; }
+.hub-toggle input { position:absolute; inset:0; margin:0; opacity:0; cursor:pointer; z-index:2; }
+.hub-toggle-track { position:absolute; inset:0; border-radius:999px; background:var(--border); transition:background-color .25s ease, box-shadow .25s ease; }
+.hub-toggle-thumb { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.28); transition:transform .28s cubic-bezier(.34,1.56,.64,1); }
+.hub-toggle input:checked + .hub-toggle-track { background:var(--primary); }
+.hub-toggle input:checked + .hub-toggle-track .hub-toggle-thumb { transform:translateX(18px); }
+.hub-toggle input:focus-visible + .hub-toggle-track { box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent); }
+.hub-toggle input:active + .hub-toggle-track .hub-toggle-thumb { width:21px; }
+@media (prefers-reduced-motion: no-preference) {
+  .hub-feature-list .hub-feature-chip { animation:hubFeatureChipIn .35s ease both; }
+  .hub-feature-list .hub-feature-chip:nth-child(1) { animation-delay:.02s; }
+  .hub-feature-list .hub-feature-chip:nth-child(2) { animation-delay:.06s; }
+  .hub-feature-list .hub-feature-chip:nth-child(3) { animation-delay:.1s; }
+  .hub-feature-list .hub-feature-chip:nth-child(4) { animation-delay:.14s; }
+  .hub-feature-list .hub-feature-chip:nth-child(5) { animation-delay:.18s; }
+  .hub-feature-list .hub-feature-chip:nth-child(6) { animation-delay:.22s; }
 }
-function showMobileSidebar() { document.getElementById('app-screen').classList.add('sidebar-open'); }
+@keyframes hubFeatureChipIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-const baseSelectFriend = selectFriend;
-selectFriend = function(friend) { baseSelectFriend(friend); document.getElementById('app-screen').classList.remove('sidebar-open'); };
-
-const baseRenderSidebar = renderSidebar;
-renderSidebar = function() {
-  baseRenderSidebar();
-  if (!currentUser) return;
-  const pins = getPinnedChats(); const list = document.getElementById('friends-list');
-  const rows = [...list.children];
-  rows.sort((a,b) => pins.includes(b.querySelector('.user-profile-info > span')?.textContent.replace('@','')) - pins.includes(a.querySelector('.user-profile-info > span')?.textContent.replace('@','')));
-  rows.forEach(row => {
-    const friend = row.querySelector('.user-profile-info > span')?.textContent.replace('@',''); if (!friend) return;
-    const pinned = pins.includes(friend); row.classList.toggle('pinned-chat', pinned);
-    const button = document.createElement('button'); button.className = `pin-chat-btn ${pinned ? 'pinned' : ''}`; button.title = pinned ? 'Unpin chat' : 'Pin chat'; button.textContent = pinned ? '★' : '☆';
-    button.onclick = event => togglePinnedChat(friend, event); row.appendChild(button);
-  });
-  rows.forEach(row => list.appendChild(row));
-};
-
-function gameState(e) {
-  if (!e.game) e.game = { board: e.title === 'Chess' ? ['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','♙','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔','♗','♘','♖'] : Array(9).fill(''), turn: e.mode === 'solo' ? currentUser : null, selected: null, log: [], started: Date.now(), prompt: '', score: {} };
-  return e.game;
+/* Smart Hub Configuration: shown when the wizard detects a Study Hub */
+.smart-hub-banner { position:relative; margin:0 0 14px; padding:14px 42px 14px 14px; border-radius:14px; border:1px solid color-mix(in srgb, var(--primary) 35%, var(--border)); background:linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, var(--bg-card)), color-mix(in srgb, #8b5cf6 10%, var(--bg-card))); overflow:hidden; }
+.smart-hub-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(130px 90px at 92% -15%, color-mix(in srgb, var(--primary) 24%, transparent), transparent 70%); pointer-events:none; }
+.smart-hub-title { position:relative; display:block; margin-bottom:4px; font-size:13.5px; font-weight:800; background:linear-gradient(90deg, var(--primary), #8b5cf6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.smart-hub-sub { position:relative; margin:0; color:var(--text-muted); font-size:12px; line-height:1.5; }
+.smart-hub-corner-icon { position:absolute; top:10px; right:10px; width:26px; height:26px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(135deg, var(--primary), #8b5cf6); color:#fff; font-size:12.5px; box-shadow:0 0 0 4px color-mix(in srgb, var(--primary) 16%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .smart-hub-banner { animation:smartHubIn .45s cubic-bezier(.22,1,.36,1) both; }
+  .smart-hub-corner-icon { animation:smartHubSparklePulse 2.4s ease-in-out .45s infinite; }
 }
-function canPlayGame(e) { return e.mode === 'solo' || (e.accepted && e.game?.turn === currentUser); }
-function gameMessage(msgId, text) { const messages = DB.getMessages(); const m = messages.find(x => x.id === msgId); if (!m) return; const e = m.extension; const g = gameState(e); g.log.unshift(text); g.log = g.log.slice(0,8); DB.saveMessages(messages); renderMessages(false); }
-function playGame(msgId, action, value) {
-  const messages = DB.getMessages(); const m = messages.find(x => x.id === msgId); if (!m?.extension) return; const e = m.extension; const g = gameState(e);
-  if (action === 'accept') { e.accepted = true; g.turn = m.sender; g.log.unshift(`${currentUser} accepted the challenge`); }
-  else if (!canPlayGame(e)) return;
-  else if (e.title === 'Tic-tac-toe' && action === 'cell') { if (g.board[value]) return; const mark = currentUser === m.sender ? 'X' : 'O'; g.board[value] = mark; if (win(g.board)) g.winner = currentUser; else if (g.board.every(Boolean)) g.winner = 'Draw'; else g.turn = otherPlayer(m, currentUser); }
-  else if (e.title === 'Chess' && action === 'cell') { if (g.selected === null) { if (g.board[value]) g.selected = value; } else { const piece = g.board[g.selected]; if (piece) { g.board[value] = piece; g.board[g.selected] = ''; g.log.unshift(`${currentUser} moved ${piece}`); g.turn = e.mode === 'solo' ? currentUser : otherPlayer(m, currentUser); } g.selected = null; } }
-  else if (e.title === 'Reaction speed' && action === 'start') { g.prompt = 'Now! Tap SCORE as quickly as you can.'; g.started = Date.now(); }
-  else if (e.title === 'Reaction speed' && action === 'score' && g.prompt) { const time = Date.now() - g.started; g.score[currentUser] = time; g.prompt = `${currentUser}: ${time} ms`; g.turn = e.mode === 'solo' ? currentUser : otherPlayer(m, currentUser); }
-  else if (action === 'submit') { const input = document.getElementById(`game-input-${msgId}`); const valueText = input?.value.trim(); if (!valueText) return; g.log.unshift(`${currentUser}: ${valueText}`); if (e.title === 'Guess the emoji' && /pizza/i.test(valueText)) g.winner = currentUser; g.turn = e.mode === 'solo' ? currentUser : otherPlayer(m, currentUser); }
-  else if (e.title === 'Trivia' && action === 'answer') { g.winner = value === 'Pacific' ? currentUser : ''; g.prompt = value === 'Pacific' ? `${currentUser} got it right!` : 'Not quite — the answer was Pacific.'; }
-  else if (e.title === 'Drawing challenge' && action === 'done') { g.log.unshift(`${currentUser} finished their drawing`); g.turn = e.mode === 'solo' ? currentUser : otherPlayer(m, currentUser); }
-  DB.saveMessages(messages); renderMessages(false);
-}
-function otherPlayer(m, user) { return m.sender === user ? m.receiver : m.sender; }
-function win(board) { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(line => line.every(i => board[i] && board[i] === board[line[0]])); }
-function gameInput(msgId, placeholder) { return `<div class="game-actions"><input id="game-input-${msgId}" placeholder="${placeholder}"><button onclick="playGame(${msgId},'submit')">Send</button></div>`; }
-function gameHTML(m) {
-  const e = m.extension, g = gameState(e); const locked = !canPlayGame(e); const title = escapeHTML(e.title);
-  if (e.mode !== 'solo' && !e.accepted) return `<div class="extension-card game-card"><div class="extension-title">Game · ${title}</div><div class="game-status">Challenge waiting for acceptance.</div>${m.receiver === currentUser ? `<button class="poll-option" onclick="playGame(${m.id},'accept')">Accept & play</button>` : ''}</div>`;
-  const status = g.winner ? (g.winner === 'Draw' ? 'It is a draw.' : `${g.winner} wins!`) : (locked ? `Waiting for @${g.turn}` : 'Your turn');
-  let play = '';
-  if (e.title === 'Tic-tac-toe') play = `<div class="game-board">${g.board.map((cell,i) => `<button ${locked||g.winner?'disabled':''} onclick="playGame(${m.id},'cell',${i})">${cell}</button>`).join('')}</div>`;
-  else if (e.title === 'Chess') play = `<div class="game-board chess-board">${g.board.map((cell,i) => `<button class="${g.selected===i?'selected':''}" ${locked?'disabled':''} onclick="playGame(${m.id},'cell',${i})">${cell}</button>`).join('')}</div><div class="extension-meta">Tap a piece, then a square. This is a friendly free-move chess board.</div>`;
-  else if (e.title === 'Guess the emoji') play = `<div class="game-prompt">🍕 Guess this emoji</div>${gameInput(m.id,'Your guess')}`;
-  else if (e.title === 'Trivia') play = `<div class="game-prompt">Which is the largest ocean?</div><div class="game-actions"><button onclick="playGame(${m.id},'answer','Atlantic')">Atlantic</button><button onclick="playGame(${m.id},'answer','Pacific')">Pacific</button><button onclick="playGame(${m.id},'answer','Indian')">Indian</button></div>`;
-  else if (e.title === 'Reaction speed') play = `<div class="game-prompt">${g.prompt || 'Test your speed.'}</div><div class="game-actions"><button onclick="playGame(${m.id},'start')">Start</button><button onclick="playGame(${m.id},'score')">Score!</button></div>`;
-  else if (e.title === 'Drawing challenge') play = `<div class="game-prompt">Draw a rocket ship, then mark it done.</div><div class="game-actions"><button onclick="playGame(${m.id},'done')">I finished drawing</button></div>`;
-  else if (e.title === 'Word battle') play = `<div class="game-prompt">Take turns with a word that starts with the last letter of the previous word.</div>${gameInput(m.id,'Type a word')}`;
-  else play = `<div class="game-prompt">Ask a clever yes/no question. Take turns.</div>${gameInput(m.id,'Ask a question')}`;
-  return `<div class="extension-card game-card"><div class="extension-title">Game · ${title}</div><div class="game-status">${status}</div>${play}<div class="game-log">${g.log.map(x => `<div>${escapeHTML(x)}</div>`).join('')}</div></div>`;
+@keyframes smartHubIn { from { opacity:0; transform:translateY(-6px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes smartHubSparklePulse { 0%,100% { box-shadow:0 0 0 4px color-mix(in srgb, var(--primary) 16%, transparent); transform:scale(1); } 50% { box-shadow:0 0 0 7px color-mix(in srgb, var(--primary) 7%, transparent); transform:scale(1.08); } }
+.hub-permission-group { margin-bottom:14px; }
+.hub-permission-title { margin-bottom:7px; font-size:13px; font-weight:700; color:var(--text-main); }
+.hub-permission-option { display:flex; align-items:center; gap:10px; padding:9px 12px; margin-bottom:6px; background:var(--input-bg); border:1px solid var(--border); border-radius:10px; font-size:12.5px; color:var(--text-main); }
+.hub-permission-option input { width:auto; margin:0; }
+.hub-accent-grid { display:flex; flex-wrap:wrap; gap:9px; margin:4px 0 6px; }
+.hub-accent-swatch { width:30px; height:30px; flex:0 0 30px; margin:0; padding:0; border-radius:50%; background:var(--accent-color, var(--primary)); border:2px solid transparent; box-shadow:0 0 0 1px var(--border); }
+.hub-accent-swatch.selected { border-color:var(--bg-card); box-shadow:0 0 0 2px var(--accent-color, var(--primary)); }
+.hub-accent-swatch.small { width:20px; height:20px; flex:0 0 20px; box-shadow:0 0 0 1px var(--border); }
+.hub-review-block { padding:11px 0; border-bottom:1px solid var(--border); }
+.hub-review-block:last-child { border-bottom:0; }
+.hub-review-heading { margin-bottom:7px; color:var(--text-muted); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+.hub-review-identity { display:flex; align-items:center; gap:10px; }
+.hub-review-identity strong { display:block; font-size:14px; }
+.hub-review-identity p { margin:2px 0 0; color:var(--text-muted); font-size:12px; }
+.hub-review-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.hub-review-chip { padding:4px 9px; background:var(--input-bg); border:1px solid var(--border); border-radius:99px; font-size:11px; color:var(--text-main); }
+.hub-review-list { margin:0; padding-left:18px; color:var(--text-main); font-size:12.5px; line-height:1.7; }
+.hub-review-appearance { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+@media (max-width:480px) { .hub-category-grid { grid-template-columns:1fr; } }
+.quest-shop { width:min(760px, calc(100vw - 28px)); max-width:760px; max-height:90vh; overflow-y:auto; padding:22px; background:linear-gradient(145deg, #07152d, #111536 58%, #200d42); color:#f8fafc; border-color:#6d28d9; box-shadow:0 18px 52px rgba(76,29,149,.45); }
+.shop-topline { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }.shop-topline h2 { margin:4px 0 0; color:#fff; text-align:left; font-size:22px; }.shop-kicker { color:#d8b4fe; font-size:12px; font-weight:800; letter-spacing:.13em; }.shop-topline .icon-btn { background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.2); }
+.gem-wallet { display:inline-flex; align-items:center; gap:8px; margin:15px 0; padding:10px 15px; border:1px solid #38bdf8; border-radius:10px; background:rgba(14,165,233,.12); font-size:18px; }.gem-wallet strong { font-size:24px; }.gem-wallet span { font-size:12px; color:#bae6fd; text-transform:uppercase; letter-spacing:.08em; }
+.quest-shop h3 { margin:12px 0 9px; color:#c4b5fd; font-size:14px; text-align:left; text-transform:uppercase; letter-spacing:.07em; }
+.quest-list { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }.quest-card { padding:10px; border-radius:10px; border:1px solid rgba(196,181,253,.28); background:rgba(255,255,255,.06); }.quest-card strong { display:block; font-size:12px; }.quest-card small { display:block; margin:5px 0; color:#cbd5e1; font-size:11px; }.quest-progress { height:5px; overflow:hidden; border-radius:6px; background:rgba(255,255,255,.13); }.quest-progress i { display:block; height:100%; background:linear-gradient(90deg,#38bdf8,#c084fc); }.quest-reward { margin-top:5px; color:#f0abfc; font-size:11px; font-weight:700; }
+.crate-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }.crate-card { min-height:150px; padding:13px; margin:0; color:#fff; border:1px solid rgba(255,255,255,.22); border-radius:13px; background:linear-gradient(145deg,#172554,#0f172a); }.crate-card.rare { background:linear-gradient(145deg,#0c4a6e,#172554); border-color:#38bdf8; }.crate-card.epic { background:linear-gradient(145deg,#4c1d95,#1e1b4b); border-color:#e879f9; }.crate-card:hover { transform:translateY(-2px); filter:brightness(1.12); }.crate-card .crate-icon { display:block; font-size:38px; margin-bottom:6px; }.crate-card strong,.crate-card small,.crate-card b { display:block; }.crate-card small { margin:4px 0 9px; color:#dbeafe; font-size:11px; }.crate-card b { color:#f0abfc; }
+.crate-result { margin:14px 0; padding:12px; border-radius:10px; text-align:center; color:#fef3c7; background:rgba(250,204,21,.12); border:1px solid rgba(250,204,21,.45); }.crate-result.show { display:block !important; animation:crateReveal .45s ease; }@keyframes crateReveal { from{transform:scale(.94);opacity:0} to{transform:scale(1);opacity:1} }
+.frame-inventory { display:flex; flex-wrap:wrap; gap:7px; }.frame-choice { width:auto; margin:0; padding:7px 9px; color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); font-size:11px; }.frame-choice.active { background:#7c3aed; border-color:#ddd6fe; }
+.avatar.frame-sakura,.avatar-large.frame-sakura { border:3px solid #fb7185 !important; box-shadow:0 0 0 3px #fecdd3,0 0 14px #f472b6; }.avatar.frame-ocean,.avatar-large.frame-ocean { border:3px solid #22d3ee !important; box-shadow:0 0 0 3px #0e7490,0 0 15px #67e8f9; }.avatar.frame-cosmic,.avatar-large.frame-cosmic { border:3px solid #a78bfa !important; box-shadow:0 0 0 3px #312e81,0 0 16px #c084fc; }.avatar.frame-sunflower,.avatar-large.frame-sunflower { border:3px solid #facc15 !important; box-shadow:0 0 0 3px #854d0e,0 0 14px #fde047; }.avatar.frame-ice,.avatar-large.frame-ice { border:3px solid #93c5fd !important; box-shadow:0 0 0 3px #1d4ed8,0 0 16px #dbeafe; }.avatar.frame-dragon,.avatar-large.frame-dragon { border:3px solid #fb923c !important; box-shadow:0 0 0 3px #7c2d12,0 0 16px #ef4444; }.avatar.frame-royal,.avatar-large.frame-royal { border:3px solid #fbbf24 !important; box-shadow:0 0 0 4px #78350f,0 0 16px #fde68a; }
+
+/* Separate Shop/Quest menus and real crate PNG artwork. */
+#shop-modal .quest-area { display:none; }
+.quest-modal-card { width:min(600px,calc(100vw - 28px)); max-width:600px; background:linear-gradient(145deg,#101938,#26104a); color:#fff; border-color:#a855f7; }.quest-modal-card .shop-topline h2 { color:#fff; }.quest-modal-card .quest-list { grid-template-columns:repeat(3,1fr); }.quest-modal-card .gem-wallet { margin-bottom:6px; }
+.crate-card { position:relative; overflow:visible; }.crate-card .crate-icon { display:none; }.crate-card::before { content:''; display:block; width:150px; height:120px; margin:0 auto 5px; background-repeat:no-repeat; background-size:contain; background-position:center; filter:drop-shadow(0 7px 6px rgba(0,0,0,.38)); }.crate-card.common::before { background-image:url('assets/crate-common.png'); }.crate-card.rare::before { background-image:url('assets/crate-rare.png'); }.crate-card.epic::before { background-image:url('assets/crate-epic.png'); }
+.crate-info { position:absolute; top:8px; right:8px; width:24px; height:24px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.6); border-radius:50%; background:rgba(15,23,42,.82); color:#fff; font-size:13px; font-weight:800; z-index:3; cursor:pointer; }.crate-info:hover { background:#7c3aed; }.crate-info-popover { position:absolute; z-index:6; top:36px; right:0; width:190px; padding:10px; border:1px solid #c4b5fd; border-radius:10px; background:#111827; color:#fff; box-shadow:0 12px 24px rgba(0,0,0,.35); text-align:left; }.crate-info-popover strong { display:block; font-size:12px; margin-bottom:7px; color:#e9d5ff; }.crate-info-popover span { display:block; padding:3px 0; color:#dbeafe; font-size:11px; }
+.avatar.frame-rose-thorn,.avatar-large.frame-rose-thorn { border:3px solid hsl(0, 70%, 35%)!important; box-shadow:0 0 0 3px #1f0a0a,0 0 14px #ef4444; }.avatar.frame-butterfly,.avatar-large.frame-butterfly { border:3px solid #c084fc!important; box-shadow:0 0 0 3px #6d28d9,0 0 15px #ddd6fe; }.avatar.frame-starlight,.avatar-large.frame-starlight { border:3px solid #fbbf24!important; box-shadow:0 0 0 3px #fef3c7,0 0 15px #fde68a; }.avatar.frame-heart,.avatar-large.frame-heart { border:3px solid #fb7185!important; box-shadow:0 0 0 3px #fda4af,0 0 15px #fecdd3; }.avatar.frame-rainbow,.avatar-large.frame-rainbow { border:3px solid #a78bfa!important; box-shadow:0 0 0 3px #38bdf8,0 0 15px #f472b6; }.avatar.frame-pirate,.avatar-large.frame-pirate { border:3px solid #a16207!important; box-shadow:0 0 0 3px #451a03,0 0 15px #d97706; }.avatar.frame-autumn,.avatar-large.frame-autumn { border:3px solid #ea580c!important; box-shadow:0 0 0 3px #7c2d12,0 0 15px #fb923c; }.avatar.frame-moon,.avatar-large.frame-moon { border:3px solid #facc15!important; box-shadow:0 0 0 3px #1e3a8a,0 0 15px #93c5fd; }.avatar.frame-cat,.avatar-large.frame-cat { border:3px solid #111827!important; box-shadow:0 0 0 3px #f9a8d4,0 0 13px #f472b6; }.avatar.frame-candy,.avatar-large.frame-candy { border:3px solid #f472b6!important; box-shadow:0 0 0 3px #f9a8d4,0 0 15px #c084fc; }.avatar.frame-holiday,.avatar-large.frame-holiday { border:3px solid #dc2626!important; box-shadow:0 0 0 3px #16a34a,0 0 15px #facc15; }
+
+@media (max-width: 720px) {
+  body { display:block; min-height:100dvh; overflow:hidden; }
+  #app-screen { width:100vw; height:100dvh; max-height:none; border:0; border-radius:0; position:relative; }
+  .sidebar { position:absolute; z-index:20; inset:0 auto 0 0; width:min(88vw, 360px); box-shadow:12px 0 30px var(--shadow); transform:translateX(-105%); transition:transform .25s ease; }
+  #sidebar-resize-handle { display:none; }
+  #app-screen.sidebar-open .sidebar { transform:translateX(0); }
+  .main-chat { min-width:0; width:100%; }
+  .chat-header { padding:12px; gap:10px; }
+  #mobile-conversations { display:flex; width:38px; height:38px; flex:0 0 auto; } 
+  .messages-list { padding:12px; gap:12px; }
+  .chat-input { padding:10px; }
+  .input-row { gap:5px; }
+  .icon-btn { width:38px; height:38px; padding:0; }
+  #message-input { min-width:0; padding:10px; }
+  #send-btn { width:42px !important; height:42px; padding:0; background:#000; }  
+  .extension-card { min-width:0; max-width:calc(100vw - 66px); }
+  .pinned-messages-menu { width:min(280px, calc(100vw - 28px)); }
+  .smart-context-card { max-width:calc(100vw - 84px); margin-left:32px; margin-right:32px; }
+  .quest-list,.crate-grid { grid-template-columns:1fr; }.crate-card { min-height:92px; display:grid; grid-template-columns:50px 1fr; text-align:left; align-items:center; }.crate-card .crate-icon { grid-row:span 3; }.quest-shop { padding:18px; }
+  .quest-modal-card .quest-list { grid-template-columns:1fr; }.crate-card::before { width:90px; height:74px; margin:0; }
+  .modal .card { width:calc(100vw - 28px); padding:20px; }
+  .game-card { min-width:0; }
 }
 
-extensionHTML = function(message) { return message.extension?.type === 'game' ? gameHTML(message) : baseExtensionHTML(message); };
-updateExtension = function(msgId, action, value) { if (action === 'accept') return playGame(msgId, action, value); return baseUpdateExtension(msgId, action, value); };
-
-/* Reaction controls now require an intentional double-click. */
-const originalRenderMessages = renderMessages;
-renderMessages = function(forceScroll) {
-  originalRenderMessages(forceScroll);
-  document.querySelectorAll('.message').forEach(message => {
-    const existing = message.onclick; message.onclick = null;
-    message.ondblclick = event => { event.preventDefault(); const wrapper = message.closest('.message-wrapper'); const list = [...document.querySelectorAll('.message-wrapper')]; const index = list.indexOf(wrapper); const visible = DB.getMessages().filter(m => (m.sender === currentUser && m.receiver === activeFriend) || (m.sender === activeFriend && m.receiver === currentUser)); const msg = visible[index]; if (msg) toggleMsgPopover(event, msg.id); };
-  });
-};
-
-/* Quest Crates: all progress and rewards remain local to the signed-in profile. */
-const QUEST_DEFINITIONS = [
-  { metric:'messages', target:5, gems:10, label:'Send 5 messages' }, { metric:'messages', target:20, gems:25, label:'Send 20 messages' }, { metric:'messages', target:50, gems:50, label:'Send 50 messages' },
-  { metric:'images', target:1, gems:15, label:'Send 1 image' }, { metric:'images', target:5, gems:35, label:'Send 5 images' }, { metric:'images', target:15, gems:60, label:'Send 15 images' },
-  { metric:'reactions', target:5, gems:10, label:'React 5 times' }, { metric:'reactions', target:25, gems:30, label:'React 25 times' }, { metric:'reactions', target:75, gems:75, label:'React 75 times' }
-];
-const FRAME_NAMES = { 'frame-gold':'Golden Halo', 'frame-neon':'Neon Cyan', 'frame-rose':'Rose Quartz', 'frame-void':'Void Purple', 'frame-sakura':'Sakura Bloom', 'frame-ocean':'Ocean Wave', 'frame-cosmic':'Cosmic Glow', 'frame-sunflower':'Sunflower Ring', 'frame-ice':'Ice Crown', 'frame-dragon':'Dragon Flame', 'frame-royal':'Royal Laurel' };
-const CRATES = { common:{ cost:50, frames:['frame-sakura','frame-ocean','frame-sunflower'] }, rare:{ cost:120, frames:['frame-cosmic','frame-ice','frame-royal'] }, epic:{ cost:250, frames:['frame-dragon','frame-royal','frame-cosmic'] } };
-function questKey() { return `quest_crates_${currentUser}`; }
-function getQuestProfile() {
-  const fallback = { gems:0, stats:{messages:0,images:0,reactions:0}, claimed:[], inventory:['frame-gold','frame-neon','frame-rose','frame-void'] };
-  if (!currentUser) return fallback;
-  const saved = JSON.parse(localStorage.getItem(questKey()) || 'null') || fallback;
-  saved.stats = { ...fallback.stats, ...(saved.stats || {}) }; saved.claimed ||= []; saved.inventory ||= fallback.inventory;
-  const currentFrame = DB.getUsers()[currentUser]?.frame; if (currentFrame && !saved.inventory.includes(currentFrame)) saved.inventory.push(currentFrame);
-  return saved;
+/* Native-feeling phone layout — desktop rules remain untouched above. */
+@media (max-width: 720px) {
+  :root { --mobile-app-height: 100dvh; }
+  html, body { width:100%; min-width:0; height:100%; overflow:hidden; overscroll-behavior:none; }
+  body { min-height:var(--mobile-app-height); background:var(--bg-main); }
+  #auth-screen { width:calc(100% - 28px); max-width:440px; margin:0 auto; padding:24px 20px calc(24px + env(safe-area-inset-bottom)); }
+  #app-screen { width:100%; height:var(--mobile-app-height); min-height:0; max-height:none; border:0; border-radius:0; isolation:isolate; overflow:hidden; }
+  .main-chat { min-width:0; min-height:0; height:100%; }
+  .chat-header { min-width:0; min-height:58px; padding:9px max(12px, env(safe-area-inset-right)) 9px max(12px, env(safe-area-inset-left)); gap:8px; flex-shrink:0; }
+  .chat-header .user-profile-info { min-width:0; flex:1; gap:8px; } #chat-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .header-actions { flex:0 0 auto; gap:4px; }.header-actions .icon-btn, #mobile-conversations { width:42px; height:42px; min-width:42px; border-radius:12px; } #pinned-messages-btn { margin-right:0; }
+  .main-chat.hub-active .chat-header { min-height:72px; padding:10px 12px; }.hub-banner-info { gap:9px; }.hub-banner-icon { width:42px; height:42px; flex-basis:42px; }.hub-banner-name { font-size:16px; }.hub-banner-meta { font-size:11px; }
+  .messages-list { min-width:0; min-height:0; padding:12px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); gap:12px; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+  .message-body-row { max-width:88%; gap:6px; }.message { max-width:100%; padding:9px 11px; font-size:15px; line-height:1.38; }.message img.attachment-img { max-height:190px; }.extension-card, .game-card, .smart-context-card { min-width:0; max-width:100%; }.smart-context-card { margin:6px 30px 0; }
+  .typing-status { height:18px; padding:1px 14px; flex-shrink:0; }.chat-input { flex-shrink:0; padding:8px max(8px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); gap:6px; box-shadow:0 -4px 16px rgba(15,23,42,.06); }
+  .input-row { width:100%; display:grid; grid-template-columns:38px 38px 38px 38px minmax(0,1fr) 42px; gap:5px; }.chat-input .icon-btn, .chat-input label.icon-btn { width:38px; min-width:38px; height:42px; padding:0; border-radius:12px; }.chat-input input[type="text"] { min-width:0; width:100%; height:42px; padding:10px; font-size:16px; border-radius:12px; } #send-btn { width:42px !important; height:42px; padding:0 !important; border-radius:12px; font-size:12px; background:#000; }
+  .attachment-preview { min-width:0; padding:7px 9px; }.attachment-preview span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .emoji-picker, .extension-menu { position:fixed; z-index:900; left:8px; right:8px; bottom:calc(66px + env(safe-area-inset-bottom)); width:auto; max-width:none; max-height:min(45dvh,360px); border-radius:18px; padding:12px; box-shadow:0 -8px 30px rgba(15,23,42,.25); }.emoji-picker { grid-template-columns:repeat(6,1fr); }.emoji-picker span { min-height:38px; display:grid; place-items:center; }.extension-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.extension-option { min-height:48px; font-size:14px; }
+  .sidebar { z-index:1001; width:min(88vw,360px); height:var(--mobile-app-height); max-height:none; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); overflow-y:auto; overscroll-behavior:contain; border-right:1px solid var(--border); } #app-screen.sidebar-open::after { content:''; position:absolute; inset:0; z-index:1000; background:rgba(15,23,42,.38); backdrop-filter:blur(1px); } #app-screen.sidebar-open .sidebar { z-index:1002; transform:translateX(0); }
+  #sidebar-resize-handle { display:none; }
+  .sidebar-header { position:sticky; top:0; z-index:3; min-height:62px; padding:10px 12px; background:var(--bg-sidebar); }.sidebar-header .icon-btn { width:40px; height:40px; border-radius:12px; }.sidebar .section { padding:11px 12px; }.sidebar .section input, .sidebar .section button { min-height:42px; margin-bottom:8px; }.sidebar .item-list { max-height:none; overflow:visible; }.sidebar .item-list li { min-height:52px; padding:8px; margin-bottom:5px; }.hub-list-title { margin:4px 0 8px; }
+  .status-menu { position:fixed; top:calc(env(safe-area-inset-top) + 66px); left:12px; width:min(280px,calc(100vw - 24px)); z-index:1100; border-radius:14px; }.status-option { min-height:46px; font-size:14px; }
+  .quick-status-popover { position:fixed; top:calc(env(safe-area-inset-top) + 66px); left:12px; width:min(300px,calc(100vw - 24px)); z-index:1100; border-radius:16px; padding:14px; }.qsp-option { min-height:44px; font-size:14px; }.qsp-custom input[type="datetime-local"] { min-height:42px; font-size:14px; }.qsp-custom button { min-height:42px; }
+  .pinned-messages-menu { position:fixed; top:auto; right:8px; bottom:calc(66px + env(safe-area-inset-bottom)); width:calc(100vw - 16px); max-height:50dvh; border-radius:18px; z-index:950; }.pinned-message-item { min-height:54px; padding:10px; }
+  .msg-popover { position:fixed !important; display:flex !important; align-items:center !important; padding:6px 8px !important; gap:4px; border-radius:22px !important; box-shadow:0 6px 18px var(--shadow) !important; max-width:calc(100vw - 24px); z-index:970; }.message-wrapper.sent .msg-popover, .message-wrapper.received .msg-popover { left:auto; right:auto; }.popover-reactions { display:flex !important; align-items:center; gap:2px; padding-right:6px !important; }.popover-reactions span { box-sizing:border-box; min-width:32px; min-height:32px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:18px !important; line-height:1 !important; padding:0 !important; }.popover-btn, .pin-message-popover { box-sizing:border-box; min-width:32px !important; width:32px !important; height:32px !important; display:flex; align-items:center; justify-content:center; line-height:1; }.popover-dropdown { position:fixed; left:8px; right:8px; top:auto; bottom:calc(124px + env(safe-area-inset-bottom)); width:auto; border-radius:14px; z-index:970; }.popover-dropdown-item { min-height:48px; padding:13px 16px; font-size:14px; }
+  .modal { width:100%; height:var(--mobile-app-height); padding:0; align-items:flex-end; background:rgba(15,23,42,.52); }.modal .card, .modal .card.extension-dialog, .modal .card.quest-shop, .modal .card.quest-modal-card { width:100%; max-width:none; max-height:min(92dvh,760px) !important; margin:0; padding:20px max(16px,env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); border-radius:22px 22px 0 0; overflow-y:auto; box-shadow:0 -12px 36px rgba(15,23,42,.24); }.modal .card h2, .modal .card h3 { text-align:left; margin-bottom:14px; }.modal input, .modal select, .modal textarea { min-height:46px; font-size:16px; }.modal button { min-height:46px; font-size:14px; }.extension-dialog .dialog-actions { position:sticky; bottom:calc(-20px - env(safe-area-inset-bottom)); padding:10px 0 calc(2px + env(safe-area-inset-bottom)); background:var(--bg-card); }.hub-wizard-card { max-height:min(92dvh,760px) !important; }.hub-wizard-footer { position:sticky; bottom:calc(-20px - env(safe-area-inset-bottom)); padding:10px 0 calc(2px + env(safe-area-inset-bottom)); background:var(--bg-card); margin-top:10px; }
+  .hub-modal .card { max-width:none; }.hub-member-list { gap:7px; }.hub-member-chip { min-height:34px; font-size:13px; }.hub-member-chip button { min-height:24px; }.game-board { max-width:100%; }.chess-board { width:min(100%,300px); }.timer-display { font-size:25px; }
 }
-function saveQuestProfile(profile) { if (currentUser) localStorage.setItem(questKey(), JSON.stringify(profile)); }
-function rewardQuestProgress(metric, amount=1) {
-  if (!currentUser) return; const profile = getQuestProfile(); profile.stats[metric] += amount;
-  QUEST_DEFINITIONS.forEach(quest => { const key = `${quest.metric}-${quest.target}`; if (quest.metric === metric && profile.stats[metric] >= quest.target && !profile.claimed.includes(key)) { profile.claimed.push(key); profile.gems += quest.gems; } });
-  saveQuestProfile(profile); if (!document.getElementById('shop-modal').classList.contains('hidden')) renderQuestShop();
-}
-function openShop() { renderQuestShop(); document.getElementById('shop-modal').classList.remove('hidden'); }
-function closeShop() { document.getElementById('shop-modal').classList.add('hidden'); }
-function renderQuestShop() {
-  const profile = getQuestProfile(); document.getElementById('gem-balance').textContent = profile.gems;
-  const list = document.getElementById('quest-list'); list.innerHTML = '';
-  QUEST_DEFINITIONS.forEach(quest => { const done = profile.stats[quest.metric] >= quest.target; const card = document.createElement('div'); card.className = 'quest-card'; card.innerHTML = `<strong>${escapeHTML(quest.label)}</strong><small>${Math.min(profile.stats[quest.metric],quest.target)} / ${quest.target}${done ? ' · complete' : ''}</small><div class="quest-progress"><i style="width:${Math.min(100, profile.stats[quest.metric] / quest.target * 100)}%"></i></div><div class="quest-reward">💎 ${quest.gems} gems</div>`; list.appendChild(card); });
-  const inventory = document.getElementById('frame-inventory'); inventory.innerHTML = '';
-  const current = DB.getUsers()[currentUser]?.frame || '';
-  profile.inventory.forEach(frame => { const item = document.createElement('button'); item.className = `frame-choice ${current === frame ? 'active' : ''}`; item.textContent = FRAME_NAMES[frame] || frame; item.onclick = () => { changeProfileFrame(frame); renderQuestShop(); syncFrameSelect(); }; inventory.appendChild(item); });
-}
-function buyCrate(tier) {
-  const crate = CRATES[tier]; const profile = getQuestProfile(); if (profile.gems < crate.cost) return alert(`You need ${crate.cost - profile.gems} more gems for this crate.`);
-  profile.gems -= crate.cost; const available = crate.frames.filter(frame => !profile.inventory.includes(frame)); const duplicateReward = !available.length;
-  const reward = (available.length ? available : crate.frames)[Math.floor(Math.random() * (available.length ? available.length : crate.frames.length))];
-  if (!profile.inventory.includes(reward)) profile.inventory.push(reward); else profile.gems += Math.ceil(crate.cost * .2);
-  saveQuestProfile(profile); const result = document.getElementById('crate-result'); result.innerHTML = duplicateReward ? `✨ Duplicate <strong>${FRAME_NAMES[reward]}</strong> converted to bonus gems.` : `✨ Crate opened! You unlocked <strong>${FRAME_NAMES[reward]}</strong>.`; result.classList.remove('hidden'); result.classList.add('show'); renderQuestShop(); syncFrameSelect();
-}
-function syncFrameSelect() {
-  const select = document.getElementById('frame-select'); if (!select || !currentUser) return; const current = DB.getUsers()[currentUser]?.frame || ''; const profile = getQuestProfile();
-  Object.entries(FRAME_NAMES).forEach(([frame,name]) => { let option = [...select.options].find(item => item.value === frame); if (!option && profile.inventory.includes(frame)) { option = document.createElement('option'); option.value = frame; option.textContent = name; select.appendChild(option); } if (option) option.disabled = !profile.inventory.includes(frame); });
-  select.value = current;
-}
-const openSettingsWithFrames = openSettings;
-openSettings = function() { openSettingsWithFrames(); syncFrameSelect(); };
-const sendMessageWithQuests = sendMessage;
-sendMessage = function() { const text = document.getElementById('message-input')?.value.trim(); const attachment = currentAttachment; const newMessage = !editingMsgId && activeFriend && (text || attachment); sendMessageWithQuests(); if (newMessage) { rewardQuestProgress('messages'); if (attachment?.type === 'image') rewardQuestProgress('images'); } };
-const reactToMessageWithQuests = reactToMsg;
-reactToMsg = function(messageId, emoji) { const message = DB.getMessages().find(m => m.id === messageId); const isNewReaction = message && !message.reactions?.[currentUser]; reactToMessageWithQuests(messageId, emoji); if (isNewReaction) rewardQuestProgress('reactions'); };
+@media (max-width: 360px) { .input-row { grid-template-columns:34px 34px 34px 34px minmax(0,1fr) 38px; gap:3px; }.chat-input .icon-btn, .chat-input label.icon-btn { width:34px; min-width:34px; }.header-actions .icon-btn, #mobile-conversations { width:38px; min-width:38px; height:38px; }.chat-header { padding-left:8px; padding-right:8px; }.message-body-row { max-width:92%; } #send-btn { width:38px !important; height:38px; } }
 
-/* Keep Quests separate from the crate shop, with transparent crate rewards. */
-Object.assign(FRAME_NAMES, { 'frame-rose-thorn':'Rose Thorn', 'frame-butterfly':'Butterfly Glow', 'frame-starlight':'Starlight Ring', 'frame-heart':'Heart Halo', 'frame-rainbow':'Rainbow Cloud', 'frame-pirate':'Pirate Wheel', 'frame-autumn':'Autumn Leaves', 'frame-moon':'Moonlit Sky', 'frame-cat':'Cat Paws', 'frame-candy':'Candy Pop', 'frame-holiday':'Holiday Wreath' });
-CRATES.common.frames.push('frame-sakura','frame-sunflower','frame-heart','frame-autumn');
-CRATES.rare.frames.push('frame-ocean','frame-butterfly','frame-ice','frame-rainbow','frame-cat');
-CRATES.epic.frames.push('frame-cosmic','frame-dragon','frame-royal','frame-rose-thorn','frame-starlight','frame-pirate','frame-moon','frame-candy','frame-holiday');
-const CRATE_PREVIEWS = { common:['Sakura Bloom','Sunflower Ring','Heart Halo','Autumn Leaves'], rare:['Ocean Wave','Butterfly Glow','Ice Crown','Rainbow Cloud','Cat Paws'], epic:['Cosmic Glow','Dragon Flame','Royal Laurel','Rose Thorn','Starlight Ring','Pirate Wheel','Moonlit Sky','Candy Pop','Holiday Wreath'] };
-function buildQuestMenu() {
-  if (document.getElementById('quest-modal')) return;
-  document.body.insertAdjacentHTML('beforeend', '<div id="quest-modal" class="modal hidden"><div class="card quest-modal-card"><div class="shop-topline"><div><span class="shop-kicker">QUESTS</span><h2>Complete actions. Earn gems.</h2></div><button class="icon-btn" onclick="closeQuestMenu()" title="Close quests">×</button></div><div class="gem-wallet">💎 <strong id="quest-gem-balance">0</strong><span>Gems</span></div><div class="quest-area"><h3>Active quests</h3><div id="quest-list-standalone" class="quest-list"></div></div></div></div>');
-  const toolbar = document.querySelector('.sidebar-header > div[style*="display:flex"]');
-  if (toolbar) { const button = document.createElement('button'); button.className = 'icon-btn'; button.title = 'Quests'; button.textContent = '📋'; button.onclick = openQuestMenu; toolbar.insertBefore(button, toolbar.firstChild); }
-  document.querySelectorAll('.crate-card').forEach(card => { const tier = [...card.classList].find(name => CRATE_PREVIEWS[name]); if (!tier || card.querySelector('.crate-info')) return; const info = document.createElement('span'); info.className = 'crate-info'; info.textContent = '?'; info.title = 'View possible rewards'; info.onclick = event => showCrateInfo(tier, event); card.appendChild(info); });
+/* Hub-media safety net: uploaded art stays within its intended UI surface. */
+@media (min-width: 721px) { #mobile-conversations { display:none !important; } }
+/* Back arrow (DMs and Hubs): returns to the home state. Hidden while home itself is showing;
+   .is-home is kept in sync on #chat-header by initHomeHeader() in script.js. */
+/* Sizes mirror the neighbouring buttons: 38px like the header action buttons on desktop,
+   42px / 38px like the existing ☰ button on phones. .chat-header prefix outranks the inline .icon-btn rule. */
+.chat-header .chat-back-btn { flex:0 0 auto; width:38px; min-width:38px; height:38px; }
+.chat-header.is-home .chat-back-btn { display:none; }
+@media (max-width: 720px) { .chat-header .chat-back-btn { width:42px; min-width:42px; height:42px; } }
+@media (max-width: 360px) { .chat-header .chat-back-btn { width:38px; min-width:38px; height:38px; } }
+.main-chat, .chat-header, .messages-list, .hub-row, .hub-row .user-profile-info { min-width:0; }
+.messages-list { overflow-x:hidden; }
+.hub-row { max-width:100%; overflow:hidden; }
+.hub-row .user-profile-info { width:100%; max-width:100%; overflow:hidden; }
+.hub-row .hub-icon { display:block; flex:0 0 34px; width:34px !important; height:34px !important; min-width:34px; max-width:34px; max-height:34px; object-fit:cover; overflow:hidden; }
+.hub-row .user-profile-info > div:last-child, .hub-banner-copy { min-width:0; overflow:hidden; }
+.hub-row span, .hub-row small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hub-banner-info { overflow:hidden; }
+.hub-banner-icon { display:block; flex:0 0 44px; width:44px !important; height:44px !important; min-width:44px; max-width:44px; max-height:44px; object-fit:cover; overflow:hidden; }
+.hub-banner-icon.fallback { display:grid; }
+.main-chat.hub-active .chat-header { align-items:center; gap:12px; }
+.main-chat.hub-active .hub-banner-info { flex:1 1 auto; }
+.main-chat.hub-active .header-actions { flex:0 0 auto; margin-left:auto; }
+.main-chat.hub-active .chat-header[style*="background-image"] .hub-banner-name,
+.main-chat.hub-active .chat-header[style*="background-image"] .hub-banner-meta { color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.65); }
+.hub-chat-bg { background-repeat:no-repeat !important; }
+.avatar, .avatar-large { display:block; object-fit:cover; }
+
+/* Premium chat polish. Hub headers are deliberately excluded. */
+.main-chat:not(.hub-active) .chat-header {
+  min-height:72px;
+  margin:12px 14px 0;
+  padding:11px 16px;
+  border:1px solid color-mix(in srgb, var(--border) 84%, transparent);
+  border-radius:20px;
+  background:color-mix(in srgb, var(--bg-card) 92%, transparent);
+  box-shadow:0 9px 24px rgba(15,23,42,.08), inset 0 1px rgba(255,255,255,.5);
 }
-const renderQuestShopWithSeparateMenu = renderQuestShop;
-renderQuestShop = function() { renderQuestShopWithSeparateMenu(); const standalone = document.getElementById('quest-list-standalone'); const original = document.getElementById('quest-list'); const gems = document.getElementById('quest-gem-balance'); if (standalone && original) standalone.innerHTML = original.innerHTML; if (gems) gems.textContent = getQuestProfile().gems; };
-function openQuestMenu() { renderQuestShop(); document.getElementById('quest-modal').classList.remove('hidden'); }
-function closeQuestMenu() { document.getElementById('quest-modal').classList.add('hidden'); }
-function showCrateInfo(tier, event) { event.preventDefault(); event.stopPropagation(); document.querySelectorAll('.crate-info-popover').forEach(menu => menu.remove()); const menu = document.createElement('div'); menu.className = 'crate-info-popover'; menu.innerHTML = `<strong>Possible ${tier} rewards</strong>${CRATE_PREVIEWS[tier].map(name => `<span>✦ ${name}</span>`).join('')}`; event.currentTarget.parentElement.appendChild(menu); }
-/* Quest Crates is paused. Its UI is not initialized. */
-sendMessage = sendMessageWithQuests;
-reactToMsg = reactToMessageWithQuests;
-openSettings = openSettingsWithFrames;
+.main-chat:not(.hub-active) .chat-header .user-profile-info { min-width:0; gap:12px; }
+.main-chat:not(.hub-active) .chat-header .avatar-container {
+  padding:2px;
+  border-radius:50%;
+  background:linear-gradient(145deg, color-mix(in srgb, var(--primary) 70%, white), var(--primary));
+  box-shadow:0 5px 13px color-mix(in srgb, var(--primary) 26%, transparent);
+}
+.main-chat:not(.hub-active) .chat-header .avatar { border:2px solid var(--bg-card); }
+.main-chat:not(.hub-active) #chat-title { letter-spacing:-.01em; font-size:16px; }
+.main-chat:not(.hub-active) .chat-header .header-actions .icon-btn {
+  border-radius:13px;
+  box-shadow:inset 0 1px rgba(255,255,255,.45);
+}
 
-/* Hubs: local group chats with invitations and member controls. */
-let activeHub = null;
-let hubCreationInProgress = false;
-const directSendMessage = sendMessage;
-function getHubs() { return JSON.parse(localStorage.getItem('hubs_data') || '[]'); }
+.message {
+  border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow:0 4px 12px rgba(15,23,42,.07);
+  transition:transform .16s ease, box-shadow .16s ease;
+}
+.message:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(15,23,42,.11); }
+.message.sent { border-top-right-radius:16px; box-shadow:0 5px 14px color-mix(in srgb, var(--primary) 17%, transparent); }
+.message.received { border-top-left-radius:16px; }
+.message .attachment-img { border-radius:11px; box-shadow:0 3px 9px rgba(15,23,42,.14); }
 
-// --- Firestore Hub sync bookkeeping -----------------------------------
-// Same diff-and-mirror pattern used for DMs (see DB.saveMessages in
-// index.html): lastSyncedHubs is the last array we mirrored to/from
-// Firestore; applyingRemoteHubData guards against re-pushing a snapshot
-// that just came FROM Firestore back into Firestore.
-let lastSyncedHubs = [];
-let applyingRemoteHubData = false;
+/* Message composers: an outer floating pill with a separate typing-field pill. */
+.main-chat.hub-active .chat-input,
+.main-chat:not(.hub-active) .chat-input {
+  margin:10px 14px 14px;
+  padding:9px 10px;
+  border:1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius:999px;
+  background:color-mix(in srgb, var(--bg-card) 94%, transparent);
+  box-shadow:0 12px 28px rgba(15,23,42,.18), inset 0 1px rgba(255,255,255,.48);
+}
+.main-chat.hub-active .chat-input .input-row,
+.main-chat:not(.hub-active) .chat-input .input-row { gap:7px; }
+.main-chat.hub-active .chat-input .icon-btn,
+.main-chat.hub-active .chat-input label.icon-btn,
+.main-chat:not(.hub-active) .chat-input .icon-btn,
+.main-chat:not(.hub-active) .chat-input label.icon-btn {
+  border-radius:16px;
+  border-color:transparent;
+  box-shadow:inset 0 1px rgba(255,255,255,.45);
+}
+.main-chat.hub-active .chat-input input[type="text"],
+.main-chat:not(.hub-active) .chat-input input[type="text"] {
+  min-width:0;
+  border:0;
+  border-radius:999px;
+  background:color-mix(in srgb, var(--input-bg) 84%, var(--bg-card));
+  box-shadow:inset 0 1px 3px rgba(15,23,42,.08);
+}
+.main-chat.hub-active #send-btn,
+.main-chat:not(.hub-active) #send-btn {
+  min-width:50px;
+  border-radius:17px;
+  background:linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 68%, #8b5cf6));
+  box-shadow:0 7px 14px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+.main-chat.hub-active .attachment-preview,
+.main-chat:not(.hub-active) .attachment-preview { margin:0 4px; border-radius:16px; }
 
-function saveHubs(hubs) {
-  localStorage.setItem('hubs_data', JSON.stringify(hubs));
-  if (!applyingRemoteHubData && typeof window.syncHubsToFirestore === 'function') {
-    window.syncHubsToFirestore(lastSyncedHubs, hubs);
+@media (max-width:720px) {
+  .main-chat:not(.hub-active) .chat-header {
+    min-height:62px;
+    margin:8px 8px 0;
+    padding:8px 11px;
+    border-radius:17px;
   }
-  lastSyncedHubs = hubs;
-}
-
-// Bridges the real-time Firestore Hub listener (see window.subscribeToHub
-// in the Firebase module script) into the existing local `hubs_data` store,
-// so renderHubMessages(), search, and everything else keep working
-// unchanged — they just see other members' messages instantly.
-window.mergeRemoteHubMessages = function (hubId, remoteMessages) {
-  applyingRemoteHubData = true;
-  try {
-    const hubs = getHubs();
-    const hub = hubs.find(h => h.id === hubId);
-    if (hub) {
-      hub.messages = remoteMessages.slice().sort((a, b) => a.id - b.id);
-      saveHubs(hubs);
-    }
-  } finally {
-    applyingRemoteHubData = false;
+  .main-chat:not(.hub-active) .chat-header .user-profile-info { gap:9px; }
+  .main-chat:not(.hub-active) #chat-title { font-size:15px; }
+  .message { box-shadow:0 3px 9px rgba(15,23,42,.08); }
+  .message:hover { transform:none; }
+  .main-chat.hub-active .chat-input,
+  .main-chat:not(.hub-active) .chat-input {
+    margin:8px 8px calc(8px + env(safe-area-inset-bottom));
+    padding:6px;
+    border-radius:26px;
   }
-  if (activeHub === hubId) renderHubMessages(false);
-};
-
-function hubById(id) { return getHubs().find(hub => hub.id === id); }
-// Modular Smart Hub Feature check: works for any Hub type/category, since it
-// only ever reads the same hub.features array the creation wizard already
-// writes. Adding a new toggleable feature anywhere just means adding its
-// label to that category's HUB_CATEGORY_FEATURES entry — no other code here
-// needs to change to support it.
-function hubHasFeature(hub, featureName) { return !!(hub && Array.isArray(hub.features) && hub.features.includes(featureName)); }
-function safeHubText(value='') { const el = document.createElement('div'); el.textContent = value; return el.innerHTML; }
-function hubImageSource(value) {
-  if (typeof value !== 'string') return '';
-  const source = value.trim();
-  return /^(?:data:image\/(?:png|jpe?g|webp|gif);base64,|https?:\/\/)/i.test(source) ? source : '';
-}
-/* Hub creation wizard: 7-step guided flow. Data lives in `hubWizard` until the
-   final step commits a single Hub object — no partial/recommended Hubs are ever created. */
-const HUB_CATEGORIES = [
-  { id:'gaming', label:'Gaming', emoji:'🎮' },
-  { id:'study', label:'Study/Productivity', emoji:'📚' },
-  { id:'creator', label:'Creator', emoji:'🎨' },
-  { id:'coding', label:'Coding/Tech', emoji:'💻' },
-  { id:'music', label:'Music', emoji:'🎵' },
-  { id:'sports', label:'Sports', emoji:'🏆' },
-  { id:'community', label:'Community', emoji:'🌐' },
-  { id:'other', label:'Other', emoji:'✨' }
-];
-const HUB_CATEGORY_FEATURES = {
-  gaming: ['LFG board', 'Match schedule', 'Voice hangout callouts', 'Leaderboard'],
-  study: ['Study sessions', 'Shared resources', 'Assignment tracker', 'Focus timer', '📝 Quiz Maker', '📅 Events', '🖊️ Whiteboard'],
-  creator: ['Showcase feed', 'Feedback threads', 'Collab board', 'Release calendar'],
-  coding: ['Code snippet sharing', 'Bug tracker', 'Pair programming board', 'Changelog'],
-  music: ['Now playing', 'Setlist board', 'Jam session planner', 'Release drops'],
-  sports: ['Match schedule', 'Score tracker', 'Team roster', 'Fan chat'],
-  community: ['Announcements', 'Events calendar', 'Welcome board', 'Polls & feedback'],
-  other: ['Announcements', 'Shared resources', 'Events calendar', 'General chat']
-};
-const HUB_ACCENTS = ['#2563eb', '#8b5cf6', '#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#ec4899', '#64748b'];
-const HUB_WIZARD_STEP_NAMES = ['Identity', 'Category', 'Experience', 'Permissions', 'Appearance', 'Hub Context', 'Review'];
-let hubWizard = null;
-let hubWizardStep = 1;
-function hubWizardEsc(value = '') { return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-function freshHubWizard() { return { icon:'', banner:'', background:'', name:'', description:'', category:'', features:[], permissions:{ messaging:'everyone', invites:'owner', activities:true, management:'owner' }, accent:'', primaryContext:'' }; }
-function addHubModals() {
-  if (document.getElementById('hub-create-modal')) return;
-  document.body.insertAdjacentHTML('beforeend', `<div id="hub-create-modal" class="modal hidden hub-modal"><div class="card hub-wizard-card"><div class="hub-wizard-head"><div><div class="hub-wizard-kicker" id="hub-wizard-kicker">Step 1 of 7</div><h3 id="hub-wizard-title">Identity</h3></div><button type="button" class="icon-btn hub-wizard-close" onclick="closeHubModal('hub-create-modal')" title="Cancel" aria-label="Cancel">×</button></div><div class="hub-wizard-progress" id="hub-wizard-progress" role="list" aria-label="Hub creation steps"></div><div class="hub-wizard-body" id="hub-wizard-body"></div><div class="hub-wizard-footer" id="hub-wizard-footer"></div></div></div><div id="hub-settings-modal" class="modal hidden hub-modal"><div class="card"><h3>Hub settings</h3><label class="hub-form-label">Name</label><input id="hub-edit-name"><label class="hub-form-label">Description</label><textarea id="hub-edit-description"></textarea><label class="hub-form-label">Invite member</label><div class="input-row"><input id="hub-add-member" placeholder="Username"><button onclick="inviteToHub()">Invite</button></div><button type="button" class="secondary" onclick="copyHubInviteLink(activeHub)">Copy invite link</button><label class="hub-form-label">Members</label><div id="hub-members" class="hub-member-list"></div><button onclick="saveHubSettings()">Save changes</button><button class="secondary" onclick="closeHubModal('hub-settings-modal')">Close</button></div></div>`);
-}
-function closeHubModal(id) { document.getElementById(id).classList.add('hidden'); }
-function fileAsData(inputId, done) { const file = document.getElementById(inputId)?.files[0]; if (!file) return done(''); if (!file.type.startsWith('image/') || file.size > 900 * 1024) { alert('Use a PNG, JPG, or WebP image under 900 KB for Hub images.'); hubCreationInProgress = false; return; } const reader = new FileReader(); reader.onerror = () => { hubCreationInProgress = false; alert('That image could not be read.'); }; reader.onload = e => done(e.target.result); reader.readAsDataURL(file); }
-function openHubCreator() {
-  addHubModals();
-  const modal = document.getElementById('hub-create-modal');
-  if (!modal) return alert('Hub creator could not load. Please refresh the page once.');
-  hubWizard = freshHubWizard();
-  hubWizardStep = 1;
-  hubWizardRender();
-  modal.classList.remove('hidden');
-}
-function hubWizardImagePreview(value, kind) {
-  if (!value) return `<span class="hub-image-preview-empty">${kind === 'round' ? 'No icon' : 'No image'}</span>`;
-  return `<img src="${value}" alt="">`;
-}
-function hubWizardRenderProgress() {
-  const bar = document.getElementById('hub-wizard-progress');
-  if (!bar) return;
-  bar.innerHTML = HUB_WIZARD_STEP_NAMES.map((label, index) => {
-    const num = index + 1, state = num < hubWizardStep ? 'done' : (num === hubWizardStep ? 'active' : '');
-    return `<div class="hub-wizard-dot ${state}" role="listitem" aria-current="${num === hubWizardStep}" title="${hubWizardEsc(label)}"><span>${num < hubWizardStep ? '✓' : num}</span></div>`;
-  }).join('<div class="hub-wizard-line"></div>');
-}
-function hubWizardStepHTML(step) {
-  const w = hubWizard;
-  if (step === 1) {
-    return `<div class="hub-wizard-avatar-row"><div class="hub-image-preview hub-image-preview-round">${hubWizardImagePreview(w.icon, 'round')}</div><div class="hub-wizard-avatar-field"><label class="hub-form-label">Hub icon (optional)</label><input id="hub-icon-file" type="file" accept="image/png,image/jpeg,image/webp" onchange="hubWizardReadImage(this,'icon')"></div></div><label class="hub-form-label">Hub name</label><input id="hub-name" placeholder="Study Squad" value="${hubWizardEsc(w.name)}" oninput="hubWizard.name=this.value"><label class="hub-form-label">Description</label><textarea id="hub-description" placeholder="What is this hub for?" oninput="hubWizard.description=this.value">${hubWizardEsc(w.description)}</textarea><label class="hub-form-label">Header banner (optional)</label><div class="hub-image-preview hub-image-preview-banner">${hubWizardImagePreview(w.banner, 'banner')}</div><input id="hub-banner-file" type="file" accept="image/png,image/jpeg,image/webp" onchange="hubWizardReadImage(this,'banner')">`;
-  }
-  if (step === 2) {
-    return `<p class="hub-wizard-help">Pick the category that best fits this Hub — it shapes which features we suggest next.</p><div class="hub-category-grid">${HUB_CATEGORIES.map(c => `<button type="button" class="hub-category-card${w.category === c.id ? ' selected' : ''}" onclick="hubWizardSelectCategory('${c.id}')"><span class="hub-category-emoji">${c.emoji}</span><span>${hubWizardEsc(c.label)}</span></button>`).join('')}</div>`;
-  }
-  if (step === 3) {
-    const options = HUB_CATEGORY_FEATURES[w.category] || HUB_CATEGORY_FEATURES.other;
-    const label = HUB_CATEGORIES.find(c => c.id === w.category)?.label || 'this';
-    const smartBanner = w.category === 'study' ? `<div class="smart-hub-banner"><span class="smart-hub-corner-icon" aria-hidden="true">✦</span><strong class="smart-hub-title">Looks like a Study Hub ✦</strong><p class="smart-hub-sub">We've suggested a few features to help shape your Hub. You're in control.</p></div>` : '';
-    return `${smartBanner}<p class="hub-wizard-help">Turn on the Hub features that fit a ${hubWizardEsc(label)} community. You can change these later in Hub settings.</p><div class="hub-feature-list">${options.map(f => `<label class="hub-feature-chip"><span class="hub-feature-chip-label">${hubWizardEsc(f)}</span><span class="hub-toggle"><input type="checkbox" ${w.features.includes(f) ? 'checked' : ''} onchange="hubWizardToggleFeature('${hubWizardEsc(f)}', this.checked)"><span class="hub-toggle-track"><span class="hub-toggle-thumb"></span></span></span></label>`).join('')}</div>`;
-  }
-  if (step === 4) {
-    const p = w.permissions;
-    return `<div class="hub-permission-group"><div class="hub-permission-title">Who can send messages?</div><label class="hub-permission-option"><input type="radio" name="hw-msg" ${p.messaging === 'everyone' ? 'checked' : ''} onchange="hubWizardSetPermission('messaging','everyone')"><span>Everyone in the Hub</span></label><label class="hub-permission-option"><input type="radio" name="hw-msg" ${p.messaging === 'owner' ? 'checked' : ''} onchange="hubWizardSetPermission('messaging','owner')"><span>Only the owner (announcements)</span></label></div><div class="hub-permission-group"><div class="hub-permission-title">Who can invite members?</div><label class="hub-permission-option"><input type="radio" name="hw-invite" ${p.invites === 'owner' ? 'checked' : ''} onchange="hubWizardSetPermission('invites','owner')"><span>Only the owner</span></label><label class="hub-permission-option"><input type="radio" name="hw-invite" ${p.invites === 'members' ? 'checked' : ''} onchange="hubWizardSetPermission('invites','members')"><span>Any member</span></label></div><div class="hub-permission-group"><div class="hub-permission-title">Activities</div><label class="hub-permission-option"><input type="checkbox" ${p.activities ? 'checked' : ''} onchange="hubWizardSetPermission('activities', this.checked)"><span>Allow games &amp; activities in this Hub</span></label></div><div class="hub-permission-group"><div class="hub-permission-title">Who can manage this Hub?</div><label class="hub-permission-option"><input type="radio" name="hw-manage" ${p.management === 'owner' ? 'checked' : ''} onchange="hubWizardSetPermission('management','owner')"><span>Only the owner</span></label><label class="hub-permission-option"><input type="radio" name="hw-manage" ${p.management === 'members' ? 'checked' : ''} onchange="hubWizardSetPermission('management','members')"><span>All members</span></label></div>`;
-  }
-  if (step === 5) {
-    return `<label class="hub-form-label">Icon</label><div class="hub-image-preview hub-image-preview-round">${hubWizardImagePreview(w.icon, 'round')}</div><input id="hub-icon-file-2" type="file" accept="image/png,image/jpeg,image/webp" onchange="hubWizardReadImage(this,'icon')"><label class="hub-form-label">Header banner</label><div class="hub-image-preview hub-image-preview-banner">${hubWizardImagePreview(w.banner, 'banner')}</div><input id="hub-banner-file-2" type="file" accept="image/png,image/jpeg,image/webp" onchange="hubWizardReadImage(this,'banner')"><label class="hub-form-label">Chat background</label><div class="hub-image-preview hub-image-preview-banner">${hubWizardImagePreview(w.background, 'banner')}</div><input id="hub-bg-file" type="file" accept="image/png,image/jpeg,image/webp" onchange="hubWizardReadImage(this,'background')"><label class="hub-form-label">Hub accent theme</label><div class="hub-accent-grid">${HUB_ACCENTS.map(hex => `<button type="button" class="hub-accent-swatch${w.accent === hex ? ' selected' : ''}" style="--accent-color:${hex}" onclick="hubWizardSelectAccent('${hex}')" aria-label="Accent ${hex}"></button>`).join('')}</div>`;
-  }
-  if (step === 6) {
-    return `<p class="hub-wizard-help">Optional. Give members quick context — goals, rules, or what belongs here.</p><label class="hub-form-label">Primary Context</label><textarea id="hub-context" placeholder="e.g. This Hub is for our Calc II study group. Share notes, ask questions, keep it kind." oninput="hubWizard.primaryContext=this.value">${hubWizardEsc(w.primaryContext)}</textarea>`;
-  }
-  const category = HUB_CATEGORIES.find(c => c.id === w.category);
-  const p = w.permissions;
-  return `<div class="hub-review-block"><div class="hub-review-heading">Identity</div><div class="hub-review-identity"><div class="hub-image-preview hub-image-preview-round hub-image-preview-small">${hubWizardImagePreview(w.icon, 'round')}</div><div><strong>${hubWizardEsc(w.name || 'Untitled Hub')}</strong><p>${hubWizardEsc(w.description || 'No description yet.')}</p></div></div></div><div class="hub-review-block"><div class="hub-review-heading">Category</div><div>${category ? `${category.emoji} ${hubWizardEsc(category.label)}` : 'Not set'}</div></div><div class="hub-review-block"><div class="hub-review-heading">Experience</div><div class="hub-review-chips">${w.features.length ? w.features.map(f => `<span class="hub-review-chip">${hubWizardEsc(f)}</span>`).join('') : '<span class="hub-wizard-help">No features selected.</span>'}</div></div><div class="hub-review-block"><div class="hub-review-heading">Permissions</div><ul class="hub-review-list"><li>Messaging: ${p.messaging === 'owner' ? 'Owner only' : 'Everyone'}</li><li>Invites: ${p.invites === 'members' ? 'Any member' : 'Owner only'}</li><li>Activities: ${p.activities ? 'Enabled' : 'Disabled'}</li><li>Management: ${p.management === 'members' ? 'All members' : 'Owner only'}</li></ul></div><div class="hub-review-block"><div class="hub-review-heading">Appearance</div><div class="hub-review-appearance"><div class="hub-image-preview hub-image-preview-round hub-image-preview-small">${hubWizardImagePreview(w.icon, 'round')}</div><div class="hub-image-preview hub-image-preview-banner hub-image-preview-small">${hubWizardImagePreview(w.banner, 'banner')}</div><div class="hub-image-preview hub-image-preview-banner hub-image-preview-small">${hubWizardImagePreview(w.background, 'banner')}</div><span class="hub-accent-swatch small" style="--accent-color:${w.accent || 'var(--primary)'}"></span></div></div><div class="hub-review-block"><div class="hub-review-heading">Hub Context</div><p>${hubWizardEsc(w.primaryContext || 'No additional context added.')}</p></div>`;
-}
-function hubWizardRenderFooter() {
-  const footer = document.getElementById('hub-wizard-footer');
-  if (!footer) return;
-  const back = hubWizardStep > 1 ? `<button type="button" class="secondary" onclick="hubWizardBack()">Back</button>` : `<button type="button" class="secondary" onclick="closeHubModal('hub-create-modal')">Cancel</button>`;
-  const forward = hubWizardStep < HUB_WIZARD_STEP_NAMES.length ? `<button type="button" onclick="hubWizardNext()">Continue</button>` : `<button type="button" onclick="hubWizardFinish()">Create Hub</button>`;
-  footer.innerHTML = `<div class="hub-wizard-footer-inner">${back}${forward}</div>`;
-}
-function hubWizardRender() {
-  hubWizardRenderProgress();
-  const kicker = document.getElementById('hub-wizard-kicker'), title = document.getElementById('hub-wizard-title'), body = document.getElementById('hub-wizard-body');
-  if (kicker) kicker.textContent = `Step ${hubWizardStep} of ${HUB_WIZARD_STEP_NAMES.length}`;
-  if (title) title.textContent = HUB_WIZARD_STEP_NAMES[hubWizardStep - 1];
-  if (body) body.innerHTML = hubWizardStepHTML(hubWizardStep);
-  hubWizardRenderFooter();
-}
-function hubWizardReadImage(inputEl, key) {
-  const file = inputEl.files[0];
-  if (!file) return;
-  if (!file.type.startsWith('image/') || file.size > 900 * 1024) { alert('Use a PNG, JPG, or WebP image under 900 KB for Hub images.'); inputEl.value = ''; return; }
-  const reader = new FileReader();
-  reader.onerror = () => alert('That image could not be read.');
-  reader.onload = e => { hubWizard[key] = e.target.result; hubWizardRender(); };
-  reader.readAsDataURL(file);
-}
-function hubWizardSelectCategory(id) { hubWizard.category = id; hubWizard.features = (HUB_CATEGORY_FEATURES[id] || []).slice(0, 2); hubWizardRender(); }
-function hubWizardToggleFeature(name, checked) { const set = new Set(hubWizard.features); if (checked) set.add(name); else set.delete(name); hubWizard.features = Array.from(set); }
-function hubWizardSetPermission(key, value) { hubWizard.permissions[key] = value; }
-function hubWizardSelectAccent(hex) { hubWizard.accent = hubWizard.accent === hex ? '' : hex; hubWizardRender(); }
-function hubWizardGoTo(step) { hubWizardStep = step; hubWizardRender(); }
-function hubWizardNext() {
-  if (hubWizardStep === 1 && !hubWizard.name.trim()) return alert('Give your Hub a name.');
-  if (hubWizardStep === 2 && !hubWizard.category) return alert('Choose a category for your Hub.');
-  if (hubWizardStep < HUB_WIZARD_STEP_NAMES.length) { hubWizardStep += 1; hubWizardRender(); }
-}
-function hubWizardBack() { if (hubWizardStep > 1) { hubWizardStep -= 1; hubWizardRender(); } }
-function hubWizardFinish() {
-  if (hubCreationInProgress) return;
-  if (!hubWizard.name.trim()) { hubWizardGoTo(1); return alert('Give your Hub a name.'); }
-  if (!hubWizard.category) { hubWizardGoTo(2); return alert('Choose a category for your Hub.'); }
-  hubCreationInProgress = true;
-  const hubs = getHubs();
-  const category = HUB_CATEGORIES.find(c => c.id === hubWizard.category);
-  const hub = {
-    id: Date.now(), name: hubWizard.name.trim(), description: hubWizard.description.trim(),
-    type: category ? category.label : 'Other', category: hubWizard.category,
-    owner: currentUser, members: [currentUser], invites: [],
-    icon: hubWizard.icon, background: hubWizard.background, banner: hubWizard.banner, accent: hubWizard.accent,
-    features: hubWizard.features.slice(), permissions: { ...hubWizard.permissions },
-    primaryContext: hubWizard.primaryContext.trim(), messages: []
-  };
-  hubs.push(hub);
-  try { saveHubs(hubs); } catch (error) { hubCreationInProgress = false; return alert('Hub storage is full. Choose smaller images or remove an old Hub.'); }
-  hubCreationInProgress = false;
-  closeHubModal('hub-create-modal');
-  selectHub(hub.id);
-}
-const createHub = hubWizardFinish;
-function selectHub(id) {
-  const hub = hubById(id); if (!hub || !hub.members.includes(currentUser)) return;
-  const icon = hubImageSource(hub.icon), headerImage = hubImageSource(hub.banner), chatImage = hubImageSource(hub.background);
-  activeHub = id; activeFriend = null; ensureHubBanner(); const accentStyle = hub.accent ? ` style="--hub-accent:${hub.accent}"` : ''; const banner = document.getElementById('hub-banner-info'); const image = icon ? `<img class="hub-banner-icon" src="${icon}" alt="${safeHubText(hub.name)} icon"${accentStyle}>` : `<div class="hub-banner-icon fallback"${accentStyle}>${safeHubText(hub.name).charAt(0).toUpperCase()}</div>`; banner.innerHTML = `${image}<div class="hub-banner-copy"><div class="hub-banner-name" title="${safeHubText(hub.primaryContext || '')}">${safeHubText(hub.name)}</div><span class="hub-banner-meta">${safeHubText(hub.type)} · ${hub.members.length} member${hub.members.length === 1 ? '' : 's'}</span></div>`; banner.classList.add('visible'); const header=document.getElementById('chat-header'); header.style.backgroundImage = headerImage ? `linear-gradient(rgba(15,23,42,.58),rgba(15,23,42,.58)),url('${headerImage}')` : ''; header.style.backgroundSize = headerImage ? 'cover' : ''; header.style.backgroundPosition = headerImage ? 'center' : ''; document.querySelector('.main-chat').classList.add('hub-active'); document.getElementById('chat-header-avatar-container').classList.add('hidden'); document.getElementById('chat-title').innerHTML = '';
-  document.getElementById('chat-input-container').classList.remove('hidden'); document.getElementById('hub-settings-btn').classList.remove('hidden'); document.getElementById('hub-invite-btn').classList.remove('hidden'); document.getElementById('hub-pinned-messages-btn')?.classList.remove('hidden'); document.getElementById('hub-search-btn').classList.remove('hidden'); document.getElementById('pinned-messages-btn').classList.add('hidden'); const messages = document.getElementById('messages-list'); messages.classList.toggle('hub-chat-bg', !!chatImage); messages.style.backgroundImage = chatImage ? `url('${chatImage}')` : '';
-  renderHubMessages(true); renderSidebar(); document.getElementById('app-screen').classList.remove('sidebar-open');
-  if (typeof window.subscribeToHub === 'function') window.subscribeToHub(id);
-}
-function ensureHubBanner() { if (document.getElementById('hub-banner-info')) return; const banner=document.createElement('div'); banner.id='hub-banner-info'; banner.className='hub-banner-info'; document.getElementById('mobile-conversations').insertAdjacentElement('afterend', banner); }
-const selectFriendWithHubBanner = selectFriend;
-selectFriend = function(friend) { if (typeof window.unsubscribeFromHub === 'function') window.unsubscribeFromHub(); activeHub = null; const banner = document.getElementById('hub-banner-info'); if (banner) banner.classList.remove('visible'); document.querySelector('.main-chat').classList.remove('hub-active'); const header = document.getElementById('chat-header'); header.style.backgroundImage = ''; header.style.backgroundSize = ''; header.style.backgroundPosition = ''; const messages = document.getElementById('messages-list'); messages.classList.remove('hub-chat-bg'); applyWallpaper(localStorage.getItem('wallpaper') || ''); document.getElementById('hub-settings-btn').classList.add('hidden'); document.getElementById('hub-invite-btn').classList.add('hidden'); document.getElementById('hub-pinned-messages-btn')?.classList.add('hidden'); document.getElementById('hub-pinned-messages-menu')?.classList.add('hidden'); document.getElementById('hub-search-btn').classList.add('hidden'); closeHubSearch(); document.getElementById('pinned-messages-btn').classList.remove('hidden'); selectFriendWithHubBanner(friend); };
-function renderHubMessages(scroll) {
-  const hub = hubById(activeHub); if (!hub) return; const list = document.getElementById('messages-list'); const query = document.getElementById('hub-message-search')?.value.trim().toLowerCase() || ''; if (typeof trackNewMessages === 'function') trackNewMessages('hub:' + activeHub, hub.messages, list, scroll); list.innerHTML = '';
-  const visibleMessages = hub.messages.filter(message => !query || `${message.sender} ${message.text || ''}`.toLowerCase().includes(query));
-  if (!visibleMessages.length && query) list.innerHTML = '<div class="hub-search-empty">No Hub messages match your search.</div>';
-  let lastDateKey = null;
-  visibleMessages.forEach(message => {
-    const msgDateKey = new Date(message.id).toDateString();
-    if (msgDateKey !== lastDateKey) {
-      list.appendChild(buildDateSeparatorElement(message.id));
-      lastDateKey = msgDateKey;
-    }
-    const newMsgDivider = typeof newMessagesDividerFor === 'function' ? newMessagesDividerFor(message.id) : null;
-    if (newMsgDivider) list.appendChild(newMsgDivider);
-    const sent = message.sender === currentUser; const row = document.createElement('div'); row.className = `message-wrapper ${sent ? 'sent' : 'received'}${scroll ? ' message-arrive' : ''}`; row.dataset.messageId = message.id; row.classList.toggle('message-pinned', !!message.pinned); const structuredContent = (message.extension && typeof extensionHTML === 'function') ? extensionHTML(message) : ''; const locationCard = (typeof locationCardHTML === 'function') ? locationCardHTML(message.text) : null; const pinterestCard = (typeof pinterestCardSlotHTML === 'function') ? pinterestCardSlotHTML(message.text, message.id) : ''; row.innerHTML = `<div class="message-body-row"><img class="avatar" src="${(DB.getUsers()[message.sender]?.pfp) || DEFAULT_AVATAR}" style="width:26px;height:26px;"><div class="message ${sent ? 'sent' : 'received'}"><div class="hub-message-name">@${safeHubText(message.sender)}</div>${typeof replyChipHTML === 'function' ? replyChipHTML(message) : ''}${message.attachment?.type === 'image' ? `<img src="${message.attachment.data}" class="attachment-img">` : ''}${structuredContent}${locationCard || (message.text ? `<div>${parseTextLinks(message.text)}</div>` : '')}${pinterestCard}<div style="font-size:10px;opacity:.7;text-align:right;">${message.timestamp}</div></div></div>`;
-
-    // Reactions + pin: same popover UI/behaviour as Direct Chat
-    // (buildMsgPopoverElement / buildReactionBadgeElement in index.html —
-    // shared, not duplicated). The pin button itself is Hub-specific
-    // (togglePinnedHubMessage), kept entirely separate from Direct Chat's
-    // togglePinnedMessage/pinned-messages-btn/-menu, which are untouched.
-    const msgEl = row.querySelector('.message');
-    if (msgEl) msgEl.onclick = (e) => toggleMsgPopover(e, message.id);
-    if (activePopoverMsgId === message.id && typeof buildMsgPopoverElement === 'function') {
-      const bodyRow = row.querySelector('.message-body-row');
-      if (bodyRow) {
-        const popoverEl = buildMsgPopoverElement(message.id, sent);
-        bodyRow.appendChild(popoverEl);
-        if (!popoverEl.querySelector('.pin-message-popover')) {
-          const pin = document.createElement('button'); pin.className = `pin-message-popover ${message.pinned ? 'is-pinned' : ''}`;
-          pin.title = message.pinned ? 'Unpin message' : 'Pin message'; pin.textContent = '📌';
-          pin.onclick = event => togglePinnedHubMessage(message.id, event);
-          popoverEl.appendChild(pin);
-        }
-      }
-    } else if (typeof buildMsgHoverBarElement === 'function') {
-      const bodyRow = row.querySelector('.message-body-row');
-      if (bodyRow) bodyRow.appendChild(buildMsgHoverBarElement(message.id));
-    }
-    if (typeof buildReactionBadgeElement === 'function') {
-      const badge = buildReactionBadgeElement(message.id, message.reactions);
-      if (badge) row.appendChild(badge);
-    }
-
-    list.appendChild(row);
-  });
-  if (scroll) list.scrollTop = list.scrollHeight;
-  if (typeof updateJumpToLatestVisibility === 'function') updateJumpToLatestVisibility();
-  if (activePopoverMsgId !== null && typeof positionMsgPopoverMobile === 'function') positionMsgPopoverMobile();
-  const hubPinnedMenu = document.getElementById('hub-pinned-messages-menu');
-  if (hubPinnedMenu && !hubPinnedMenu.classList.contains('hidden')) renderHubPinnedMessagesMenu();
-}
-function togglePinnedHubMessage(msgId, event) {
-  event?.stopPropagation();
-  const hubs = getHubs(), hub = hubs.find(h => h.id === activeHub); if (!hub) return;
-  const msg = hub.messages.find(m => m.id === msgId); if (!msg) return;
-  msg.pinned = !msg.pinned;
-  saveHubs(hubs);
-  activePopoverMsgId = null; activeMoreMenuMsgId = null;
-  renderHubMessages(false);
-}
-function hubPinnedPreview(message) {
-  if (message.text) return message.text;
-  if (message.extension?.type === 'note') return message.extension.title;
-  if (message.extension) return `${message.extension.type}: ${message.extension.title || ''}`;
-  if (message.attachment) return `Attachment: ${message.attachment.name || 'file'}`;
-  return 'Message';
-}
-function renderHubPinnedMessagesMenu() {
-  const menu = document.getElementById('hub-pinned-messages-menu'); if (!menu) return;
-  const hub = hubById(activeHub); if (!hub) return;
-  const pinned = (hub.messages || []).filter(m => m.pinned);
-  menu.innerHTML = `<div class="pinned-menu-title"><span>Pinned messages</span><span>${pinned.length}</span></div>`;
-  if (!pinned.length) { menu.innerHTML += '<div class="pinned-message-empty">No pinned messages yet</div>'; return; }
-  pinned.forEach(message => {
-    const item = document.createElement('button'); item.className = 'pinned-message-item';
-    item.innerHTML = `📌 <small>@${escapeHTML(message.sender)}: ${escapeHTML(hubPinnedPreview(message))}</small>`;
-    item.onclick = () => jumpToHubPinnedMessage(message.id);
-    menu.appendChild(item);
-  });
-}
-function toggleHubPinnedMessages() {
-  if (!activeHub) return;
-  const menu = document.getElementById('hub-pinned-messages-menu');
-  renderHubPinnedMessagesMenu(); menu.classList.toggle('hidden');
-}
-function jumpToHubPinnedMessage(messageId) {
-  document.getElementById('hub-pinned-messages-menu').classList.add('hidden');
-  const target = document.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
-  if (!target) return;
-  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  target.classList.remove('pin-jump'); void target.offsetWidth; target.classList.add('pin-jump');
-}
-sendMessage = function() { if (!activeHub) return directSendMessage(); const input = document.getElementById('message-input'), text = input.value.trim(); if (!text && !currentAttachment) return; const hubs = getHubs(), hub = hubs.find(item => item.id === activeHub); if (!hub) return; if (hub.permissions?.messaging === 'owner' && hub.owner !== currentUser) return alert('Only the Hub owner can send messages in this Hub.'); hub.messages.push({id:Date.now(),sender:currentUser,text,attachment:currentAttachment,replyTo:replyingToMessage?{...replyingToMessage}:null,timestamp:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}); saveHubs(hubs); input.value=''; removeAttachment(); cancelReply(); renderHubMessages(true); };
-function hubCanManage(hub) { return !!hub && (hub.owner === currentUser || hub.permissions?.management === 'members'); }
-function openHubSettings() { const hub = hubById(activeHub); if (!hub) return; addHubModals(); ensureHubAppearanceSettings(); if (!hubCanManage(hub)) return alert('Only the Hub owner can change settings or manage members.'); document.getElementById('hub-edit-name').value = hub.name; document.getElementById('hub-edit-description').value = hub.description; document.getElementById('hub-edit-context').value = hub.primaryContext || ''; hubEditSelectAccent(hub.accent || ''); renderHubMembers(hub); document.getElementById('hub-settings-modal').classList.remove('hidden'); }
-// Small, focused "Invite to Hub" menu — opened by the people-plus icon
-// beside the Hub search icon. Shows the current user's real Firestore
-// friends (window.firestoreFriendUsernames) with a one-tap Invite button
-// each, plus the "Copy invite link" option. Inviting from this list can
-// never hit "User not found": these usernames already came from a real,
-// Firestore-verified friendship, unlike a freshly-typed username which may
-// belong to an account this browser has never mirrored locally.
-function ensureHubInviteModal() {
-  if (document.getElementById('hub-invite-modal')) return;
-  document.body.insertAdjacentHTML('beforeend', `<div id="hub-invite-modal" class="modal hidden hub-modal"><div class="card hub-invite-card"><h3>Invite to Hub</h3><label class="hub-form-label">Friends</label><div id="hub-invite-friends-list" class="hub-invite-friends-list"></div><label class="hub-form-label">Or share a link</label><button type="button" class="secondary" onclick="copyHubInviteLink(activeHub)">Copy invite link</button><button type="button" class="secondary" onclick="closeHubModal('hub-invite-modal')">Close</button></div></div>`);
+  .main-chat.hub-active .chat-input .input-row,
+  .main-chat:not(.hub-active) .chat-input .input-row { gap:5px; }
+  .main-chat.hub-active .chat-input .icon-btn,
+  .main-chat.hub-active .chat-input label.icon-btn,
+  .main-chat:not(.hub-active) .chat-input .icon-btn,
+  .main-chat:not(.hub-active) .chat-input label.icon-btn { border-radius:13px; }
+  .main-chat.hub-active #send-btn,
+  .main-chat:not(.hub-active) #send-btn { min-width:42px; border-radius:14px; }
 }
 
-function renderHubInviteFriends(hub) {
-  const container = document.getElementById('hub-invite-friends-list');
-  if (!container) return;
-  const friends = window.firestoreFriendUsernames || [];
-  const users = DB.getUsers();
-  container.innerHTML = '';
-  if (!friends.length) {
-    container.innerHTML = '<div class="hub-invite-empty">No friends yet — add some first, or share the invite link below.</div>';
-    return;
-  }
-  friends.forEach(friend => {
-    const isMember = hub.members.includes(friend);
-    const isInvited = hub.invites.includes(friend);
-    const pfp = (users[friend] && users[friend].pfp) ? users[friend].pfp : DEFAULT_AVATAR;
-    const row = document.createElement('div');
-    row.className = 'hub-invite-friend-row';
-    row.innerHTML = `<div class="user-profile-info"><img class="avatar" src="${pfp}" style="width:28px;height:28px;"><span>@${safeHubText(friend)}</span></div>`;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'poll-option';
-    btn.textContent = isMember ? 'Member' : (isInvited ? 'Invited' : 'Invite');
-    btn.disabled = isMember || isInvited;
-    if (!btn.disabled) btn.onclick = () => inviteFriendToHub(hub.id, friend, btn);
-    row.appendChild(btn);
-    container.appendChild(row);
-  });
+/* Hub header actions and its inline search panel. */
+.main-chat.hub-active .header-actions { gap:8px; }
+.main-chat.hub-active .header-actions .icon-btn {
+  width:40px;
+  height:40px;
+  margin:0;
+  padding:0;
+  border-radius:13px;
+  border-color:transparent;
+  background:color-mix(in srgb, var(--input-bg) 88%, transparent);
+  box-shadow:inset 0 1px rgba(255,255,255,.35);
+}
+.main-chat.hub-active .header-actions .icon-btn:hover { background:color-mix(in srgb, var(--primary) 15%, var(--input-bg)); }
+#hub-invite-btn { position:relative; font-size:15px; }
+#hub-invite-btn sup { position:absolute; right:5px; bottom:5px; font-size:10px; font-weight:800; color:var(--primary); }
+#hub-search-btn { font-size:25px; font-family:Georgia,serif; line-height:1; }
+.hub-search-panel {
+  position:absolute;
+  top:88px;
+  right:18px;
+  z-index:220;
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  gap:8px;
+  width:min(360px,calc(100% - 36px));
+  box-sizing:border-box;
+  padding:8px 9px 8px 13px;
+  border:1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius:16px;
+  background:color-mix(in srgb, var(--bg-card) 96%, transparent);
+  box-shadow:0 14px 30px rgba(15,23,42,.22);
+}
+.hub-search-panel > span { display:block; flex:0 0 22px; font-size:24px; line-height:1; color:var(--text-muted); }
+.hub-search-panel input { box-sizing:border-box; width:0 !important; min-width:0; height:40px; flex:1 1 auto; margin:0 !important; padding:8px 2px !important; border:0; background:transparent; box-shadow:none; }
+.hub-search-panel .icon-btn { display:flex; flex:0 0 34px; width:34px !important; min-width:34px; height:34px; margin:0 !important; padding:0 !important; border-radius:10px; }
+.hub-search-empty { align-self:center; margin:auto; padding:16px 20px; border-radius:14px; color:var(--text-muted); background:color-mix(in srgb, var(--bg-card) 88%, transparent); box-shadow:0 5px 16px rgba(15,23,42,.08); }
+@media (max-width:720px) {
+  .main-chat.hub-active .header-actions { gap:4px; }
+  .main-chat.hub-active .header-actions .icon-btn { width:36px; min-width:36px; height:36px; border-radius:11px; }
+  #hub-invite-btn sup { right:3px; bottom:3px; }
+  .hub-search-panel { top:80px; right:8px; width:calc(100% - 16px); border-radius:14px; }
 }
 
-function inviteFriendToHub(hubId, friend, btnEl) {
-  const hubs = getHubs(), hub = hubs.find(item => item.id === hubId); if (!hub) return;
-  if (hub.members.includes(friend) || hub.invites.includes(friend)) return;
-  hub.invites.push(friend); saveHubs(hubs);
-  sendHubInviteMessage(hub, friend);
-  if (btnEl) { btnEl.textContent = 'Invited'; btnEl.disabled = true; }
+/* Fast, purposeful motion layer. */
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar { transition:transform .26s cubic-bezier(.2,.8,.2,1), box-shadow .26s ease; }
+  #app-screen.sidebar-open::after { animation:backdropIn .2s ease both; }
+  .item-list li, .hub-row { transition:transform .16s ease, background-color .16s ease, border-color .16s ease; }
+  .item-list li:active, .hub-row:active { transform:scale(.985); }
+  button, .icon-btn, .extension-option, .emoji-picker span { transition:transform .14s ease, filter .14s ease, box-shadow .14s ease, background-color .14s ease; }
+  button:active, .icon-btn:active, .extension-option:active, .emoji-picker span:active { transform:scale(.93); }
+  .chat-input { transition:margin .2s ease, border-radius .2s ease, box-shadow .2s ease, padding .2s ease; }
+  .chat-input:focus-within { box-shadow:0 15px 32px rgba(15,23,42,.22), inset 0 1px rgba(255,255,255,.5); }
+  .emoji-picker:not(.hidden), .extension-menu:not(.hidden) { animation:menuSlideUp .2s cubic-bezier(.2,.8,.2,1) both; transform-origin:bottom left; }
+  .attachment-preview:not(.hidden) { animation:attachmentIn .18s ease both; }
+  .pinned-chat::after, .status-badge.online { animation:badgePop .28s cubic-bezier(.2,1.4,.4,1) both; }
+  .message-arrive { animation:messageIn .24s cubic-bezier(.2,.8,.2,1) both; }
+  .message-wrapper { transition:transform .16s ease; }
+  .message-wrapper.swiping { transform:translateX(var(--swipe-x)); }
 }
+.message-wrapper { touch-action:pan-y; }
+.message-wrapper::before, .message-wrapper::after { position:absolute; top:50%; z-index:0; display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#fff; font-size:15px; opacity:0; transform:translateY(-50%) scale(.75); transition:opacity .12s ease, transform .12s ease; pointer-events:none; }
+.message-wrapper::before { content:'↩'; left:8px; background:var(--primary); }
+.message-wrapper::after { content:'↪'; right:8px; background:#8b5cf6; }
+.message-wrapper.swipe-reply::before, .message-wrapper.swipe-forward::after { opacity:1; transform:translateY(-50%) scale(1); }
+.forward-sheet { position:fixed; inset:0; z-index:1400; display:flex; align-items:flex-end; justify-content:center; padding:16px; background:rgba(15,23,42,.42); animation:backdropIn .18s ease both; }
+.forward-card { width:min(430px,100%); max-height:72dvh; overflow-y:auto; padding:16px; border:1px solid var(--border); border-radius:22px; background:var(--bg-card); box-shadow:0 -14px 38px rgba(15,23,42,.28); animation:sheetIn .24s cubic-bezier(.2,.8,.2,1) both; }
+.forward-sheet-title { display:flex; align-items:center; justify-content:space-between; font-weight:750; }.forward-sheet-title .icon-btn { width:34px; height:34px; margin:0; border-radius:10px; }
+.forward-preview { margin:10px 0 12px; padding:10px; border-radius:11px; color:var(--text-muted); background:var(--input-bg); overflow-wrap:anywhere; }.forward-destinations { display:grid; gap:7px; }.forward-destinations button { min-height:44px; margin:0; justify-content:flex-start; text-align:left; }.forward-empty { color:var(--text-muted); }
+@keyframes menuSlideUp { from { opacity:0; transform:translateY(10px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes attachmentIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+@keyframes badgePop { from { transform:scale(.5); } to { transform:scale(1); } }
+@keyframes messageIn { from { opacity:0; transform:translateY(8px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes backdropIn { from { opacity:0; } to { opacity:1; } }
+@keyframes sheetIn { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
 
-function openHubInvitePanel() {
-  const hub = hubById(activeHub); if (!hub) return;
-  if (hub.permissions?.invites !== 'members' && !hubCanManage(hub)) return alert('Only the Hub owner can invite new members.');
-  ensureHubInviteModal();
-  renderHubInviteFriends(hub);
-  document.getElementById('hub-invite-modal').classList.remove('hidden');
-}
-// Drops a hub_invite card into the existing DM thread with `toUsername` —
-// reuses the exact same DB.getMessages()/DB.saveMessages() path every other
-// DM already goes through (already Firestore-synced), so no new sync code
-// is needed for the invite message itself.
-function sendHubInviteMessage(hub, toUsername) {
-  const messages = DB.getMessages();
-  messages.push({
-    id: Date.now(), sender: currentUser, receiver: toUsername,
-    text: '', attachment: null, reactions: {},
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    extension: { type: 'hub_invite', hubId: hub.id, hubName: hub.name }
-  });
-  DB.saveMessages(messages);
-}
+/* Settings theme picker — previews use palette samples without altering the app until selected. */
+.theme-settings { margin-top:16px; }
+.theme-selector-label { display:block; margin-bottom:3px; color:var(--text-main); font-size:14px; font-weight:700; }
+.theme-selector-help { margin:0 0 11px; color:var(--text-muted); font-size:12px; line-height:1.4; }
+.theme-native-select { position:absolute; width:1px !important; height:1px !important; margin:-1px !important; padding:0 !important; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0 !important; }
+.theme-preview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.theme-preview { width:100%; min-width:0; min-height:64px; margin:0; padding:8px; justify-content:flex-start; gap:8px; color:var(--text-main); background:var(--input-bg); border:1px solid var(--border); border-radius:12px; font-size:12px; font-weight:650; text-align:left; box-shadow:none; }
+.theme-preview:hover { color:var(--text-main); background:color-mix(in srgb,var(--primary) 9%,var(--input-bg)); border-color:color-mix(in srgb,var(--primary) 58%,var(--border)); }
+.theme-preview.selected { color:var(--text-main); border-color:var(--primary); box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 23%,transparent); }
+.theme-preview[data-theme-preview="durga-puja"], .theme-preview[data-theme-preview="halloween"] { position:relative; }
+.theme-preview-art { position:static; display:block; flex:0 0 34px; width:34px; height:34px; }
+.theme-preview-swatch { position:relative; display:block; width:34px; height:34px; overflow:hidden; border:1px solid rgba(255,255,255,.2); border-radius:10px; background:linear-gradient(145deg,var(--theme-a) 0 48%,var(--theme-b) 48%); box-shadow:inset 0 1px rgba(255,255,255,.16); }
+.theme-preview-swatch i { position:absolute; right:4px; bottom:5px; width:15px; height:7px; border-radius:5px; background:var(--theme-c); box-shadow:0 0 7px var(--theme-c); }
+.theme-preview-swatch b { position:absolute; top:5px; left:5px; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.8); }
+.theme-preview[data-theme-preview="halloween"] .theme-preview-swatch { background:linear-gradient(110deg,#71351F 0%,#9B451F 28%,#C56B2D 54%,#D99A46 78%,#35221D 100%); }
+.theme-preview[data-theme-preview="durga-puja"] .theme-limited-glint-badge, .theme-preview[data-theme-preview="halloween"] .theme-limited-glint-badge { position:absolute; z-index:2; top:8px; right:8px; width:22px; height:22px; margin:0; display:grid; place-items:center; border:1px solid rgba(253,216,53,.46); border-radius:50%; background:rgba(23,23,25,.78); box-shadow:0 0 8px rgba(253,216,53,.3); transform-origin:center; animation:limitedThemeBadgePulse 2.8s ease-in-out infinite; }
+.theme-limited-glint-badge svg { display:block; width:12px; height:12px; fill:#FDD835; filter:drop-shadow(0 0 2px rgba(253,216,53,.8)); }
+.theme-preview[data-theme-preview="halloween"] .theme-limited-glint-badge { border-color:rgba(217,154,70,.5); box-shadow:0 0 8px rgba(217,154,70,.3); }
+.theme-preview[data-theme-preview="halloween"] .theme-limited-glint-badge svg { fill:#D99A46; filter:drop-shadow(0 0 2px rgba(217,154,70,.8)); }
+@media (max-width:720px) { .theme-preview[data-theme-preview="durga-puja"] .theme-preview-art, .theme-preview[data-theme-preview="halloween"] .theme-preview-art { position:relative; }.theme-preview[data-theme-preview="durga-puja"] .theme-limited-glint-badge, .theme-preview[data-theme-preview="halloween"] .theme-limited-glint-badge { top:2px; right:2px; width:16px; height:16px; }.theme-limited-glint-badge svg { width:9px; height:9px; } }
+@media (prefers-reduced-motion:reduce) { .theme-limited-glint-badge { animation:none; } }
+@keyframes limitedThemeBadgePulse { 0%,100% { transform:scale(1); box-shadow:0 0 7px rgba(217,154,70,.18); } 50% { transform:scale(1.07); box-shadow:0 0 10px rgba(217,154,70,.34); } }
 
-// Falls back to the public usernames/{username} Firestore lookup — the same
-// one requestFriendship() (index.html) already uses — when a username isn't
-// in this browser's local mirror yet, e.g. the account was created on a
-// different device. Mirrors it locally via ensureLocalMirror() on success,
-// so the rest of the Hub invite flow (hub.invites, member lists) is
-// unchanged from here on.
-async function resolveHubInviteTarget(name) {
-  name = (name || '').trim();
-  if (!name) return null;
-  const users = DB.getUsers();
-  let actual = Object.keys(users).find(user => user.toLowerCase() === name.toLowerCase());
-  if (!actual && typeof window.lookupUsername === 'function') {
-    const resolved = await window.lookupUsername(name);
-    if (resolved) {
-      ensureLocalMirror(resolved.username, resolved.photoURL);
-      actual = resolved.username;
-    }
-  }
-  return actual || null;
-}
-
-async function quickInviteToHub(hubId, name) {
-  name = (name || '').trim(); if (!name) return;
-  const actual = await resolveHubInviteTarget(name);
-  const hubs = getHubs(), hub = hubs.find(item => item.id === hubId); if (!hub) return;
-  if (!actual) return alert('User not found.');
-  if (hub.members.includes(actual) || hub.invites.includes(actual)) return alert('That user is already in this Hub or has an invite.');
-  hub.invites.push(actual); saveHubs(hubs);
-  sendHubInviteMessage(hub, actual);
-  alert(`Invite sent to @${actual}.`);
-}
-function toggleHubSearch() { if (!activeHub) return; const panel = document.getElementById('hub-search-panel'); panel.classList.toggle('hidden'); if (!panel.classList.contains('hidden')) document.getElementById('hub-message-search').focus(); }
-function closeHubSearch() { const panel = document.getElementById('hub-search-panel'); if (!panel) return; panel.classList.add('hidden'); const input = document.getElementById('hub-message-search'); if (input?.value) { input.value = ''; if (activeHub) renderHubMessages(false); } }
-function filterHubMessages() { if (activeHub) renderHubMessages(false); }
-function ensureHubAppearanceSettings() { if (document.getElementById('hub-edit-icon')) return; document.getElementById('hub-members').insertAdjacentHTML('afterend', `<label class="hub-form-label">Change Hub icon</label><input id="hub-edit-icon" type="file" accept="image/png,image/jpeg,image/webp"><label class="hub-form-label">Change chat background</label><input id="hub-edit-background" type="file" accept="image/png,image/jpeg,image/webp"><label class="hub-form-label">Change header banner</label><input id="hub-edit-banner" type="file" accept="image/png,image/jpeg,image/webp"><label class="hub-form-label">Hub accent theme</label><div class="hub-accent-grid" id="hub-edit-accent-grid">${HUB_ACCENTS.map(hex => `<button type="button" class="hub-accent-swatch" style="--accent-color:${hex}" onclick="hubEditSelectAccent('${hex}')" aria-label="Accent ${hex}"></button>`).join('')}</div><input type="hidden" id="hub-edit-accent-value"><label class="hub-form-label">Primary Context (optional)</label><textarea id="hub-edit-context" placeholder="Goals, rules, or what belongs here"></textarea>`); }
-function hubEditSelectAccent(hex) { const field = document.getElementById('hub-edit-accent-value'); if (field) field.value = hex; document.querySelectorAll('#hub-edit-accent-grid .hub-accent-swatch').forEach(btn => btn.classList.toggle('selected', hex && btn.style.getPropertyValue('--accent-color') === hex)); }
-function renderHubMembers(hub) { const target = document.getElementById('hub-members'); target.innerHTML = ''; hub.members.forEach(member => { const chip = document.createElement('div'); chip.className='hub-member-chip'; chip.innerHTML = `@${safeHubText(member)}${member !== hub.owner ? `<button title="Remove member" onclick="removeHubMember('${member}')">×</button>` : ' · Owner'}`; target.appendChild(chip); }); }
-async function inviteToHub() { const name = document.getElementById('hub-add-member').value.trim(); const actual = await resolveHubInviteTarget(name); const hubs=getHubs(), hub=hubs.find(item=>item.id===activeHub); if (!actual) return alert('User not found.'); if (hub.members.includes(actual) || hub.invites.includes(actual)) return alert('That user is already in this Hub or has an invite.'); hub.invites.push(actual); saveHubs(hubs); sendHubInviteMessage(hub, actual); document.getElementById('hub-add-member').value=''; alert(`Invite sent to @${actual}.`); }
-function removeHubMember(member) { const hubs=getHubs(), hub=hubs.find(item=>item.id===activeHub); if (!hub || member===hub.owner) return; hub.members=hub.members.filter(user=>user!==member); saveHubs(hubs); renderHubMembers(hub); renderSidebar(); }
-
-// Shareable "join this Hub" link — anyone signed in to Nexora who opens it
-// joins the Hub automatically (see the ?joinHub= handling in loadApp(),
-// index.html), same underlying join as joinHubFromInvite() above. Useful
-// for invites outside of DMs (e.g. pasted into a group chat elsewhere).
-function copyHubInviteLink(hubId) {
-  const hub = hubById(hubId); if (!hub) return;
-  const url = `${location.origin}${location.pathname}?joinHub=${hub.id}`;
-  const done = () => alert(`Invite link copied!\n\n${url}\n\nAnyone signed in to Nexora who opens it will join "${hub.name}".`);
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(url).then(done).catch(() => prompt('Copy this invite link:', url));
-  } else {
-    prompt('Copy this invite link:', url);
-  }
-}
-window.copyHubInviteLink = copyHubInviteLink;
-function saveHubSettings() {
-  const hubs=getHubs(), hub=hubs.find(item=>item.id===activeHub); if (!hub) return;
-  hub.name=document.getElementById('hub-edit-name').value.trim() || hub.name;
-  hub.description=document.getElementById('hub-edit-description').value.trim();
-  const contextField = document.getElementById('hub-edit-context'); if (contextField) hub.primaryContext = contextField.value.trim();
-  const accentField = document.getElementById('hub-edit-accent-value'); if (accentField) hub.accent = accentField.value || '';
-  const updateAppearance = (inputId, property, done) => {
-    const file=document.getElementById(inputId)?.files[0];
-    if (!file) return done();
-    if (!file.type.startsWith('image/') || file.size > 900 * 1024) return alert('Use a PNG, JPG, or WebP image under 900 KB.');
-    const reader=new FileReader(); reader.onload=e=>{hub[property]=e.target.result; done();}; reader.readAsDataURL(file);
-  };
-  updateAppearance('hub-edit-icon','icon', () => {
-    updateAppearance('hub-edit-background','background', () => {
-      updateAppearance('hub-edit-banner','banner', () => {
-        try { saveHubs(hubs); } catch (error) { return alert('Hub storage is full. Choose smaller images.'); }
-        closeHubModal('hub-settings-modal'); selectHub(hub.id);
-      });
-    });
-  });
-}
-const sidebarWithHubs = renderSidebar;
-renderSidebar = function() {
-  document.getElementById('hub-sidebar-section')?.remove(); sidebarWithHubs(); if (!currentUser) return;
-  const list = document.getElementById('friends-list'), hubs = getHubs();
-  const visible = hubs.filter(hub => hub.members.includes(currentUser)).filter((hub,index,all) => all.findIndex(item => item.owner === hub.owner && item.name === hub.name && item.type === hub.type) === index);
-  const invites = hubs.filter(hub => hub.invites.includes(currentUser));
-  if (visible.length || invites.length) {
-    const section=document.createElement('div'); section.id='hub-sidebar-section'; section.className='section'; section.innerHTML='<div class="hub-list-title">Hubs</div><ul class="item-list hub-list"></ul>'; const hubList=section.querySelector('.hub-list'); list.parentElement.parentElement.insertBefore(section,list.parentElement);
-    visible.forEach(hub => { const row=document.createElement('li'); const icon = hubImageSource(hub.icon); const accentStyle = hub.accent ? ` style="--hub-accent:${hub.accent}"` : ''; row.className=`hub-row ${activeHub===hub.id?'active-friend':''}`; row.innerHTML=`<div class="user-profile-info">${icon ? `<img class="hub-icon" src="${icon}" alt="">` : `<div class="hub-icon"${accentStyle}>#</div>`}<div><span>${safeHubText(hub.name)}</span><small>${safeHubText(hub.type)} · ${hub.members.length} member${hub.members.length === 1 ? '' : 's'}</small></div></div>`; row.onclick=()=>selectHub(hub.id); hubList.appendChild(row); });
-    invites.forEach(hub => { const row=document.createElement('li'); row.innerHTML=`<span>Invite: ${safeHubText(hub.name)}</span><button>Join</button>`; row.querySelector('button').onclick=event=>{event.stopPropagation(); acceptHubInvite(hub.id);}; hubList.appendChild(row); });
-  }
-};
-function acceptHubInvite(id) { const hubs=getHubs(), hub=hubs.find(item=>item.id===id); if (!hub) return; hub.invites=hub.invites.filter(user=>user!==currentUser); if (!hub.members.includes(currentUser)) hub.members.push(currentUser); saveHubs(hubs); selectHub(id); }
-
-// Called from the "Join Hub" button on a hub_invite DM card (see the
-// hub_invite case in extensionHTML, index.html). Unlike acceptHubInvite
-// above, this doesn't assume the Hub already exists in this browser's
-// local `hubs_data` — the invite may have come from a friend on a
-// different device — so it fetches the Hub's Firestore mirror first and
-// creates a local copy if needed. Icon/banner/background aren't part of
-// that mirror (see window.syncHubsToFirestore), so a Hub joined this way
-// starts with no custom images until someone uploads them on this device.
-async function joinHubFromInvite(hubId) {
-  if (typeof window.joinFirestoreHub !== 'function') return alert('Hub sync is not available right now.');
-  const result = await window.joinFirestoreHub(hubId, currentUser);
-  if (!result.ok) return alert(result.message || 'Could not join this Hub.');
-
-  const hubs = getHubs();
-  let hub = hubs.find(h => h.id === hubId);
-  if (!hub) {
-    hub = {
-      id: hubId, name: result.hub.name || 'Hub', description: result.hub.description || '',
-      type: result.hub.type || 'Other', category: result.hub.category || '',
-      owner: result.hub.owner, members: result.hub.members || [currentUser], invites: [],
-      icon: '', background: '', banner: '', accent: '', features: [],
-      permissions: { messaging: 'everyone', invites: 'owner', activities: true, management: 'owner' },
-      primaryContext: '', messages: []
-    };
-    hubs.push(hub);
-  } else if (!hub.members.includes(currentUser)) {
-    hub.members.push(currentUser);
-  }
-  hub.invites = (hub.invites || []).filter(u => u !== currentUser);
-  saveHubs(hubs);
-  selectHub(hubId);
-}
-window.joinHubFromInvite = joinHubFromInvite;
-addHubModals();
-if (currentUser) renderSidebar();
-window.openHubCreator = openHubCreator;
-window.createHub = createHub;
-window.closeHubModal = closeHubModal;
-window.openHubSettings = openHubSettings;
-window.openHubInvitePanel = openHubInvitePanel;
-window.toggleHubSearch = toggleHubSearch;
-window.closeHubSearch = closeHubSearch;
-window.filterHubMessages = filterHubMessages;
-
-/* Mobile interaction polish: use the existing drawer control, respect keyboards and safe viewport height. */
-function updateMobileViewport() {
-  const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  document.documentElement.style.setProperty('--mobile-app-height', `${Math.round(height)}px`);
-}
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', updateMobileViewport);
-  window.visualViewport.addEventListener('scroll', updateMobileViewport);
-}
-window.addEventListener('resize', updateMobileViewport);
-updateMobileViewport();
-document.addEventListener('focusin', event => {
-  if (event.target.id === 'message-input') setTimeout(() => document.getElementById('messages-list')?.scrollTo({ top: document.getElementById('messages-list').scrollHeight, behavior:'smooth' }), 120);
-});
-document.addEventListener('click', event => {
-  const app = document.getElementById('app-screen');
-  if (!app?.classList.contains('sidebar-open')) return;
-  if (event.target.closest('.sidebar') || event.target.closest('#mobile-conversations')) return;
-  app.classList.remove('sidebar-open');
-});
-
-/* Add Friend writes to Firebase Firestore (friendRequests collection) — see
-   window.sendFirestoreFriendRequest in the Firebase module script in
-   index.html. No local storage is used for sending requests. */
-sendFriendRequest = function() {
-  const field = document.getElementById('search-username');
-  const identifier = field.value.trim();
-  if (!identifier) return alert('Enter a username or email.');
-  window.sendFirestoreFriendRequest(identifier).then(result => {
-    if (result.ok) { alert('Friend request sent!'); field.value = ''; }
-    else alert(result.message || 'Could not send friend request.');
-  });
-};
-
-/* Pin individual messages and make them easy to find again. */
-function conversationMessages() {
-  return activeFriend ? DB.getMessages().filter(m => (m.sender === currentUser && m.receiver === activeFriend) || (m.sender === activeFriend && m.receiver === currentUser)) : [];
-}
-function pinnedPreview(message) {
-  if (message.text) return message.text;
-  if (message.extension?.type === 'note') return message.extension.title;
-  if (message.extension) return `${message.extension.type}: ${message.extension.title || ''}`;
-  if (message.attachment) return `Attachment: ${message.attachment.name || 'file'}`;
-  return 'Message';
-}
-function togglePinnedMessage(messageId, event) {
-  event?.stopPropagation();
-  const messages = DB.getMessages(); const message = messages.find(m => m.id === messageId); if (!message) return;
-  message.pinned = !message.pinned;
-  DB.saveMessages(messages);
-  activePopoverMsgId = null; activeMoreMenuMsgId = null;
-  renderMessages(false);
-}
-function renderPinnedMessagesMenu() {
-  const menu = document.getElementById('pinned-messages-menu'); if (!menu) return;
-  const pinned = conversationMessages().filter(m => m.pinned);
-  menu.innerHTML = `<div class="pinned-menu-title"><span>Pinned messages</span><span>${pinned.length}</span></div>`;
-  if (!pinned.length) { menu.innerHTML += '<div class="pinned-message-empty">No pinned messages yet</div>'; return; }
-  pinned.forEach(message => {
-    const item = document.createElement('button'); item.className = 'pinned-message-item';
-    item.innerHTML = `📌 <small>${escapeHTML(pinnedPreview(message))}</small>`;
-    item.onclick = () => jumpToPinnedMessage(message.id);
-    menu.appendChild(item);
-  });
-}
-function togglePinnedMessages() {
-  if (!activeFriend) return;
-  const menu = document.getElementById('pinned-messages-menu');
-  renderPinnedMessagesMenu(); menu.classList.toggle('hidden');
-}
-function jumpToPinnedMessage(messageId) {
-  document.getElementById('pinned-messages-menu')?.classList.add('hidden');
-  const target = document.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
-  if (!target) return;
-  target.scrollIntoView({ behavior:'smooth', block:'center' });
-  target.classList.remove('pin-jump'); void target.offsetWidth; target.classList.add('pin-jump');
-}
-
-/* Saved Messages (private bookmarks) — Direct Chat only.
-   A DM message can be privately "bookmarked" by the signed-in user. Stored
-   locally per-account (bookmarks_<username> in localStorage) and NEVER
-   synced to Firestore, so the other participant in the DM never sees it —
-   unlike the old shared `message.pinned` field above, which is visible to
-   both sides. This is what the DM "Pin message" action/label now does.
-   Hub pinning (togglePinnedHubMessage, hub-pinned-messages-btn/-menu,
-   hub.messages[].pinned) is a separate, shared, permission-gated feature
-   and is completely untouched by this. */
-function getBookmarks() {
-  if (!currentUser) return [];
-  return JSON.parse(localStorage.getItem(`bookmarks_${currentUser}`) || '[]');
-}
-function saveBookmarksList(list) {
-  if (!currentUser) return;
-  localStorage.setItem(`bookmarks_${currentUser}`, JSON.stringify(list));
-}
-function isMessageBookmarked(messageId) {
-  return getBookmarks().some(b => b.messageId === messageId);
-}
-function toggleBookmarkMessage(messageId, event) {
-  event?.stopPropagation();
-  const messages = DB.getMessages(); const message = messages.find(m => m.id === messageId); if (!message) return;
-  const bookmarks = getBookmarks();
-  const existingIndex = bookmarks.findIndex(b => b.messageId === messageId);
-  if (existingIndex !== -1) {
-    bookmarks.splice(existingIndex, 1);
-  } else {
-    bookmarks.unshift({
-      messageId: message.id,
-      type: 'dm',
-      withUser: message.sender === currentUser ? message.receiver : message.sender,
-      sender: message.sender,
-      text: pinnedPreview(message),
-      originalTimestamp: message.id,
-      savedAt: Date.now()
-    });
-  }
-  saveBookmarksList(bookmarks);
-  activePopoverMsgId = null; activeMoreMenuMsgId = null;
-  renderMessages(false);
-  const modal = document.getElementById('saved-messages-modal');
-  if (modal && !modal.classList.contains('hidden') && typeof renderSavedMessages === 'function') renderSavedMessages();
-}
-function removeBookmark(messageId) {
-  saveBookmarksList(getBookmarks().filter(b => b.messageId !== messageId));
-  renderMessages(false);
-  if (typeof renderSavedMessages === 'function') renderSavedMessages();
-}
-function formatBookmarkTimestamp(ms) {
-  if (!ms) return '';
-  return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-}
-function renderSavedMessages() {
-  const list = document.getElementById('saved-messages-list'); if (!list) return;
-  const bookmarks = getBookmarks();
-  if (!bookmarks.length) { list.innerHTML = '<div class="saved-message-empty">No saved messages yet. Bookmark a Direct Message to see it here.</div>'; return; }
-  list.innerHTML = '';
-  bookmarks.forEach(b => {
-    const item = document.createElement('div'); item.className = 'saved-message-item';
-    const locationLabel = b.type === 'hub' ? `Hub · ${escapeHTML(b.hubName || '')}` : `DM · @${escapeHTML(b.withUser || '')}`;
-    item.innerHTML = `
-      <div class="saved-message-top">
-        <span class="saved-message-sender">@${escapeHTML(b.sender)}</span>
-        <span class="saved-message-location">${locationLabel}</span>
-      </div>
-      <div class="saved-message-text">${escapeHTML(b.text || '(no text)')}</div>
-      <div class="saved-message-meta">
-        <span>Sent ${formatBookmarkTimestamp(b.originalTimestamp)}</span>
-        <span>Saved ${formatBookmarkTimestamp(b.savedAt)}</span>
-      </div>
-      <div class="saved-message-actions">
-        <button type="button" class="secondary saved-message-open-btn">Open</button>
-        <button type="button" class="saved-message-remove-btn">Remove</button>
-      </div>`;
-    item.querySelector('.saved-message-open-btn').onclick = () => openBookmarkedMessage(b);
-    item.querySelector('.saved-message-remove-btn').onclick = () => removeBookmark(b.messageId);
-    list.appendChild(item);
-  });
-}
-function openBookmarkedMessage(bookmark) {
-  closeSavedMessages();
-  if (bookmark.type === 'dm' && bookmark.withUser) {
-    selectFriend(bookmark.withUser);
-    setTimeout(() => jumpToPinnedMessage(bookmark.messageId), 150);
-  }
-}
-function openSavedMessages() {
-  document.getElementById('saved-messages-modal')?.classList.remove('hidden');
-  renderSavedMessages();
-}
-function closeSavedMessages() {
-  document.getElementById('saved-messages-modal')?.classList.add('hidden');
-}
-
-const renderMessagesWithDoubleClick = renderMessages;
-renderMessages = function(forceScroll) {
-  renderMessagesWithDoubleClick(forceScroll);
-  const shown = conversationMessages();
-  document.querySelectorAll('.message-wrapper').forEach((wrapper, index) => {
-    const message = shown[index]; if (!message) return;
-    wrapper.dataset.messageId = message.id;
-    wrapper.classList.toggle('message-pinned', !!message.pinned);
-  });
-  if (activePopoverMsgId) {
-    const active = shown.find(m => m.id === activePopoverMsgId);
-    const popover = document.querySelector('.msg-popover');
-    if (active && popover && !popover.querySelector('.pin-message-popover')) {
-      const bookmarked = isMessageBookmarked(active.id);
-      const pin = document.createElement('button'); pin.className = `pin-message-popover ${bookmarked ? 'is-pinned' : ''}`;
-      pin.title = bookmarked ? 'Remove bookmark' : 'Bookmark message'; pin.textContent = '🔖';
-      pin.onclick = event => toggleBookmarkMessage(active.id, event);
-      popover.appendChild(pin);
-    }
-  }
-  const menu = document.getElementById('pinned-messages-menu'); if (menu && !menu.classList.contains('hidden')) renderPinnedMessagesMenu();
-  // Re-run mobile popover positioning now that the pin button above may have
-  // widened it — otherwise the earlier positioning pass (inside the original
-  // renderMessages, before this pin button existed) could clamp using a
-  // stale, narrower width and let the wider final popover overflow again.
-  if (typeof positionMsgPopoverMobile === 'function') positionMsgPopoverMobile();
-};
-
-/* Smart Context: high-confidence suggestions only; every action remains opt-in. */
-function smartContextFor(message) {
-  if (!message?.text || message.contextDismissed) return null;
-  const text = message.text.trim().toLowerCase();
-  const locationRequest = /\b(where are you|where r u|where you at|share (your )?location|send (your )?location)\b/.test(text);
-  const outside = /\b(i['’]?m|i am|im)\s+(already\s+)?outside\b/.test(text);
-  const reminder = /\b(remind me|reminder|don't let me forget|do not let me forget|google calendar|calendar reminder|let'?s meet|meeting)\b/.test(text) && /\b(today|tomorrow|tonight|next |at \d|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/.test(text);
-  const task = /\b(google tasks?|add (?:this|it) to (?:my )?tasks?|make (?:this|it) a task|to[- ]do)\b/.test(text);
-  if (locationRequest || outside) return { type:'location', text: outside ? 'Looks like they have arrived. Choose a quick reply?' : 'They are asking for your location.', actions: outside ? [['coming','🚪 Coming'],['five','⏳ 5 min'],['location','📍 Share location']] : [['location','📍 Share location']] };
-  if (task) return { type:'task', text:'This sounds like a task. Add it to a shared to-do list?', actions:[['task','✓ Create task']] };
-  if (reminder) return { type:'reminder', text:'This mentions a time or meeting. Create a reminder card?', actions:[['calendar','☆ Create reminder']] };
-  return null;
-}
-function dismissSmartContext(messageId) {
-  const messages = DB.getMessages(); const message = messages.find(m => m.id === messageId); if (!message) return;
-  message.contextDismissed = true; DB.saveMessages(messages); renderMessages(false);
-}
-function smartCalendarDefault() {
-  const date = new Date(); date.setDate(date.getDate() + 1); date.setHours(17,0,0,0);
-  const offset = date.getTimezoneOffset(); return new Date(date.getTime() - offset * 60000).toISOString().slice(0,16);
-}
-function smartContextAction(messageId, action) {
-  const message = DB.getMessages().find(m => m.id === messageId); if (!message) return;
-  if (action === 'location') { dismissSmartContext(messageId); shareLocation(); return; }
-  if (action === 'coming' || action === 'five') {
-    const input = document.getElementById('message-input'); input.value = action === 'coming' ? "I'm coming now." : "I'll be there in 5 minutes."; dismissSmartContext(messageId); sendMessage(); return;
-  }
-  if (action === 'calendar') {
-    dismissSmartContext(messageId); openExtension('calendar');
-    document.getElementById('ext-title').value = message.text.slice(0,80);
-    document.getElementById('ext-date').value = smartCalendarDefault();
-    return;
-  }
-  if (action === 'task') {
-    dismissSmartContext(messageId); openExtension('todo');
-    document.getElementById('ext-title').value = 'New task';
-    document.getElementById('ext-items').value = message.text.slice(0,120);
-  }
-}
-function smartContextCard(message, context) {
-  const actions = context.actions.map(([action,label]) => `<button onclick="smartContextAction(${message.id},'${action}')">${label}</button>`).join('');
-  return `<div class="smart-context-card"><div class="smart-context-heading"><span>✦ Smart Context</span><button title="Dismiss suggestion" onclick="dismissSmartContext(${message.id})">×</button></div><div class="smart-context-text">${context.text}</div><div class="smart-context-actions">${actions}</div></div>`;
-}
-const renderMessagesWithPins = renderMessages;
-renderMessages = function(forceScroll) {
-  renderMessagesWithPins(forceScroll);
-  const shown = conversationMessages();
-  document.querySelectorAll('.message-wrapper').forEach((wrapper, index) => {
-    const message = shown[index], context = smartContextFor(message);
-    if (message && context && !wrapper.querySelector('.smart-context-card')) wrapper.insertAdjacentHTML('beforeend', smartContextCard(message, context));
-  });
-};
-
-/* Swipe right to reply and left to forward. Horizontal drags must be deliberate,
-   so scrolling and the existing message popovers continue to work normally. */
-let swipeStart = null;
-function messageById(id) {
-  if (activeHub) return hubById(activeHub)?.messages.find(message => String(message.id) === String(id));
-  return DB.getMessages().find(message => String(message.id) === String(id));
-}
-let replyingToMessage = null; // { id, sender, text } while a reply draft is active, else null
-function replyToMessage(message) {
-  const input = document.getElementById('message-input'); if (!input || !message) return;
-  const text = message.text || pinnedPreview(message);
-  replyingToMessage = { id: message.id, sender: message.sender, text: (text || '').slice(0, 140) };
-  const bar = document.getElementById('reply-preview-bar');
-  if (bar) {
-    document.getElementById('reply-preview-bar-sender').textContent = `@${replyingToMessage.sender}`;
-    document.getElementById('reply-preview-bar-snippet').textContent = replyingToMessage.text;
-    bar.classList.remove('hidden');
-  }
-  input.focus();
-}
-function cancelReply() {
-  replyingToMessage = null;
-  document.getElementById('reply-preview-bar')?.classList.add('hidden');
-}
-function jumpToRepliedMessage(messageId) {
-  const target = document.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
-  if (!target) return;
-  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  target.classList.remove('pin-jump'); void target.offsetWidth; target.classList.add('pin-jump');
-}
-function openForwardSheet(message) {
-  if (!message || document.getElementById('forward-message-sheet')) return;
-  const friends = (window.firestoreFriendUsernames || []).filter(friend => friend !== activeFriend);
-  const hubs = getHubs().filter(hub => hub.members.includes(currentUser) && hub.id !== activeHub);
-  const options = [...friends.map(friend => `<button onclick="forwardMessageTo('${safeHubText(friend)}','direct')">@${safeHubText(friend)}</button>`), ...hubs.map(hub => `<button onclick="forwardMessageTo('${hub.id}','hub')"># ${safeHubText(hub.name)}</button>`)].join('') || '<p class="forward-empty">No other conversations available.</p>';
-  document.body.insertAdjacentHTML('beforeend', `<div id="forward-message-sheet" class="forward-sheet"><div class="forward-card"><div class="forward-sheet-title"><span>Forward message</span><button class="icon-btn" onclick="closeForwardSheet()" aria-label="Close">×</button></div><p class="forward-preview">${safeHubText(pinnedPreview(message)).slice(0, 140)}</p><div class="forward-destinations">${options}</div></div></div>`);
-  document.getElementById('forward-message-sheet').dataset.messageId = message.id;
-}
-function closeForwardSheet() { document.getElementById('forward-message-sheet')?.remove(); }
-function forwardMessageTo(destination, type) {
-  const sheet = document.getElementById('forward-message-sheet'); const message = messageById(sheet?.dataset.messageId); if (!message) return closeForwardSheet();
-  const timestamp = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); const text = `↪ ${message.text || pinnedPreview(message)}`;
-  if (type === 'hub') { const hubs = getHubs(); const hub = hubs.find(item => String(item.id) === String(destination)); if (hub) { hub.messages.push({id:Date.now(),sender:currentUser,text,attachment:null,timestamp}); saveHubs(hubs); } }
-  else { const messages = DB.getMessages(); messages.push({id:Date.now(),sender:currentUser,receiver:destination,text,attachment:null,reactions:{},timestamp}); DB.saveMessages(messages); }
-  closeForwardSheet();
-}
-document.addEventListener('pointerdown', event => { const wrapper = event.target.closest('.message-wrapper[data-message-id]'); if (!wrapper || event.pointerType === 'mouse') return; swipeStart = { wrapper, x:event.clientX, y:event.clientY, moved:false }; });
-document.addEventListener('pointermove', event => { if (!swipeStart) return; const dx = event.clientX - swipeStart.x, dy = event.clientY - swipeStart.y; if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 8) return; swipeStart.moved = true; const shift = Math.max(-68, Math.min(68, dx)); swipeStart.wrapper.style.setProperty('--swipe-x', `${shift}px`); swipeStart.wrapper.classList.add('swiping'); swipeStart.wrapper.classList.toggle('swipe-reply', shift > 20); swipeStart.wrapper.classList.toggle('swipe-forward', shift < -20); });
-document.addEventListener('pointerup', event => { if (!swipeStart) return; const { wrapper, x, y, moved } = swipeStart; const dx = event.clientX - x, dy = event.clientY - y; swipeStart = null; wrapper.style.removeProperty('--swipe-x'); wrapper.classList.remove('swiping','swipe-reply','swipe-forward'); if (!moved || Math.abs(dy) > 56 || Math.abs(dx) < 58) return; const message = messageById(wrapper.dataset.messageId); if (dx > 0) replyToMessage(message); else openForwardSheet(message); });
-document.addEventListener('pointercancel', () => { if (!swipeStart) return; swipeStart.wrapper.style.removeProperty('--swipe-x'); swipeStart.wrapper.classList.remove('swiping','swipe-reply','swipe-forward'); swipeStart = null; });
-window.closeForwardSheet = closeForwardSheet;
-window.forwardMessageTo = forwardMessageTo;
-
-/* Mobile long-press on a message opens the same reaction/action popover a
-   normal tap already opens (toggleMsgPopover in index.html) — normal tap
-   itself is completely untouched. Entirely separate tracking from the
-   swipe-to-reply/forward listeners above; only clears swipeStart (so the
-   same press can't also fire a swipe) and never reads/depends on it. */
-let longPressTimer = null;
-let longPressTarget = null;
-let suppressNextMsgClick = false;
-document.addEventListener('pointerdown', event => { const wrapper = event.target.closest('.message-wrapper[data-message-id]'); if (!wrapper || event.pointerType === 'mouse' || event.target.closest('.msg-popover')) return; longPressTarget = { wrapper, x: event.clientX, y: event.clientY }; longPressTimer = setTimeout(() => { longPressTimer = null; if (!longPressTarget) return; longPressTarget = null; swipeStart = null; suppressNextMsgClick = true; activePopoverMsgId = wrapper.dataset.messageId; activeMoreMenuMsgId = null; if (activeHub) renderHubMessages(false); else renderMessages(false); }, 500); });
-document.addEventListener('pointermove', event => { if (!longPressTimer || !longPressTarget) return; if (Math.abs(event.clientX - longPressTarget.x) > 10 || Math.abs(event.clientY - longPressTarget.y) > 10) { clearTimeout(longPressTimer); longPressTimer = null; longPressTarget = null; } });
-document.addEventListener('pointerup', () => { clearTimeout(longPressTimer); longPressTimer = null; longPressTarget = null; });
-document.addEventListener('pointercancel', () => { clearTimeout(longPressTimer); longPressTimer = null; longPressTarget = null; });
-document.addEventListener('click', event => { if (!suppressNextMsgClick) return; suppressNextMsgClick = false; if (event.target.closest('.message-wrapper[data-message-id]')) { event.stopPropagation(); event.preventDefault(); } }, true);
-
-const renderMessagesWithMotion = renderMessages;
-renderMessages = function(forceScroll) {
-  const list = document.getElementById('messages-list');
-  const prevTop = list ? list.scrollTop : 0;
-  renderMessagesWithMotion(forceScroll);
-  if (forceScroll) document.querySelector('.message-wrapper:last-of-type')?.classList.add('message-arrive');
-  if (!list) return;
-  // Everything that changes the list's height (messages, pins, Smart Context
-  // cards, motion) has now run. A forced render scrolls to the latest message
-  // only now, and keeps it there while attachments load (settleDmScroll in
-  // index.html). A plain re-render (Firestore snapshot, 3s poll, reaction...)
-  // puts the reading position back. That has to wait for the message-grouping
-  // observer below, which tightens message spacing in a microtask AFTER this
-  // render; when the list shrinks, scroll anchoring drags scrollTop up and the
-  // view ends up short of where it was. A microtask queued now runs after the
-  // observer's, so it sees the final layout.
-  if (forceScroll) { settleDmScroll(false); return; }
-  queueMicrotask(() => {
-    if (Math.abs(list.scrollTop - prevTop) > 1) { list.scrollTop = prevTop; updateJumpToLatestVisibility(); }
-  });
-};
-
-/* Chat Extensions: /whiteboard slash command. Hub-only, and only opens
-   anything when that Hub actually has the Whiteboard Smart Hub Feature
-   enabled (same hubHasFeature gate as the extension-menu button) — typing
-   it anywhere else just sends as ordinary text, same as any other message. */
-const beforeWhiteboardSlashCommand = sendMessage;
-sendMessage = function() {
-  const input = document.getElementById('message-input');
-  const text = input ? input.value.trim() : '';
-  if (activeHub && /^\/whiteboard$/i.test(text)) {
-    const hub = hubById(activeHub);
-    if (hub && hubHasFeature(hub, '🖊️ Whiteboard')) {
-      input.value = '';
-      openWhiteboard();
-      return;
-    }
-  }
-  return beforeWhiteboardSlashCommand();
-};
-/* Message grouping — consecutive messages from the same sender collapse
-   under one avatar/name with tighter spacing (the CSS for .msg-grouped is
-   in style.css). Purely a class toggle on the wrappers the DM and Hub
-   renderers already create, so nothing that indexes into
-   .message-wrapper (pin/reply/swipe handlers) is affected. An observer on
-   the list re-runs it after every render, whichever renderer produced it. */
-function applyMessageGrouping() {
-  const list = document.getElementById('messages-list'); if (!list) return;
-  let prevEl = null, prevKey = null;
-  Array.from(list.children).forEach(el => {
-    if (!el.classList.contains('message-wrapper')) { prevEl = null; return; }
-    // Direct chats: sent/received identifies the sender. Hubs: received
-    // messages also carry the sender's name.
-    const key = el.classList.contains('sent') ? '__me__' : (el.querySelector('.hub-message-name')?.textContent || '__them__');
-    el.classList.toggle('msg-grouped', !!prevEl && key === prevKey);
-    prevEl = el; prevKey = key;
-  });
-}
-(function () {
-  const list = document.getElementById('messages-list');
-  if (list) new MutationObserver(applyMessageGrouping).observe(list, { childList: true });
-})();
-/* ---- Home header: time-based greeting + live clock, and the header ⋯ menu ----
-   The greeting/clock only show while no chat and no Hub is open (the old
-   "Select a friend to message" state). Visibility is a single `is-home` class
-   on #chat-header, kept in sync by a MutationObserver on the elements the
-   existing selectFriend()/selectHub() already toggle, so none of that code
-   needed to change. The ⋯ button reuses the original #pinned-messages-btn id
-   (selectFriend/selectHub already show/hide it by id) and now hosts the
-   Saved Messages entry (openSavedMessagesFromMenu) as a menu item. */
-(function initHomeHeader() {
-  const header = document.getElementById('chat-header');
-  if (!header) return;
-  const helloEl = document.getElementById('home-greeting-hello');
-  const nameEl = document.getElementById('home-greeting-name');
-  const subEl = document.getElementById('home-greeting-sub');
-  const timeEl = document.getElementById('home-clock-time');
-  const dateEl = document.getElementById('home-clock-date');
-
-  function greetingFor(now) {
-    const hour = now.getHours();
-    if (hour >= 5 && hour < 12) return ['Good morning', 'Pick a chat to say hi.'];
-    if (hour >= 12 && hour < 17) return ['Good afternoon', 'Pick a chat to continue.'];
-    return ['Good evening', 'Pick a chat to catch up.'];
-  }
-  // Only touch the DOM when the text actually changed (no needless repaints).
-  function setText(el, text) { if (el && el.textContent !== text) el.textContent = text; }
-
-  function refreshHomeHeader() {
-    const isHome = !activeFriend && !activeHub;
-    header.classList.toggle('is-home', isHome);
-    if (!isHome) return;
-    const now = new Date();
-    const [hello, sub] = greetingFor(now);
-    setText(helloEl, hello);
-    setText(nameEl, currentUser ? `, ${currentUser}` : '');
-    setText(subEl, sub);
-    setText(timeEl, now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
-    setText(dateEl, now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }));
-  }
-
-  // Instant sync with the existing navigation code, without editing it:
-  // selectFriend() un-hides the avatar container, selectHub() toggles
-  // .hub-active on .main-chat, and login/logout toggles #app-screen.
-  const observer = new MutationObserver(refreshHomeHeader);
-  [document.querySelector('.main-chat'), document.getElementById('chat-header-avatar-container'), document.getElementById('app-screen')]
-    .forEach(node => { if (node) observer.observe(node, { attributes: true, attributeFilter: ['class'] }); });
-
-  // Clock: tick on the minute boundary (the display has no seconds), and
-  // catch up immediately when the tab/window comes back to the foreground.
-  (function scheduleTick() {
-    setTimeout(() => { refreshHomeHeader(); scheduleTick(); }, 60000 - (Date.now() % 60000) + 50);
-  })();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshHomeHeader(); });
-  window.addEventListener('focus', refreshHomeHeader);
-
-  refreshHomeHeader();
-})();
-
-/* Back arrow in the chat header (DMs and Hubs): returns to the home state, i.e.
-   no chat and no Hub open. It is the inverse of selectFriend()/selectHub(): drop
-   the live Firestore stream, clear the active chat, and undo every piece of
-   header/chat chrome those two switched on. The greeting, clock and the arrow's
-   own visibility then follow automatically from the .is-home sync in
-   initHomeHeader(). Works the same on desktop and mobile; on mobile the home
-   screen keeps its existing ☰ button for opening the conversations drawer. */
-function goHome() {
-  if (!activeFriend && !activeHub) return;
-  if (typeof window.unsubscribeFromConversation === 'function') window.unsubscribeFromConversation();
-  if (typeof window.unsubscribeFromHub === 'function') window.unsubscribeFromHub();
-  activeFriend = null; activeHub = null;
-  knownMsgCount = 0; activePopoverMsgId = null; activeMoreMenuMsgId = null;
-  // Anything anchored to the message input goes away with it.
-  document.getElementById('emoji-picker')?.classList.add('hidden');
-  document.getElementById('extension-menu')?.classList.add('hidden');
-  // Hub chrome (same resets selectFriend() applies when leaving a Hub).
-  document.getElementById('hub-banner-info')?.classList.remove('visible');
-  const header = document.getElementById('chat-header');
-  header.style.backgroundImage = ''; header.style.backgroundSize = ''; header.style.backgroundPosition = '';
-  const messages = document.getElementById('messages-list');
-  messages.classList.remove('hub-chat-bg');
-  applyWallpaper(localStorage.getItem('wallpaper') || '');
-  ['hub-settings-btn', 'hub-invite-btn', 'hub-pinned-messages-btn', 'hub-search-btn'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
-  document.getElementById('hub-pinned-messages-menu')?.classList.add('hidden');
-  closeHubSearch();
-  document.getElementById('pinned-messages-btn')?.classList.remove('hidden'); // home hosts the ⋯ Saved Messages menu
-  // DM chrome.
-  document.getElementById('chat-header-avatar-container').classList.add('hidden');
-  document.getElementById('chat-title').innerText = 'Select a friend to message';
-  document.getElementById('chat-input-container').classList.add('hidden');
-  messages.innerHTML = '';
-  document.querySelector('.main-chat').classList.remove('hub-active');
-  renderSidebar();
-  updateJumpToLatestVisibility();
-}
-window.goHome = goHome;
-
-function closeHeaderMoreMenu() {
-  document.getElementById('header-more-menu')?.classList.add('hidden');
-  document.getElementById('pinned-messages-btn')?.setAttribute('aria-expanded', 'false');
-}
-function toggleHeaderMoreMenu(event) {
-  if (event) event.stopPropagation();
-  const menu = document.getElementById('header-more-menu'); if (!menu) return;
-  // The pinned list used to be toggled by this very button, so if it's open,
-  // the button keeps acting as its close control.
-  const pinnedList = document.getElementById('pinned-messages-menu');
-  if (pinnedList && !pinnedList.classList.contains('hidden')) { pinnedList.classList.add('hidden'); closeHeaderMoreMenu(); return; }
-  const willOpen = menu.classList.contains('hidden');
-  menu.classList.toggle('hidden', !willOpen);
-  document.getElementById('pinned-messages-btn')?.setAttribute('aria-expanded', String(willOpen));
-}
-// Saved Messages is a home-menu entry (private bookmarks across every DM,
-// not tied to whichever conversation happens to be open), so unlike the old
-// per-conversation pinned list it never needs activeFriend to be set.
-function openSavedMessagesFromMenu() {
-  closeHeaderMoreMenu();
-  if (typeof openSavedMessages === 'function') openSavedMessages();
-}
-document.addEventListener('click', event => {
-  if (event.target.closest('.header-actions')) return;
-  closeHeaderMoreMenu();
-  document.getElementById('pinned-messages-menu')?.classList.add('hidden');
-});
-document.addEventListener('keydown', event => {
-  if (event.key !== 'Escape') return;
-  const menu = document.getElementById('header-more-menu');
-  const wasOpen = menu && !menu.classList.contains('hidden');
-  closeHeaderMoreMenu();
-  document.getElementById('pinned-messages-menu')?.classList.add('hidden');
-  if (wasOpen) document.getElementById('pinned-messages-btn')?.focus();
-});
-window.toggleHeaderMoreMenu = toggleHeaderMoreMenu;
-window.openSavedMessagesFromMenu = openSavedMessagesFromMenu;
-
-/* Hub header ⋮ menu — Invite member and Pinned messages moved off the header
-   into this dropdown. Same open/close conventions as the header "More"
-   menu above (outside click, Escape, aria-expanded). Each item still runs
-   its original handler, so permissions are unchanged. */
-function closeHubMoreMenu() {
-  document.getElementById('hub-more-menu')?.classList.add('hidden');
-  document.getElementById('hub-settings-btn')?.setAttribute('aria-expanded', 'false');
-}
-function toggleHubMoreMenu(event) {
-  if (event) event.stopPropagation();
-  const menu = document.getElementById('hub-more-menu'); if (!menu) return;
-  // If the pinned list is open, the ⋮ acts as its close control instead of
-  // stacking the menu on top of it (both open from the same corner).
-  const pinnedList = document.getElementById('hub-pinned-messages-menu');
-  if (pinnedList && !pinnedList.classList.contains('hidden')) { pinnedList.classList.add('hidden'); closeHubMoreMenu(); return; }
-  const willOpen = menu.classList.contains('hidden');
-  menu.classList.toggle('hidden', !willOpen);
-  document.getElementById('hub-settings-btn')?.setAttribute('aria-expanded', String(willOpen));
-}
-document.getElementById('hub-more-menu')?.addEventListener('click', event => {
-  if (event.target.closest('button')) closeHubMoreMenu();   // runs after the item's own handler
-});
-document.addEventListener('click', event => {
-  if (event.target.closest('.header-actions')) return;
-  closeHubMoreMenu();
-});
-document.addEventListener('keydown', event => {
-  if (event.key !== 'Escape') return;
-  const menu = document.getElementById('hub-more-menu');
-  const wasOpen = menu && !menu.classList.contains('hidden');
-  closeHubMoreMenu();
-  if (wasOpen) document.getElementById('hub-settings-btn')?.focus();
-});
-window.toggleHubMoreMenu = toggleHubMoreMenu;
+@media (max-width:360px) { .theme-preview-grid { grid-template-columns:1fr; }.theme-preview { min-height:54px; } }
 
 /* =========================================================================
-   MOONLIGHT SPARKLE — ambient effects (animated starfield, lunar ambience,
-   interactive glow). Runs ONLY while data-theme="moonlight-sparkle"; it is
-   created when the theme is selected and fully removed when it is changed.
-   Respects prefers-reduced-motion and pauses while the tab is hidden.
+   Login / Auth screen — ambient premium polish (additive layer only).
+   Everything below is scoped to #auth-screen / #auth-fx / #auth-success-fx
+   and #app-screen's entrance, so no other screen, card, or theme is touched.
    ========================================================================= */
-(function moonlightSparkleFx() {
-  const THEME = 'moonlight-sparkle';
-  const GLOW_SEL = '.icon-btn, .settings-tab, .wizard-chip, .item-list li, button, .emoji-picker button, .status-option';
-  const PAL = [[245,213,224],[255,255,255],[226,195,217],[133,134,201]];   // moon rose, white, muted rose, periwinkle
-  const reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
 
-  let fx = null, cv = null, ctx = null, orbCursor = null;
-  let raf = 0, active = false, w = 0, h = 0, dpr = 1;
-  let stars = [], shoots = [], sprites = [], nextShoot = 0;
-  let px = -9999, py = -9999;                 // pointer in CSS px
-  let tx = .5, ty = .5, sx = .5, sy = .5;     // pointer target / smoothed (0..1) for parallax
-  let cx = 0, cy = 0;                         // smoothed cursor-glow position
-  let lastTarget = null, pending = false, resizeT = 0;
-
-  function makeSprites() {
-    sprites = PAL.map(([r, g, b]) => {
-      const o = document.createElement('canvas'); o.width = o.height = 64;
-      const c = o.getContext('2d'), gr = c.createRadialGradient(32, 32, 0, 32, 32, 32);
-      gr.addColorStop(0, `rgba(${r},${g},${b},1)`);
-      gr.addColorStop(.22, `rgba(${r},${g},${b},.45)`);
-      gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
-      c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
-      return o;
-    });
-  }
-
-  function seed() {
-    const n = Math.round(Math.min(240, Math.max(90, (w * h) / 9500)));
-    stars = [];
-    for (let i = 0; i < n; i++) {
-      const z = Math.pow(Math.random(), 1.8) * 1.1 + .25;        // depth: mostly small, a few large
-      stars.push({ x:Math.random(), y:Math.random(), z, ph:Math.random() * 6.283, sp:.5 + Math.random() * 1.8,
-                   c:(Math.random() * PAL.length) | 0, big:z > 1.05 && Math.random() < .7 });
-    }
-  }
-
-  function resize() {
-    if (!cv) return;
-    w = window.innerWidth; h = window.innerHeight; dpr = Math.min(2, window.devicePixelRatio || 1);
-    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    seed();
-    if (reduceMq.matches) frame(0);        // static sky when motion is reduced
-  }
-
-  function frame(t) {
-    const sec = t / 1000;
-    sx += (tx - sx) * .05; sy += (ty - sy) * .05;
-    ctx.clearRect(0, 0, w, h);
-    for (let i = 0; i < stars.length; i++) {
-      const s = stars[i], pal = PAL[s.c];
-      let x = (((s.x + sec * .0015 * s.z) % 1) * w) - (sx - .5) * 30 * s.z;
-      let y = s.y * h - (sy - .5) * 20 * s.z;
-      const tw = .5 + .5 * Math.sin(sec * s.sp + s.ph);
-      let a = .22 + .78 * tw, r = .5 + s.z * .9;
-      const dx = x - px, dy = y - py, d2 = dx * dx + dy * dy;     // stars flare near the pointer
-      if (d2 < 22500) { const k = 1 - Math.sqrt(d2) / 150; a += k * .65; r *= 1 + k * .9; }
-      ctx.globalAlpha = Math.min(1, a);
-      if (s.big || r > 1.9) {
-        const size = r * 9; ctx.drawImage(sprites[s.c], x - size / 2, y - size / 2, size, size);
-        ctx.fillStyle = `rgb(${pal[0]},${pal[1]},${pal[2]})`;                  // 4-point sparkle
-        const L = r * 4.2 * (.6 + tw * .6);
-        ctx.fillRect(x - L, y - .45, L * 2, .9); ctx.fillRect(x - .45, y - L, .9, L * 2);
-      } else {
-        ctx.fillStyle = `rgb(${pal[0]},${pal[1]},${pal[2]})`;
-        ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
-      }
-    }
-    ctx.globalAlpha = 1;
-    if (!reduceMq.matches) {                                           // shooting stars
-      if (t > nextShoot) {
-        nextShoot = t + 4500 + Math.random() * 6500;
-        shoots.push({ x:w * (.35 + Math.random() * .65), y:Math.random() * h * .4, vx:-(7 + Math.random() * 4), vy:3 + Math.random() * 2.5, life:0 });
-      }
-      for (let i = shoots.length - 1; i >= 0; i--) {
-        const m = shoots[i]; m.x += m.vx; m.y += m.vy; m.life++;
-        const al = Math.max(0, 1 - m.life / 70), tx2 = m.x - m.vx * 9, ty2 = m.y - m.vy * 9;
-        const g = ctx.createLinearGradient(m.x, m.y, tx2, ty2);
-        g.addColorStop(0, `rgba(245,213,224,${.95 * al})`); g.addColorStop(1, 'rgba(133,134,201,0)');
-        ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tx2, ty2); ctx.stroke();
-        if (m.life > 70 || m.x < -50 || m.y > h + 50) shoots.splice(i, 1);
-      }
-    }
-    if (orbCursor && px > -999) {                                      // soft light following the pointer
-      cx += (px - cx) * .12; cy += (py - cy) * .12;
-      orbCursor.style.transform = `translate3d(${cx - 260}px,${cy - 260}px,0)`;
-    }
-  }
-
-  function loop(t) { if (!active) return; frame(t); raf = requestAnimationFrame(loop); }
-  function start() { if (!raf && active && !reduceMq.matches && !document.hidden) raf = requestAnimationFrame(loop); }
-  function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
-
-  function flushGlow() {                                               // per-element glow position
-    pending = false;
-    const el = lastTarget && lastTarget.closest ? lastTarget.closest(GLOW_SEL) : null;
-    if (el) { const r = el.getBoundingClientRect(); el.style.setProperty('--gx', (px - r.left) + 'px'); el.style.setProperty('--gy', (py - r.top) + 'px'); }
-    if (reduceMq.matches && orbCursor) { cx = px; cy = py; orbCursor.style.transform = `translate3d(${cx - 260}px,${cy - 260}px,0)`; }
-  }
-  function onMove(e) {
-    if (!active || e.pointerType === 'touch') return;
-    px = e.clientX; py = e.clientY; tx = px / (w || 1); ty = py / (h || 1); lastTarget = e.target;
-    if (orbCursor && !orbCursor.classList.contains('on')) { cx = px; cy = py; orbCursor.classList.add('on'); }
-    if (!pending) { pending = true; requestAnimationFrame(flushGlow); }
-  }
-  function onDown(e) {                                                 // tap / click sparkle pulse
-    if (!active || reduceMq.matches) return;
-    const d = document.createElement('div'); d.className = 'moon-tap';
-    d.style.left = e.clientX + 'px'; d.style.top = e.clientY + 'px';
-    document.body.appendChild(d); setTimeout(() => d.remove(), 800);
-    if (e.pointerType === 'touch') { px = e.clientX; py = e.clientY; setTimeout(() => { px = py = -9999; }, 900); }
-  }
-  function onLeave() { px = py = -9999; if (orbCursor) orbCursor.classList.remove('on'); }
-  function onResize() { clearTimeout(resizeT); resizeT = setTimeout(resize, 150); }
-  function onVis() { if (document.hidden) stop(); else start(); }
-  function onMotionChange() { stop(); if (active) { if (reduceMq.matches) frame(0); else start(); } }
-
-  function activate() {
-    if (active || !document.body) return;
-    active = true;
-    fx = document.createElement('div'); fx.id = 'moon-fx'; fx.setAttribute('aria-hidden', 'true');
-    fx.innerHTML = '<canvas class="moon-stars"></canvas><div class="moon-mist moon-mist-a"></div><div class="moon-mist moon-mist-b"></div><div class="moon-orb"></div><div class="moon-cursor"></div>';
-    document.body.insertBefore(fx, document.body.firstChild);
-    cv = fx.querySelector('canvas'); ctx = cv.getContext('2d'); orbCursor = fx.querySelector('.moon-cursor');
-    makeSprites(); resize(); nextShoot = 2500;
-    document.addEventListener('pointermove', onMove, { passive:true });
-    document.addEventListener('pointerdown', onDown, { passive:true });
-    document.documentElement.addEventListener('pointerleave', onLeave);
-    window.addEventListener('resize', onResize);
-    document.addEventListener('visibilitychange', onVis);
-    if (reduceMq.addEventListener) reduceMq.addEventListener('change', onMotionChange);
-    start();
-  }
-  function deactivate() {
-    if (!active) return;
-    active = false; stop(); clearTimeout(resizeT);
-    document.removeEventListener('pointermove', onMove);
-    document.removeEventListener('pointerdown', onDown);
-    document.documentElement.removeEventListener('pointerleave', onLeave);
-    window.removeEventListener('resize', onResize);
-    document.removeEventListener('visibilitychange', onVis);
-    if (reduceMq.removeEventListener) reduceMq.removeEventListener('change', onMotionChange);
-    if (fx) fx.remove();
-    fx = cv = ctx = orbCursor = null; stars = []; shoots = [];
-    document.querySelectorAll('.moon-tap').forEach(n => n.remove());
-  }
-  function sync() { (document.documentElement.getAttribute('data-theme') === THEME) ? activate() : deactivate(); }
-
-  new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
-  if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
-})();
-
-/* ===== Hollow Night reward: beating The Hollow (level 15) unlocks the exclusive Spectral Flame frame =====
-   The game sets localStorage 'nexora_spectral_flame' = '1'. Here we add the frame to the signed-in user's
-   inventory (once), make it selectable in Settings, and show an "Equip" notice. */
-FRAME_NAMES['frame-spectral'] = 'Spectral Flame';
-function ensureSpectralOption() {
-  const select = document.getElementById('frame-select');
-  if (!select || [...select.options].some(option => option.value === 'frame-spectral')) return;
-  const option = document.createElement('option'); option.value = 'frame-spectral'; option.textContent = '✦ Spectral Flame (Exclusive)'; select.appendChild(option);
+#auth-fx { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+  background:
+    radial-gradient(1200px 800px at 15% -10%, rgba(99,102,241,.24), transparent 55%),
+    radial-gradient(1000px 700px at 100% 105%, rgba(56,189,248,.16), transparent 55%),
+    linear-gradient(160deg, #05060d 0%, #0a0d1c 55%, #0d0a1f 100%);
 }
-function showSpectralToast() {
-  document.querySelectorAll('.spectral-toast').forEach(node => node.remove());
-  const toast = document.createElement('div'); toast.className = 'spectral-toast';
-  toast.innerHTML = '<img src="spectral-flame-frame.png?v=2" alt=""><div><strong>Exclusive reward unlocked!</strong><span>Spectral Flame profile frame — for beating The Hollow.</span></div><button type="button">Equip</button>';
-  toast.querySelector('button').onclick = () => { changeProfileFrame('frame-spectral'); ensureSpectralOption(); const select = document.getElementById('frame-select'); if (select) select.value = 'frame-spectral'; toast.remove(); };
-  document.body.appendChild(toast); setTimeout(() => toast.remove(), 12000);
+#auth-fx.auth-fx-hidden { display:none; }
+#auth-success-fx { position:fixed; inset:0; z-index:50; pointer-events:none; opacity:0;
+  background: radial-gradient(620px 620px at 50% 42%, rgba(139,140,255,.55), rgba(99,102,241,.14) 45%, transparent 70%);
 }
-function grantSpectralFlame(announce) {
-  let earned = false; try { earned = localStorage.getItem('nexora_spectral_flame') === '1'; } catch (e) {}
-  if (!currentUser || !earned) return;
-  const profile = getQuestProfile();
-  if (!profile.inventory.includes('frame-spectral')) { profile.inventory.push('frame-spectral'); saveQuestProfile(profile); if (announce) showSpectralToast(); }
-  ensureSpectralOption();
+#auth-success-fx.auth-fx-hidden { display:none; }
+
+.auth-fx-glow { position:absolute; border-radius:50%; filter:blur(80px); opacity:.55; will-change:transform; }
+.auth-fx-glow-a { width:420px; height:420px; top:-120px; left:-100px; background:radial-gradient(circle, rgba(99,102,241,.55), transparent 70%); }
+.auth-fx-glow-b { width:460px; height:460px; bottom:-140px; right:-120px; background:radial-gradient(circle, rgba(56,189,248,.4), transparent 70%); }
+
+.auth-fx-grid { position:absolute; inset:0; opacity:.28;
+  background-image:
+    linear-gradient(rgba(148,163,253,.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,253,.10) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at 50% 35%, rgba(0,0,0,.9), transparent 75%);
+  -webkit-mask-image: radial-gradient(circle at 50% 35%, rgba(0,0,0,.9), transparent 75%);
 }
-const loadAppWithSpectral = loadApp;
-loadApp = function() { loadAppWithSpectral.apply(this, arguments); grantSpectralFlame(true); };
-const openSettingsWithSpectral = openSettings;
-openSettings = function() { ensureSpectralOption(); openSettingsWithSpectral.apply(this, arguments); };
-window.addEventListener('storage', event => { if (event.key === 'nexora_spectral_flame') grantSpectralFlame(true); });
 
+.auth-fx-particles { position:absolute; inset:0; }
+.auth-fx-particles span { position:absolute; left:var(--x); top:var(--y); width:3px; height:3px; border-radius:50%;
+  background: radial-gradient(circle, #c7cdff 0%, rgba(139,140,255,.65) 55%, transparent 75%);
+  box-shadow: 0 0 6px 1px rgba(139,140,255,.55);
+  opacity:.75;
+}
+.auth-fx-particles span:nth-child(3n) { background: radial-gradient(circle, #bff0ff 0%, rgba(56,189,248,.6) 55%, transparent 75%); box-shadow:0 0 6px 1px rgba(56,189,248,.5); }
+.auth-fx-particles span:nth-child(4n) { width:2px; height:2px; }
+.auth-fx-particles span:nth-child(5n) { width:4px; height:4px; }
 
-/* Spectral Flame: wrap framed avatars so the ring art can sit around the (still round) photo. */
-(function () {
-  let queued = false;
-  function sync() {
-    queued = false;
-    document.querySelectorAll('img.frame-spectral').forEach(img => {
-      if (img.parentElement && img.parentElement.classList.contains('spectral-wrap')) return;
-      const wrap = document.createElement('span'); wrap.className = 'spectral-wrap' + (img.classList.contains('avatar-large') ? ' spectral-lg' : '');
-      img.parentNode.insertBefore(wrap, img); wrap.appendChild(img); wrap.insertAdjacentHTML('beforeend', '<i class="volt v1"></i><i class="volt v2"></i><i class="volt sp"></i>');
-    });
-    document.querySelectorAll('.spectral-wrap').forEach(wrap => {
-      const img = wrap.querySelector(':scope > img');
-      if (!img || !img.classList.contains('frame-spectral')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
-    });
-  }
-  if (!document.getElementById('spectral-volt-defs')) document.body.insertAdjacentHTML('beforeend', '<svg id="spectral-volt-defs" width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="spectral-volt" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="3" result="n"><animate attributeName="seed" values="1;5;2;8;4;7" dur="0.6s" repeatCount="indefinite" calcMode="discrete"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter></svg>');
-  function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
-  new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
-  queue();
-})();
+@media (prefers-reduced-motion: no-preference) {
+  .auth-fx-glow-a { animation: authGlowDriftA 16s ease-in-out infinite; }
+  .auth-fx-glow-b { animation: authGlowDriftB 18s ease-in-out infinite; }
+  .auth-fx-particles span { animation: authParticleFloat var(--dur) ease-in-out var(--d) infinite alternate, authParticleTwinkle calc(var(--dur) * .55) ease-in-out var(--d) infinite; }
+}
+@keyframes authGlowDriftA { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(26px,18px) scale(1.08); } }
+@keyframes authGlowDriftB { 0%,100% { transform:translate(0,0) scale(1); } 50% { transform:translate(-22px,-16px) scale(1.06); } }
+@keyframes authParticleFloat { from { transform:translateY(0); } to { transform:translateY(-16px); } }
+@keyframes authParticleTwinkle { 0%,100% { opacity:.25; } 50% { opacity:.9; } }
+
+/* Login card */
+#auth-screen {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(22,24,44,.86), rgba(12,13,26,.88));
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(148,163,253,.16);
+  border-radius: 22px;
+  padding: 38px 34px 30px;
+  color: #eef0ff;
+  overflow: hidden;
+  box-shadow:
+    0 30px 60px -20px rgba(0,0,0,.65),
+    inset 0 0 0 1px rgba(255,255,255,.03),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 80px -22px rgba(99,102,241,.4);
+}
+#auth-screen::before {
+  content: ''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background: linear-gradient(140deg, rgba(255,255,255,.07), transparent 42%);
+}
+#auth-screen #auth-title { color:#f5f6ff; letter-spacing:.01em; text-shadow: 0 0 18px rgba(99,102,241,.4); }
+#auth-screen label { color:#c7cbf5; }
+#auth-screen input, #auth-screen select {
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(148,163,253,.16);
+  color: #f2f3ff;
+}
+#auth-screen input::placeholder { color: rgba(202,207,240,.42); }
+#auth-screen input:focus, #auth-screen select:focus {
+  border-color: rgba(139,140,255,.65);
+  background: rgba(255,255,255,.075);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.22), 0 10px 24px -8px rgba(99,102,241,.5);
+}
+#auth-screen .auth-local-note { color: rgba(178,184,224,.55); }
+
+#auth-screen button { border-radius: 12px; font-weight: 700; letter-spacing:.01em; }
+#auth-screen #auth-btn {
+  background: linear-gradient(135deg, #6d7bff, #8b5cf6);
+  box-shadow: 0 10px 24px -6px rgba(99,102,241,.55), inset 0 1px rgba(255,255,255,.25);
+}
+#auth-screen #auth-btn:hover { background: linear-gradient(135deg, #7c89ff, #9a6bf7); box-shadow: 0 14px 30px -6px rgba(99,102,241,.72), inset 0 1px rgba(255,255,255,.3); }
+#auth-screen button.secondary { background: rgba(255,255,255,.035); color:#c7cbf5; border:1px solid rgba(148,163,253,.18); }
+#auth-screen button.secondary:hover { background: rgba(255,255,255,.075); color:#fff; border-color: rgba(148,163,253,.36); }
+
+/* Logo glow + reactivity */
+#auth-screen .brand-logo {
+  box-shadow: 0 0 0 1px rgba(139,140,255,.24), 0 10px 28px -6px rgba(99,102,241,.5), 0 0 36px -10px rgba(139,92,246,.42);
+}
+#auth-screen .brand-logo:hover,
+#auth-screen:focus-within .brand-logo {
+  transform: scale(1.035);
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 1px rgba(167,139,250,.4), 0 14px 36px -6px rgba(99,102,241,.7), 0 0 50px -6px rgba(167,139,250,.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #auth-screen input, #auth-screen select { transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease, border-color .22s ease, background-color .22s ease; }
+  #auth-screen input:focus, #auth-screen select:focus { transform: scale(1.016); }
+  #auth-screen button { transition: transform .16s cubic-bezier(.2,.8,.2,1), box-shadow .16s ease, filter .16s ease, background .2s ease; }
+  #auth-screen button:hover { transform: translateY(-1px) scale(1.012); }
+  #auth-screen button:active { transform: translateY(0) scale(.975); filter: brightness(.96); }
+  #auth-screen .brand-logo { transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s ease, box-shadow .35s ease; animation: authLogoBreathe 4.6s ease-in-out infinite; }
+  #auth-screen { animation: authCardIn .6s cubic-bezier(.16,.9,.28,1) both; }
+  #auth-screen > * { animation: authFieldIn .5s ease both; }
+  #auth-screen > *:nth-child(1) { animation-delay:.05s; }
+  #auth-screen > *:nth-child(2) { animation-delay:.1s; }
+  #auth-screen > *:nth-child(3) { animation-delay:.15s; }
+  #auth-screen > *:nth-child(4) { animation-delay:.2s; }
+  #auth-screen > *:nth-child(5) { animation-delay:.25s; }
+  #auth-screen > *:nth-child(6) { animation-delay:.3s; }
+  #auth-screen > *:nth-child(7) { animation-delay:.35s; }
+  #app-screen:not(.hidden) { animation: appScreenIn .55s cubic-bezier(.16,.9,.28,1) both; }
+  #auth-success-fx.play { animation: authSuccessFlash .9s ease both; }
+}
+@keyframes authLogoBreathe {
+  0%,100% { box-shadow: 0 0 0 1px rgba(139,140,255,.22), 0 10px 26px -6px rgba(99,102,241,.48), 0 0 34px -10px rgba(139,92,246,.38); }
+  50% { box-shadow: 0 0 0 1px rgba(167,139,250,.32), 0 12px 32px -6px rgba(99,102,241,.62), 0 0 46px -8px rgba(167,139,250,.52); }
+}
+@keyframes authCardIn { from { opacity:0; transform:translateY(22px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes authFieldIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes appScreenIn { from { opacity:0; transform:translateY(14px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes authSuccessFlash { 0% { opacity:0; transform:scale(.85); } 30% { opacity:1; transform:scale(1); } 100% { opacity:0; transform:scale(1.15); } }
+
+/* Error state */
+#auth-screen.auth-shake { animation: authShake .45s cubic-bezier(.36,.07,.19,.97) both, authErrorPulse .9s ease both; }
+@keyframes authShake {
+  10%,90% { transform:translateX(-1px); }
+  20%,80% { transform:translateX(2px); }
+  30%,50%,70% { transform:translateX(-4px); }
+  40%,60% { transform:translateX(4px); }
+}
+@keyframes authErrorPulse {
+  0% { box-shadow: 0 30px 60px -20px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.03), inset 0 1px 0 rgba(255,255,255,.06), 0 0 80px -22px rgba(99,102,241,.4); }
+  40% { box-shadow: 0 30px 60px -20px rgba(0,0,0,.65), inset 0 0 0 1px rgba(239,68,68,.55), inset 0 1px 0 rgba(255,255,255,.06), 0 0 90px -14px rgba(239,68,68,.55); }
+  100% { box-shadow: 0 30px 60px -20px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.03), inset 0 1px 0 rgba(255,255,255,.06), 0 0 80px -22px rgba(99,102,241,.4); }
+}
+
+/* Keep the app screen layered above the ambient background once revealed */
+#app-screen { position:relative; z-index:2; }
+
+/* Mobile: lighter, tighter, still premium */
+@media (max-width:480px) {
+  #auth-screen { padding:30px 22px 24px; border-radius:18px; }
+  .auth-fx-glow { filter: blur(60px); }
+  .auth-fx-glow-a { width:280px; height:280px; }
+  .auth-fx-glow-b { width:300px; height:300px; }
+}
+/* Hub invite menu (people-plus icon beside Hub search) — reuses existing
+   hub-modal/card/poll-option/secondary tokens, just lays out a friend list. */
+.hub-invite-card { max-width: 380px; }
+.hub-invite-friends-list { display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; margin:6px 0 10px; }
+.hub-invite-friend-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:var(--input-bg); }
+.hub-invite-friend-row .user-profile-info { gap:8px; }
+.hub-invite-friend-row button { width:auto; padding:6px 12px; margin:0; }
+.hub-invite-friend-row button:disabled { opacity:.55; cursor:default; }
+.hub-invite-empty { color:var(--text-muted); font-size:13px; padding:10px 0; }
+/* Profile header nudged up 5px so a small gap shows below it (floating feel).
+   Desktop only: .sidebar-header is already position:relative there, so `top`
+   is a purely visual shift — layout, the sections below, and the status menus
+   anchored inside the header all keep their positions relative to it. On
+   mobile the header is sticky and hosts fixed-position menus, so it's left
+   exactly as it was. */
+@media (min-width: 721px) {
+  .sidebar-header { top: -5px; }
+}
+/* Message grouping (see applyMessageGrouping in script.js): later messages
+   in a run from the same sender drop their avatar/name and sit closer.
+   The avatar is hidden, not removed, so bubbles stay aligned and the
+   popover offsets that assume the avatar column still line up. */
+.messages-list .message-wrapper.msg-grouped { margin-top:-14px; }
+.message-wrapper.msg-grouped .avatar { visibility:hidden; }
+.message-wrapper.msg-grouped .hub-message-name { display:none; }
+@media (max-width:720px) { .messages-list .message-wrapper.msg-grouped { margin-top:-8px; } }
+/* ---- Home header: greeting + live clock + ⋯ menu --------------------------
+   Everything is colored through the theme variables (--text-main,
+   --text-muted, --bg-card, --input-bg, --border, --shadow), so light, dark and
+   every custom theme pick it up with no per-theme rules. The greeting/clock
+   only exist visually while #chat-header carries .is-home (set by script.js). */
+.home-greeting, .home-clock { display:none; }
+.chat-header.is-home .home-greeting { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.chat-header.is-home .home-clock { display:flex; flex-direction:column; align-items:flex-end; gap:1px; margin-right:12px; line-height:1.15; text-align:right; white-space:nowrap; }
+.chat-header.is-home #chat-title,
+.chat-header.is-home #chat-header-avatar-container { display:none; }
+.chat-header.is-home .user-profile-info { flex:1 1 auto; min-width:0; }
+.home-greeting-title { font-size:18px; font-weight:700; letter-spacing:-.02em; line-height:1.2; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.home-greeting-sub { font-size:12.5px; font-weight:500; line-height:1.3; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.home-clock-time { font-size:17px; font-weight:650; letter-spacing:-.01em; font-variant-numeric:tabular-nums; color:var(--text-main); }
+.home-clock-date { font-size:11.5px; font-weight:500; color:var(--text-muted); }
+
+.header-more-icon { display:block; }
+#pinned-messages-btn[aria-expanded="true"] { background:color-mix(in srgb, var(--primary) 14%, var(--input-bg)); }
+.header-more-menu { position:absolute; right:0; top:46px; min-width:208px; padding:6px; background:var(--bg-card); border:1px solid var(--border); border-radius:14px; box-shadow:0 14px 32px var(--shadow); z-index:121; transform-origin:top right; }
+.header-more-menu .header-more-item { display:flex; align-items:center; justify-content:flex-start; gap:10px; width:100%; margin:0; padding:10px 12px; border:0; border-radius:9px; background:transparent; box-shadow:none; color:var(--text-main); font-size:13.5px; font-weight:600; text-align:left; cursor:pointer; }
+.header-more-menu .header-more-item:hover:not(:disabled) { background:var(--input-bg); }
+.header-more-menu .header-more-item:disabled { opacity:.45; cursor:not-allowed; }
+.header-more-item-icon { font-size:15px; line-height:1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .chat-header.is-home .home-greeting, .chat-header.is-home .home-clock { animation:homeHeaderIn .5s cubic-bezier(.22,1,.36,1) both; }
+  .header-more-menu { animation:headerMenuIn .14s ease-out both; }
+}
+@keyframes homeHeaderIn { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:none; } }
+@keyframes headerMenuIn { from { opacity:0; transform:translateY(-4px) scale(.97); } to { opacity:1; transform:none; } }
+
+@media (max-width: 720px) {
+  .home-greeting-title { font-size:16px; }
+  .home-greeting-sub { font-size:12px; }
+  .home-clock-time { font-size:15px; }
+  .home-clock-date { display:none; }
+  .chat-header.is-home .home-clock { margin-right:6px; }
+}
+@media (max-width: 480px) {
+  .home-greeting-title { font-size:15px; letter-spacing:-.015em; }
+  .home-greeting-name { display:none; }
+  .home-greeting-sub { font-size:11.5px; }
+  .home-clock-time { font-size:14px; }
+  .chat-header.is-home .home-clock { margin-right:2px; }
+}
+@media (max-width: 340px) {
+  .chat-header.is-home .home-clock { display:none; }
+}
+/* Hub header ⋮ menu (Invite member + Pinned messages live here). Reuses the
+   .header-more-menu / .header-more-item look. The menu is only meaningful
+   in a Hub, so it never shows over a Direct Chat even if left open. The
+   "+" on the invite icon was absolutely positioned for the old round
+   button; in a menu row it just sits inline. */
+.main-chat:not(.hub-active) #hub-more-menu { display:none !important; }
+#hub-more-menu #hub-invite-btn sup { position:static; margin-left:1px; font-size:9px; }
+
+/* Hollow Night minigame shortcut: large floating pumpkin tucked into the bottom-right
+   corner of the home view. It is a sibling after #chat-header, so it appears exactly
+   while the header carries .is-home (no chat/Hub open) and disappears otherwise. */
+.hollow-night-fab { display:none; position:absolute; right:18px; bottom:18px; width:84px; height:84px; border-radius:50%; align-items:center; justify-content:center; font-size:46px; line-height:1; text-decoration:none; background:radial-gradient(circle at 35% 30%, color-mix(in srgb, #f39a4a 28%, var(--bg-card)), var(--bg-card) 70%); border:2px solid rgba(243,154,74,.65); box-shadow:0 10px 26px var(--shadow), 0 0 22px rgba(243,154,74,.45), inset 0 2px 6px rgba(255,255,255,.12); z-index:40; cursor:pointer; animation:hollowFabFloat 3.2s ease-in-out infinite; transition:transform .18s ease, box-shadow .18s ease; -webkit-tap-highlight-color:transparent; }
+.chat-header.is-home ~ .hollow-night-fab { display:flex; }
+/* Soft rings that curve outward from the edges of the button */
+.hollow-night-fab::before, .hollow-night-fab::after { content:''; position:absolute; inset:-2px; border-radius:50%; border:2px solid rgba(243,154,74,.55); pointer-events:none; animation:hollowFabRipple 2.8s ease-out infinite; }
+.hollow-night-fab::after { animation-delay:1.4s; }
+.hollow-night-fab:hover { transform:scale(1.1) rotate(-6deg); box-shadow:0 12px 30px var(--shadow), 0 0 32px rgba(243,154,74,.7), inset 0 2px 6px rgba(255,255,255,.12); animation-play-state:paused; }
+.hollow-night-fab:active { transform:scale(.95); }
+@keyframes hollowFabFloat { 0%, 100% { translate:0 0; } 50% { translate:0 -10px; } }
+@keyframes hollowFabRipple { 0% { transform:scale(1); opacity:.7; } 100% { transform:scale(1.55); opacity:0; } }
+@media (max-width: 720px) { .hollow-night-fab { right:14px; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); width:72px; height:72px; font-size:40px; } }
+@media (prefers-reduced-motion: reduce) { .hollow-night-fab, .hollow-night-fab::before, .hollow-night-fab::after { animation:none; } }
+
+/* =========================================================================
+   MOONLIGHT SPARKLE — enhanced theme (starfield, lunar ambience, interactive
+   glow, frosted glass). Everything is scoped to html[data-theme="moonlight-sparkle"]
+   so no other theme is affected. Palette (unchanged, used as gradients):
+   #210635 deep night · #420D4B plum · #7B337E magenta · #6667AB periwinkle
+   #8586c9 hover periwinkle · #F5D5E0 moon rose (text) · #e2c3d9 muted
+   ========================================================================= */
+
+/* ---- Ambient layer (created by script.js only while this theme is active) ---- */
+#moon-fx { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+  background:
+    radial-gradient(900px 700px at 86% -6%, rgba(245,213,224,.17), transparent 60%),
+    radial-gradient(1100px 850px at 4% 108%, rgba(123,51,126,.5), transparent 62%),
+    radial-gradient(800px 620px at 58% 62%, rgba(102,103,171,.22), transparent 66%),
+    linear-gradient(165deg, #210635 0%, #2a0a42 48%, #420D4B 100%); }
+#moon-fx .moon-stars { position:absolute; inset:0; width:100%; height:100%; }
+#moon-fx .moon-orb { position:absolute; top:7vh; right:8vw; width:clamp(70px,9vw,130px); aspect-ratio:1; border-radius:50%;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255,255,255,.95), rgba(245,213,224,.92) 38%, #e2c3d9 62%, #8586c9 100%);
+  box-shadow: 0 0 40px 6px rgba(245,213,224,.38), 0 0 130px 30px rgba(133,134,201,.3), inset -14px -10px 28px rgba(102,103,171,.55);
+  opacity:.92; animation: moonFloat 14s ease-in-out infinite, moonBreath 7s ease-in-out infinite; }
+#moon-fx .moon-orb::before, #moon-fx .moon-orb::after { content:''; position:absolute; border-radius:50%; background:rgba(102,103,171,.28); }
+#moon-fx .moon-orb::before { width:22%; height:22%; left:52%; top:22%; }
+#moon-fx .moon-orb::after { width:14%; height:14%; left:26%; top:58%; }
+#moon-fx .moon-mist { position:absolute; border-radius:50%; filter:blur(90px); will-change:transform; }
+#moon-fx .moon-mist-a { width:560px; height:420px; left:-140px; top:34%; background:rgba(123,51,126,.34); animation: mistDriftA 46s ease-in-out infinite alternate; }
+#moon-fx .moon-mist-b { width:620px; height:460px; right:-180px; bottom:-120px; background:rgba(102,103,171,.30); animation: mistDriftB 58s ease-in-out infinite alternate; }
+#moon-fx .moon-cursor { position:absolute; left:0; top:0; width:520px; height:520px; border-radius:50%; opacity:0; transition:opacity .4s ease; mix-blend-mode:screen; will-change:transform;
+  background: radial-gradient(circle, rgba(245,213,224,.15) 0%, rgba(133,134,201,.10) 38%, transparent 68%); }
+#moon-fx .moon-cursor.on { opacity:1; }
+.moon-tap { position:fixed; z-index:2000; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; pointer-events:none;
+  background: radial-gradient(circle, rgba(245,213,224,.9), rgba(133,134,201,.45) 55%, transparent 72%); animation: moonTap .75s ease-out forwards; }
+@keyframes moonFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-14px); } }
+@keyframes moonBreath { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.12); } }
+@keyframes mistDriftA { from { transform:translate3d(0,0,0) scale(1); } to { transform:translate3d(140px,-60px,0) scale(1.18); } }
+@keyframes mistDriftB { from { transform:translate3d(0,0,0) scale(1); } to { transform:translate3d(-150px,50px,0) scale(1.15); } }
+@keyframes moonTap { to { transform:scale(11); opacity:0; } }
+html[data-theme="moonlight-sparkle"] #auth-fx { display:none; }
+
+/* ---- Layout sits above the ambient layer ---- */
+html[data-theme="moonlight-sparkle"] body { background:#210635; }
+html[data-theme="moonlight-sparkle"] #app-screen,
+html[data-theme="moonlight-sparkle"] #auth-screen { position:relative; z-index:1; }
+html[data-theme="moonlight-sparkle"] h2,
+html[data-theme="moonlight-sparkle"] h3 { text-shadow:0 0 18px rgba(245,213,224,.32); }
+
+/* ---- Frosted glass surfaces ---- */
+html[data-theme="moonlight-sparkle"] #app-screen { background:transparent; border:1px solid rgba(245,213,224,.2);
+  box-shadow:0 24px 70px rgba(10,2,20,.62), 0 0 60px rgba(123,51,126,.22), inset 0 1px 0 rgba(255,255,255,.1); }
+html[data-theme="moonlight-sparkle"] .sidebar { border-right:1px solid rgba(245,213,224,.14);
+  background:linear-gradient(180deg, rgba(66,13,75,.46), rgba(33,6,53,.58));
+  -webkit-backdrop-filter:blur(22px) saturate(150%); backdrop-filter:blur(22px) saturate(150%); }
+html[data-theme="moonlight-sparkle"] .main-chat {
+  background:linear-gradient(160deg, rgba(33,6,53,.34), rgba(66,13,75,.30) 55%, rgba(123,51,126,.18));
+  -webkit-backdrop-filter:blur(14px) saturate(140%); backdrop-filter:blur(14px) saturate(140%); }
+html[data-theme="moonlight-sparkle"] .chat-header,
+html[data-theme="moonlight-sparkle"] .chat-input,
+html[data-theme="moonlight-sparkle"] .sidebar-header {
+  background:linear-gradient(135deg, rgba(66,13,75,.62), rgba(123,51,126,.34));
+  border-color:rgba(245,213,224,.14); box-shadow:inset 0 1px 0 rgba(255,255,255,.07); }
+html[data-theme="moonlight-sparkle"] .section { border-bottom-color:rgba(245,213,224,.12); }
+html[data-theme="moonlight-sparkle"] .card {
+  background:linear-gradient(145deg, rgba(66,13,75,.66), rgba(33,6,53,.74));
+  border:1px solid rgba(245,213,224,.2);
+  -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%);
+  box-shadow:0 18px 55px rgba(10,2,20,.6), 0 0 40px rgba(123,51,126,.2), inset 0 1px 0 rgba(255,255,255,.12); }
+html[data-theme="moonlight-sparkle"] .modal { background:rgba(20,4,34,.5); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+html[data-theme="moonlight-sparkle"] .emoji-picker,
+html[data-theme="moonlight-sparkle"] .extension-menu,
+html[data-theme="moonlight-sparkle"] .quick-status-popover,
+html[data-theme="moonlight-sparkle"] .add-friend-menu,
+html[data-theme="moonlight-sparkle"] .message-hover-bar {
+  background:linear-gradient(145deg, rgba(66,13,75,.82), rgba(33,6,53,.88)); border:1px solid rgba(245,213,224,.2);
+  -webkit-backdrop-filter:blur(18px) saturate(150%); backdrop-filter:blur(18px) saturate(150%); }
+html[data-theme="moonlight-sparkle"] .item-list li {
+  background:linear-gradient(135deg, rgba(66,13,75,.55), rgba(123,51,126,.22)); border-color:rgba(245,213,224,.14); }
+html[data-theme="moonlight-sparkle"] input, html[data-theme="moonlight-sparkle"] select, html[data-theme="moonlight-sparkle"] textarea {
+  background-color:rgba(123,51,126,.34); border-color:rgba(245,213,224,.2); }
+html[data-theme="moonlight-sparkle"] input:focus, html[data-theme="moonlight-sparkle"] textarea:focus {
+  border-color:#8586c9; box-shadow:0 0 0 3px rgba(133,134,201,.25), 0 0 18px rgba(245,213,224,.16); }
+html[data-theme="moonlight-sparkle"] .icon-btn { background-color:rgba(123,51,126,.4); border-color:rgba(245,213,224,.2); }
+
+/* ---- Gradient variants of the palette ---- */
+html[data-theme="moonlight-sparkle"] .message.sent {
+  background:linear-gradient(135deg, #6667AB 0%, #7B337E 100%); box-shadow:0 4px 18px rgba(102,103,171,.35), inset 0 1px 0 rgba(255,255,255,.16); }
+html[data-theme="moonlight-sparkle"] .message.received {
+  background:linear-gradient(135deg, rgba(66,13,75,.78), rgba(88,28,96,.62)); box-shadow:inset 0 0 0 1px rgba(245,213,224,.16), 0 2px 10px rgba(10,2,20,.3); }
+html[data-theme="moonlight-sparkle"] #send-btn,
+html[data-theme="moonlight-sparkle"] .wizard-actions button:not(.secondary),
+html[data-theme="moonlight-sparkle"] .dialog-actions button:not(.secondary),
+html[data-theme="moonlight-sparkle"] .card > button:not(.secondary):not(.modal-close-btn),
+html[data-theme="moonlight-sparkle"] .settings-tab.active,
+html[data-theme="moonlight-sparkle"] .wizard-chip.selected {
+  background-color:#6667AB; background-image:linear-gradient(135deg, #6667AB 0%, #7B337E 100%); color:#fff; border-color:rgba(245,213,224,.28);
+  box-shadow:0 4px 16px rgba(102,103,171,.32), inset 0 1px 0 rgba(255,255,255,.18); }
+
+/* ---- Interactive glow: light follows the pointer over interactive surfaces ---- */
+html[data-theme="moonlight-sparkle"] :is(.icon-btn, .settings-tab, .wizard-chip, .item-list li, button.secondary, .emoji-picker button, .status-option):hover {
+  background-image:radial-gradient(170px circle at var(--gx,50%) var(--gy,50%), rgba(245,213,224,.26), transparent 65%); }
+html[data-theme="moonlight-sparkle"] :is(#send-btn, .wizard-actions button:not(.secondary), .dialog-actions button:not(.secondary), .card > button:not(.secondary):not(.modal-close-btn), .settings-tab.active, .wizard-chip.selected):hover {
+  background-image:radial-gradient(150px circle at var(--gx,50%) var(--gy,50%), rgba(255,255,255,.34), transparent 62%), linear-gradient(135deg, #8586c9 0%, #9a46a0 100%);
+  box-shadow:0 6px 24px rgba(133,134,201,.5), 0 0 22px rgba(245,213,224,.2), inset 0 1px 0 rgba(255,255,255,.22); }
+html[data-theme="moonlight-sparkle"] .message.sent:hover { box-shadow:0 6px 24px rgba(133,134,201,.5), inset 0 1px 0 rgba(255,255,255,.2); }
+html[data-theme="moonlight-sparkle"] .card:hover { box-shadow:0 18px 55px rgba(10,2,20,.6), 0 0 55px rgba(133,134,201,.28), inset 0 1px 0 rgba(255,255,255,.14); }
+
+/* ---- Fallbacks & comfort ---- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-theme="moonlight-sparkle"] .sidebar { background:linear-gradient(180deg,#420D4B,#210635); }
+  html[data-theme="moonlight-sparkle"] .main-chat { background:linear-gradient(160deg,#2a0a42,#3a0f48); }
+  html[data-theme="moonlight-sparkle"] .card { background:linear-gradient(145deg,#420D4B,#2a0a42); }
+}
+@media (max-width: 720px) {
+  html[data-theme="moonlight-sparkle"] .sidebar, html[data-theme="moonlight-sparkle"] .main-chat { -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  #moon-fx .moon-cursor { display:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #moon-fx .moon-orb, #moon-fx .moon-mist { animation:none; }
+  .moon-tap { display:none; }
+}
+
+/* ===== Spectral Flame — exclusive profile frame (reward for beating The Hollow in Hollow Night, level 15) =====
+   script.js wraps any avatar that has the frame-spectral class in .spectral-wrap. The ring art is drawn exactly as
+   designed (::after, no stretching or scaling); three <i> layers add electricity flowing around the glass ring. */
+.spectral-wrap { --t:2px; position:relative; display:inline-block; flex:0 0 auto; line-height:0; vertical-align:middle; isolation:isolate; }
+.spectral-wrap > img { margin:0 !important; position:relative; z-index:1; }
+.spectral-wrap.spectral-lg { --t:3px; display:block; width:70px; margin:34px auto 44px auto; }
+.spectral-wrap::before { content:''; position:absolute; inset:0; border-radius:50%; z-index:0; pointer-events:none; animation:spectralAura 2.4s ease-in-out infinite; }
+.spectral-wrap::after { content:''; position:absolute; left:50%; top:50%; width:185%; height:185%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
+  background:url('spectral-flame-frame.png?v=2') center/100% 100% no-repeat; animation:spectralSurge 2.4s ease-in-out infinite; }
+/* electricity: bright comets racing around the ring, jagged by an SVG displacement filter, flickering like current */
+.spectral-wrap .volt { position:absolute; inset:-4%; z-index:3; pointer-events:none; border-radius:50%;
+  -webkit-mask:radial-gradient(farthest-side,#0000 calc(100% - var(--t)),#000 calc(100% - var(--t) + .5px)); mask:radial-gradient(farthest-side,#0000 calc(100% - var(--t)),#000 calc(100% - var(--t) + .5px));
+  filter:url(#spectral-volt) drop-shadow(0 0 3px #22d3ee); mix-blend-mode:screen; }
+.spectral-wrap .v1 { background:conic-gradient(from 0deg,transparent 0deg 215deg,#22d3ee 290deg,#fff 352deg,transparent 360deg); animation:voltSpin 1.5s linear infinite,voltFlicker 2.3s steps(1) infinite; }
+.spectral-wrap .v2 { background:conic-gradient(from 90deg,transparent 0deg 260deg,#c084fc 320deg,#fff 356deg,transparent 360deg); animation:voltSpin 2.3s linear infinite reverse,voltFlicker 1.7s steps(1) infinite .4s; }
+.spectral-wrap .sp { inset:-9%; -webkit-mask:none; mask:none; filter:drop-shadow(0 0 3px #fff); animation:voltSpin 3.1s linear infinite,voltFlicker 1.3s steps(1) infinite .2s;
+  background:radial-gradient(circle at 50% 0,#fff 0 1.4px,#0000 2.6px),radial-gradient(circle at 100% 50%,#a5f3fc 0 1.2px,#0000 2.4px),radial-gradient(circle at 15% 85%,#e9d5ff 0 1.2px,#0000 2.4px); }
+.message-wrapper.msg-grouped .spectral-wrap { visibility:hidden; }
+@keyframes voltSpin { to { transform:rotate(360deg); } }
+@keyframes voltFlicker { 0%,100%{opacity:1} 7%{opacity:.5} 9%{opacity:1} 43%{opacity:.8} 46%{opacity:.35} 48%{opacity:1} 78%{opacity:.65} 80%{opacity:1} }
+@keyframes spectralAura { 0%,100%{ box-shadow:0 0 5px 1px #7c3aed99; } 50%{ box-shadow:0 0 9px 3px #22d3ee88; } }
+@keyframes spectralSurge { 0%,100%{ filter:drop-shadow(0 0 3px #8b5cf6) drop-shadow(0 0 7px #6366f188); } 46%{ filter:drop-shadow(0 0 3px #8b5cf6) drop-shadow(0 0 7px #6366f188); } 50%{ filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 14px #22d3ee); } 54%{ filter:drop-shadow(0 0 4px #c084fc) drop-shadow(0 0 9px #22d3eecc); } }
+.spectral-toast { position:fixed; right:18px; bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:5000; display:flex; align-items:center; gap:12px; max-width:min(380px,calc(100vw - 36px)); padding:12px 14px; border-radius:16px; color:#f5f0ff; background:linear-gradient(135deg,#1b1240f2,#0f1530f2); border:1px solid #8b5cf6; box-shadow:0 10px 30px rgba(20,8,60,.55),0 0 22px #8b5cf666; animation:spectralToastIn .45s cubic-bezier(.2,.9,.3,1.2); }
+.spectral-toast img { width:54px; height:54px; flex:0 0 auto; filter:drop-shadow(0 0 6px #a855f7); }
+.spectral-toast div { display:flex; flex-direction:column; gap:2px; font-size:13px; line-height:1.3; min-width:0; }
+.spectral-toast strong { font-size:14px; }
+.spectral-toast span { color:#c9bff0; }
+.spectral-toast button { flex:0 0 auto; border:0; border-radius:10px; padding:8px 12px; font-weight:700; cursor:pointer; color:#fff; background:linear-gradient(135deg,#7c3aed,#06b6d4); }
+@keyframes spectralToastIn { from { opacity:0; transform:translateY(16px) scale(.96); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce) {
+  .spectral-wrap::before, .spectral-wrap::after, .spectral-wrap .volt { animation:none; }
+  .spectral-toast { animation:none; }
+}
+
+/* =========================================================================
+   USER PROFILE (profile.js) — token-based so every Nexora theme just works.
+   The panel is laid over .main-chat; the sidebar stays usable on desktop and
+   the mobile drawer is closed when a profile opens.
+   ========================================================================= */
+.main-chat { position:relative; }
+.main-chat > .profile-view { position:absolute; inset:0; z-index:30; display:flex; flex-direction:column; min-height:0; background:var(--bg-main); color:var(--text-main); animation:profileIn .22s ease both; }
+@keyframes profileIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* Hide (not remove) the chat underneath, so DM/Hub state and scroll position are kept and it can't show through translucent themes or take focus. */
+.main-chat.profile-open > *:not(.profile-view) { visibility:hidden; }
+.profile-topbar { flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--bg-card); border-bottom:1px solid var(--border); }
+.profile-topbar-title { font-weight:600; font-size:15px; }
+.profile-view .profile-back-btn { width:38px; min-width:38px; height:38px; flex:0 0 auto; margin:0; padding:0; }
+.profile-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:20px 16px 36px; }
+
+.profile-card { max-width:720px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; box-shadow:0 10px 30px var(--shadow); overflow:hidden; }
+.profile-banner { height:120px; background:radial-gradient(circle at 18% 20%, rgba(255,255,255,.28), transparent 55%), linear-gradient(135deg, var(--primary) 0%, var(--bg-sidebar) 150%); }
+
+.profile-head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px 18px; align-items:start; padding:0 24px 12px; margin-top:-46px; }
+.profile-avatar-wrap { position:relative; width:104px; height:104px; }
+.profile-avatar-wrap .profile-avatar { width:104px; height:104px; margin:0; border:4px solid var(--bg-card); background:var(--input-bg); }
+.profile-avatar-wrap .status-badge { right:3px; bottom:3px; width:24px; height:24px; border-width:4px; z-index:5; }   /* sits on the circle's bottom-right edge */
+.profile-avatar-wrap .status-badge .status-icon { display:flex; width:100%; height:100%; }
+.profile-view .profile-avatar-edit { position:absolute; z-index:5; left:0; bottom:0; width:30px; height:30px; padding:0; margin:0; border-radius:50%; font-size:14px; line-height:1; border:3px solid var(--bg-card); }
+
+/* Special frames (e.g. Spectral Flame) wrap the photo in .spectral-wrap, sized for the 70px Settings avatar — keep it exactly the size of the profile photo so the badge stays on the edge. */
+.profile-avatar-wrap .spectral-wrap, .profile-avatar-wrap .spectral-wrap.spectral-lg { display:block; width:104px; height:104px; margin:0; }
+.profile-ident { min-width:0; padding:54px 0 6px; text-align:left; }   /* 54px = sits below the banner, beside the avatar */
+.profile-name { margin:0; text-align:left; font-size:22px; line-height:1.2; word-break:break-word; outline:none; }
+.profile-handle { min-height:20px; margin-top:2px; color:var(--text-muted); font-size:14px; display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.profile-badge { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 9px; border-radius:999px; background:var(--input-bg); border:1px solid var(--border); color:var(--text-main); }
+.profile-status { display:flex; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:var(--text-muted); }
+.profile-status-dot { width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+
+.profile-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; align-self:start; gap:8px; padding:54px 0 6px; }
+#profile-view button.profile-btn { width:auto; margin:0; padding:10px 18px; }
+#profile-view button.profile-btn:disabled { opacity:.55; cursor:not-allowed; }
+
+.profile-note { display:none; margin:6px 24px 0; padding:10px 14px; border-radius:10px; font-size:13px; line-height:1.4; background:var(--input-bg); border:1px solid var(--border); }
+.profile-note.show { display:block; }
+.profile-note.ok { border-color:var(--status-online); }
+.profile-note.warn { border-color:var(--status-idle); }
+
+.profile-body { display:grid; gap:20px; padding:14px 24px 26px; }
+.profile-section h3, .profile-label { margin:0 0 8px; text-align:left; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); }
+.profile-bio { margin:0; text-align:left; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+.profile-muted { color:var(--text-muted); margin:0; }
+.profile-details { margin:0; align-items:start; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+.profile-detail { background:var(--input-bg); border:1px solid var(--border); border-radius:12px; padding:12px 14px; min-width:0; }
+.profile-detail dt { margin:0 0 4px; font-size:12px; color:var(--text-muted); }
+.profile-detail dd { margin:0; font-size:14px; word-break:break-word; }
+.profile-private { margin-left:6px; font-size:10px; font-weight:600; opacity:.8; }
+.profile-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.profile-chip { padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--input-bg); color:var(--text-main); font-size:13px; line-height:1.3; }
+.profile-chip.selectable { cursor:pointer; user-select:none; padding:8px 14px; }
+.profile-chip.selectable:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.profile-chip.selectable.selected { background:var(--primary); color:#fff; border-color:var(--primary); }
+.profile-empty { display:flex; flex-direction:column; gap:6px; align-items:center; text-align:center; padding:36px 12px; color:var(--text-muted); }
+.profile-empty strong { color:var(--text-main); font-size:16px; }
+
+.profile-edit { display:grid; gap:4px; }
+.profile-edit label { font-size:13px; font-weight:600; margin-top:6px; }
+.profile-hint { font-weight:400; font-size:12px; color:var(--text-muted); margin-left:6px; }
+.profile-edit input { margin-bottom:6px; }
+.profile-textarea { width:100%; min-height:96px; resize:vertical; padding:12px 14px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); border-radius:8px; font:inherit; font-size:14px; line-height:1.5; outline:none; }
+.profile-textarea:focus, .profile-edit input:focus { border-color:var(--primary); }
+.profile-counter { text-align:right; font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+.profile-edit-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+
+/* ---- Clickable avatars / usernames elsewhere in Nexora ---- */
+[data-profile-user],
+.sidebar-header .user-name-block,
+#friends-list li .avatar-container,
+#requests-list li > span:first-child,
+#chat-header.has-profile-link #chat-header-avatar-container,
+#chat-header.has-profile-link #chat-title,
+.message-body-row > img.avatar,
+.hub-message-name,
+.hub-member-chip { cursor:pointer; }
+.sidebar-header .user-name-block:hover strong,
+#requests-list li > span:first-child:hover,
+#chat-header.has-profile-link #chat-title:hover,
+.hub-message-name:hover { text-decoration:underline; }
+.message-body-row > img.avatar:hover,
+#friends-list li .avatar-container:hover .avatar { box-shadow:0 0 0 2px var(--primary); }
+
+/* ---- Responsive ---- */
+@media (max-width: 720px) {
+  .profile-scroll { padding:12px 10px 28px; }
+  .profile-card { border-radius:14px; }
+  .profile-banner { height:96px; }
+  .profile-head { grid-template-columns:1fr; justify-items:center; text-align:center; padding:0 16px 10px; margin-top:-52px; }
+  .profile-handle, .profile-status { justify-content:center; }
+  .profile-ident { padding:6px 0 0; text-align:center; }
+  .profile-name { text-align:center; }
+  .profile-actions { justify-content:center; width:100%; padding:0; }
+  #profile-view .profile-actions button.profile-btn { flex:1 1 130px; }
+  .profile-note { margin:6px 16px 0; }
+  .profile-body { padding:12px 16px 22px; }
+  .profile-edit-actions button { flex:1 1 130px; }
+}
+@media (max-width: 360px) { .profile-name { font-size:19px; } .profile-avatar-wrap, .profile-avatar-wrap .profile-avatar { width:92px; height:92px; } }
+@media (prefers-reduced-motion: reduce) { .main-chat > .profile-view { animation:none; } }
+
+/* ---- Theme touches (colours still come from each theme's own variables) ---- */
+html[data-theme="moonlight-sparkle"] .main-chat > .profile-view { background:transparent; }
+html[data-theme="moonlight-sparkle"] .profile-topbar { background:linear-gradient(135deg, rgba(66,13,75,.62), rgba(123,51,126,.34)); border-color:rgba(245,213,224,.14); }
+html[data-theme="moonlight-sparkle"] .profile-card { background:linear-gradient(145deg, rgba(66,13,75,.66), rgba(33,6,53,.74)); border-color:rgba(245,213,224,.2); -webkit-backdrop-filter:blur(22px) saturate(150%); backdrop-filter:blur(22px) saturate(150%); box-shadow:0 18px 55px rgba(10,2,20,.6), 0 0 40px rgba(123,51,126,.2), inset 0 1px 0 rgba(255,255,255,.12); }
+html[data-theme="moonlight-sparkle"] .profile-banner { background:radial-gradient(circle at 18% 20%, rgba(245,213,224,.3), transparent 55%), linear-gradient(135deg,#6667AB 0%,#7B337E 60%,#420D4B 100%); }
+html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secondary) { background-color:#6667AB; background-image:linear-gradient(135deg,#6667AB 0%,#7B337E 100%); }
+[data-theme="durga-puja"] .main-chat > .profile-view { background:transparent; }
+[data-theme="halloween"] .main-chat > .profile-view { background:transparent; }
+[data-theme="durga-puja"] .profile-banner { background:var(--durga-gradient); }
+[data-theme="halloween"] .profile-banner { background:var(--halloween-gradient); }
+[data-theme="durga-puja"] #profile-view button.profile-btn:not(.secondary), [data-theme="durga-puja"] .profile-chip.selectable.selected { background:var(--durga-gradient); color:#171719; border-color:#D6A84B; }
+[data-theme="halloween"] #profile-view button.profile-btn:not(.secondary), [data-theme="halloween"] .profile-chip.selectable.selected { background:var(--halloween-gradient); color:#FFF2DE; border-color:#C56B2D; }
+
+/* ---- Hall of Victories (profile page). Trophies are added later; until then an empty state is shown. ---- */
+.profile-trophies-empty { display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; padding:22px 14px; border:1px dashed var(--border); border-radius:14px; background:var(--input-bg); color:var(--text-muted); }
+.profile-trophies-empty svg { color:var(--primary); opacity:.85; margin-bottom:4px; }
+.profile-trophies-empty strong { color:var(--text-main); font-size:15px; }
+.profile-trophies-empty span { font-size:13px; }
+/* a trophy card: big image with its title underneath — it floats gently, and grows + glows when hovered */
+.profile-trophies { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px; }
+.profile-trophy { display:flex; flex-direction:column; align-items:center; gap:12px; padding:20px 12px 16px; border:1px solid var(--border); border-radius:16px; background:var(--input-bg); text-align:center; word-break:break-word; cursor:default; overflow:visible; transition:border-color .3s ease, box-shadow .3s ease, transform .3s ease; }
+.profile-trophy-art { display:block; animation:trophyFloat 4.2s ease-in-out infinite; }
+.profile-trophy-art img { display:block; width:100%; max-width:130px; height:140px; margin:0 auto; object-fit:contain; transform-origin:50% 60%; filter:drop-shadow(0 6px 16px rgba(255,40,80,.35)); transition:transform .45s cubic-bezier(.2,.9,.25,1.2), filter .45s ease; }
+.profile-trophy-name { font-family:'Metal Mania', Impact, fantasy; font-weight:400; font-size:21px; line-height:1.15; letter-spacing:.04em; color:var(--text-main); text-shadow:0 0 14px rgba(255,40,80,.55); transition:text-shadow .3s ease, letter-spacing .3s ease; }
+.profile-trophy:hover, .profile-trophy:active { border-color:rgba(255,60,100,.7); box-shadow:0 0 26px rgba(255,40,80,.28), inset 0 0 24px rgba(255,40,80,.08); transform:translateY(-2px); }
+.profile-trophy:hover .profile-trophy-art img, .profile-trophy:active .profile-trophy-art img { transform:scale(1.22); filter:drop-shadow(0 10px 26px rgba(255,50,90,.75)) brightness(1.08); }
+.profile-trophy:hover .profile-trophy-name, .profile-trophy:active .profile-trophy-name { letter-spacing:.07em; text-shadow:0 0 22px rgba(255,60,100,.95); }
+@keyframes trophyFloat { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .profile-trophy-art { animation:none; } .profile-trophy, .profile-trophy-art img, .profile-trophy-name { transition:none; } }
+
+/* status (e.g. "Studying") sits on the same line as the You / Friend tag */
+.profile-handle .profile-status { margin-top:0; }
+/* ---- Badges (right-hand column of the profile body) ---- */
+.profile-card { max-width:860px; }
+.profile-body:has(.profile-side) { grid-template-columns:minmax(0,1fr) 230px; align-items:start; gap:20px 24px; }
+.profile-main { display:grid; gap:20px; min-width:0; }
+.profile-side { min-width:0; }
+.profile-badges-section { padding:14px; background:var(--input-bg); border:1px solid var(--border); border-radius:14px; }
+.profile-section-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.profile-section-head h3 { margin:0; }
+.profile-badges-count { margin-left:4px; font-weight:600; letter-spacing:0; opacity:.8; }
+#profile-view button.profile-link-btn { width:auto; margin:0; padding:2px 6px; background:none; box-shadow:none; border:0; border-radius:6px; color:var(--primary); font-size:12px; font-weight:600; cursor:pointer; }
+#profile-view button.profile-link-btn:hover { text-decoration:underline; }
+#profile-view button.profile-link-btn:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.profile-badges { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.profile-badge-tile { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 2px; border-radius:12px; background:var(--bg-card); border:1px solid var(--border); text-align:center; min-width:0; cursor:default; transition:border-color .2s ease, transform .2s ease; }
+.profile-badge-tile:hover { border-color:var(--primary); transform:translateY(-1px); }
+.profile-badge-icon { font-size:22px; line-height:1.2; }
+.profile-badge-name { max-width:100%; font-size:10.5px; line-height:1.2; color:var(--text-main); word-break:break-word; }
+.profile-badge-tile.locked { opacity:.45; }
+.profile-badge-tile.locked .profile-badge-icon { filter:grayscale(1); }
+@media (max-width: 720px) {
+  .profile-body:has(.profile-side) { grid-template-columns:minmax(0,1fr); }
+  .profile-badges { grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .profile-badge-tile { transition:none; } .profile-badge-tile:hover { transform:none; } }
