@@ -218,11 +218,14 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     </form>`;
   }
 
-  /* Hall of Victories — trophies will be added later.
-     Pass an array of { name, image } as `m.trophies` to show them; with none, a friendly empty state is shown. */
+  /* Hall of Victories. Every trophy in this list is shown on profiles for now; later, pass a per-user
+     array of { name, image } as `m.trophies` (e.g. only the ones that user earned). With none, an empty state shows. */
+  const TROPHIES = [
+    { id: 'hollow-night-2026', name: 'Hollow Night 2026', image: 'trophy-hollow-night-2026.png' }
+  ];
   const TROPHY_ICON = '<svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5a2 2 0 0 0 0 4h3M16 6h3a2 2 0 0 1 0 4h-3"/><path d="M12 13v4M10 17h4M9 20h6"/></svg>';
   function trophiesHTML(m) {
-    const items = Array.isArray(m.trophies) ? m.trophies : [];
+    const items = Array.isArray(m.trophies) ? m.trophies : TROPHIES;
     if (!items.length) {
       return `<div class="profile-trophies-empty">${TROPHY_ICON}<strong>No trophies yet</strong><span>${m.isMe ? 'Trophies you earn will be displayed here.' : 'Trophies they earn will be displayed here.'}</span></div>`;
     }
