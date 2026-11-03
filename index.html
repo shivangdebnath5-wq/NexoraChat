@@ -819,6 +819,12 @@
           <div id="hub-pinned-messages-menu" class="pinned-messages-menu hidden"></div>
         </div>
       </div>
+      <!-- Diwali countdown strip: sits right under the home greeting (only while .is-home); filled in by initDiwaliStrip() in script.js -->
+      <div id="diwali-strip" class="diwali-strip" role="status" aria-live="polite">
+        <span class="diwali-diya" aria-hidden="true"><svg viewBox="0 0 32 32" width="26" height="26"><defs><radialGradient id="diyaGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb938" stop-opacity=".75"/><stop offset="1" stop-color="#ffb938" stop-opacity="0"/></radialGradient><linearGradient id="diyaFlame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff7a18"/><stop offset=".6" stop-color="#ffc83d"/><stop offset="1" stop-color="#fff3b0"/></linearGradient></defs><circle class="diya-glow" cx="16" cy="12" r="11" fill="url(#diyaGlow)"/><path class="diya-flame" d="M16 3c2.6 3 4 5.2 4 7.3a4 4 0 0 1-8 0C12 8.200 13.400 6 16 3z" fill="url(#diyaFlame)"/><path d="M4 17h24c0 5.500-4.800 10-12 10S4 22.500 4 17z" fill="#c2561b"/><path d="M4 17h24" stroke="#f0a04b" stroke-width="2" stroke-linecap="round"/><path d="M11 29h10" stroke="#8a3a10" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span class="diwali-text"><strong id="diwali-main"></strong><span id="diwali-sub" class="diwali-sub"></span></span>
+        <button type="button" class="diwali-link" onclick="openShop()">Explore Goodies <span aria-hidden="true">→</span></button>
+      </div>
       <!-- Floating Hollow Night minigame shortcut: only visible on the home view
            (CSS: .chat-header.is-home ~ #hollow-night-fab), hidden inside chats/Hubs. -->
       <a id="hollow-night-fab" class="hollow-night-fab" href="hollow_night.html" title="Play Hollow Night" aria-label="Play Hollow Night minigame">🎃</a>
