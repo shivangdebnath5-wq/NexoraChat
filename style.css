@@ -1008,3 +1008,15 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 .profile-badge-card small { font-size:11px; color:var(--text-muted); }
 .profile-badge-card.locked { opacity:.5; }
 .profile-badge-card.locked .profile-badge-icon { filter:grayscale(1); }
+
+/* ---- Featured art badge: purple glow behind, grows on hover, Creepster title ---- */
+.profile-badge-feature { grid-column:1 / -1; position:relative; display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 4px 4px; cursor:default; isolation:isolate; }
+.profile-badge-glow { position:absolute; left:50%; top:44%; width:78%; aspect-ratio:1; transform:translate(-50%,-50%); z-index:-1; border-radius:50%; background:radial-gradient(circle, rgba(168,85,247,.75) 0%, rgba(126,34,206,.38) 45%, transparent 70%); filter:blur(14px); opacity:.75; animation:badgeGlow 3.4s ease-in-out infinite; transition:opacity .35s ease, width .35s ease; }
+.profile-badge-feature img { display:block; width:100%; max-width:150px; height:auto; transform-origin:50% 55%; filter:drop-shadow(0 4px 12px rgba(168,85,247,.55)); transition:transform .4s cubic-bezier(.2,.9,.25,1.2), filter .4s ease; }
+.profile-badge-feature:hover img, .profile-badge-feature:active img { transform:scale(1.18); filter:drop-shadow(0 6px 22px rgba(192,110,255,.95)); }
+.profile-badge-feature:hover .profile-badge-glow, .profile-badge-feature:active .profile-badge-glow { opacity:1; width:100%; }
+.profile-badge-feature-name { font-family:'Creepster', 'Metal Mania', Impact, fantasy; font-weight:400; font-size:20px; line-height:1.1; letter-spacing:.05em; text-align:center; color:var(--text-main); text-shadow:0 0 12px rgba(168,85,247,.8); }
+.profile-badge-card strong.profile-badge-feature-name { font-size:17px; font-weight:400; }
+.profile-badge-card-img { width:64px; height:64px; object-fit:contain; filter:drop-shadow(0 2px 8px rgba(168,85,247,.6)); }
+@keyframes badgeGlow { 0%, 100% { opacity:.55; } 50% { opacity:.9; } }
+@media (prefers-reduced-motion: reduce) { .profile-badge-glow { animation:none; } .profile-badge-feature img { transition:none; } }
