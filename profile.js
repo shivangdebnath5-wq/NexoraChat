@@ -55,7 +55,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
   /* ---------- State ---------- */
   let view = null, scrollEl = null, photoInput = null;
   let isOpen = false, pushed = false, editing = false;
-  let viewing = null, renderToken = 0, lastModel = null, noteText = '', badgesExpanded = false;
+  let viewing = null, renderToken = 0, lastModel = null, noteText = '';
   const cache = new Map();
 
   /* ---------- Small helpers ---------- */
@@ -240,30 +240,76 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     return `<div class="profile-trophies">${items.map((t) => `<div class="profile-trophy" title="${esc(t.name)}"><span class="profile-trophy-art"><img src="${esc(t.image)}" alt="${esc(t.name)}" loading="lazy"></span><span class="profile-trophy-name">${esc(t.name)}</span></div>`).join('')}</div>`;
   }
 
-  /* Badges (compact grid on the right of the profile). A badge is earned when its test passes; later, pass
-     `m.badges` (array of badge ids) to show exactly the ones a user earned from the server instead. */
+  /* Badges. Compact icon grid in the profile sidebar + a "View All" collection dialog.
+     A badge: { id, icon, name, hint, type, secret?, test?(m, stats) }.
+       type: 'achievement' | 'event' | 'occasion' | 'secret'  (groups the collection; secret badges stay hidden until earned)
+     Add new ones any time:
+       NexoraProfile.registerBadge({ id:'hollow-night-2026', icon:'🎃', name:'Hollow Night', type:'event', hint:'Join the 2026 event' });
+     Award one (event finished, Easter egg found, special day…) to the signed-in user:
+       NexoraProfile.awardBadge('hollow-night-2026');
+     Or pass `m.badges` (array of ids) later to show exactly what the server says a user earned. */
   const BADGES = [
-    { id: 'first-words', icon: '💬', name: 'First Words', hint: 'Send 5 messages', test: (m, s) => (s.messages || 0) >= 5 },
-    { id: 'chatterbox', icon: '🗣️', name: 'Chatterbox', hint: 'Send 50 messages', test: (m, s) => (s.messages || 0) >= 50 },
-    { id: 'shutterbug', icon: '📸', name: 'Shutterbug', hint: 'Send 5 images', test: (m, s) => (s.images || 0) >= 5 },
-    { id: 'reactor', icon: '😄', name: 'Reactor', hint: 'React 25 times', test: (m, s) => (s.reactions || 0) >= 25 },
-    { id: 'hub-member', icon: '🏠', name: 'Hub Member', hint: 'Be in a Hub', test: (m) => m.hubCount > 0 || m.sharedHubs.length > 0 },
-    { id: 'profile-pro', icon: '✨', name: 'Profile Pro', hint: 'Add a bio and interests', test: (m) => !!m.bio && m.interests.length > 0 }
+    { id: 'first-words', icon: '💬', name: 'First Words', hint: 'Send 5 messages', type: 'achievement', test: (m, s) => (s.messages || 0) >= 5 },
+    { id: 'chatterbox', icon: '🗣️', name: 'Chatterbox', hint: 'Send 50 messages', type: 'achievement', test: (m, s) => (s.messages || 0) >= 50 },
+    { id: 'shutterbug', icon: '📸', name: 'Shutterbug', hint: 'Send 5 images', type: 'achievement', test: (m, s) => (s.images || 0) >= 5 },
+    { id: 'reactor', icon: '😄', name: 'Reactor', hint: 'React 25 times', type: 'achievement', test: (m, s) => (s.reactions || 0) >= 25 },
+    { id: 'hub-member', icon: '🏠', name: 'Hub Member', hint: 'Be in a Hub', type: 'achievement', test: (m) => m.hubCount > 0 || m.sharedHubs.length > 0 },
+    { id: 'profile-pro', icon: '✨', name: 'Profile Pro', hint: 'Add a bio and interests', type: 'achievement', test: (m) => !!m.bio && m.interests.length > 0 }
   ];
-  const BADGES_COMPACT = 6;
+  const BADGE_GROUPS = [['achievement', 'Achievements'], ['event', 'Events'], ['occasion', 'Special occasions'], ['secret', 'Secret']];
+  const BADGES_COMPACT = 8;
+  const awardKey = (u) => 'nexora_badges_' + String(u || '').toLowerCase();
+  function awardedIds(u) { try { const a = JSON.parse(localStorage.getItem(awardKey(u)) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
   function questStats(username) {
     try { const q = JSON.parse(localStorage.getItem('quest_crates_' + username) || 'null'); return (q && q.stats) || {}; } catch (e) { return {}; }
   }
+  function badgeState(m) {
+    const stats = questStats(m.username), given = awardedIds(m.username);
+    return BADGES.map((b) => {
+      let earned = false;
+      try { earned = Array.isArray(m.badges) ? m.badges.includes(b.id) : (given.includes(b.id) || (typeof b.test === 'function' && !!b.test(m, stats))); } catch (e) { earned = false; }
+      return { b, earned };
+    });
+  }
+  function registerBadge(def) {
+    if (!def || !def.id || !def.name || BADGES.some((b) => b.id === def.id)) return false;
+    BADGES.push(Object.assign({ icon: '🏅', hint: '', type: def.secret ? 'secret' : 'achievement' }, def));
+    return true;
+  }
+  function awardBadge(id) {
+    if (typeof currentUser === 'undefined' || !currentUser || !BADGES.some((b) => b.id === id)) return false;
+    try { const a = awardedIds(currentUser); if (!a.includes(id)) { a.push(id); localStorage.setItem(awardKey(currentUser), JSON.stringify(a)); } } catch (e) { return false; }
+    if (isOpen && lastModel && lastModel.isMe && !editing) paint(lastModel);
+    return true;
+  }
   function badgesHTML(m) {
-    const stats = questStats(m.username);
-    const has = (b) => (Array.isArray(m.badges) ? m.badges.includes(b.id) : b.test(m, stats));
-    const earned = BADGES.filter(has), list = badgesExpanded ? BADGES : earned.slice(0, BADGES_COMPACT);
-    const tile = (b) => { const on = earned.includes(b); return `<div class="profile-badge-tile${on ? '' : ' locked'}" title="${esc(b.name)} — ${esc(on ? 'Earned' : b.hint)}"><span class="profile-badge-icon" aria-hidden="true">${b.icon}</span><span class="profile-badge-name">${esc(b.name)}</span></div>`; };
-    const grid = list.length ? `<div class="profile-badges">${list.map(tile).join('')}</div>`
+    const earned = badgeState(m).filter((x) => x.earned).map((x) => x.b);
+    const grid = earned.length
+      ? `<div class="profile-badges">${earned.slice(0, BADGES_COMPACT).map((b) => `<span class="profile-badge-tile" role="img" title="${esc(b.name)}" aria-label="${esc(b.name)}"><span class="profile-badge-icon">${esc(b.icon)}</span></span>`).join('')}</div>`
       : `<p class="profile-muted">${m.isMe ? 'Badges you earn will show up here.' : 'No badges earned yet.'}</p>`;
-    const more = BADGES.length > list.length || badgesExpanded
-      ? `<button type="button" class="profile-link-btn" id="profile-badges-toggle" aria-expanded="${badgesExpanded}">${badgesExpanded ? 'Show less' : 'View All'}</button>` : '';
-    return `<section class="profile-section profile-badges-section" id="profile-badges-section"><div class="profile-section-head"><h3>Badges <span class="profile-badges-count">${earned.length}/${BADGES.length}</span></h3>${more}</div>${grid}</section>`;
+    return `<section class="profile-section profile-badges-section" id="profile-badges-section"><div class="profile-section-head"><h3>Badges <span class="profile-badges-count">${earned.length}</span></h3><button type="button" class="profile-link-btn" id="profile-badges-toggle">View All</button></div>${grid}</section>`;
+  }
+  function openBadgesDialog() {
+    if (!lastModel) return;
+    const state = badgeState(lastModel), total = state.filter((x) => !x.b.secret || x.earned).length;
+    const tile = ({ b, earned }) => {
+      const hidden = b.secret && !earned;
+      return `<div class="profile-badge-card${earned ? '' : ' locked'}"><span class="profile-badge-icon" aria-hidden="true">${hidden ? '❔' : esc(b.icon)}</span><strong>${hidden ? '???' : esc(b.name)}</strong><small>${hidden ? 'Secret badge' : esc(earned ? 'Earned' : b.hint)}</small></div>`;
+    };
+    const groups = BADGE_GROUPS.map(([type, label]) => {
+      const items = state.filter((x) => (x.b.secret ? 'secret' : x.b.type) === type);
+      return items.length ? `<h4>${label}</h4><div class="profile-badge-collection">${items.map(tile).join('')}</div>` : '';
+    }).join('');
+    let dlg = $('profile-badges-modal');
+    if (!dlg) {
+      dlg = document.createElement('div');
+      dlg.id = 'profile-badges-modal'; dlg.className = 'modal hidden';
+      dlg.addEventListener('click', (e) => { if (e.target === dlg || (e.target.closest && e.target.closest('.modal-close-btn'))) dlg.classList.add('hidden'); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !dlg.classList.contains('hidden')) { dlg.classList.add('hidden'); e.stopPropagation(); } }, true);
+      document.body.appendChild(dlg);
+    }
+    dlg.innerHTML = `<div class="card profile-badges-dialog" role="dialog" aria-modal="true" aria-label="All badges"><button type="button" class="modal-close-btn" aria-label="Close">&times;</button><h2>Badges <span class="profile-badges-count">${state.filter((x) => x.earned).length}/${total}</span></h2>${groups}</div>`;
+    dlg.classList.remove('hidden');
   }
 
   function bodyHTML(m) {
@@ -370,7 +416,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     if (!view) return;
     const wasOpen = isOpen;
     if (wasOpen && sameUser(viewing, username)) { scrollEl.scrollTop = 0; return; }
-    editing = false; noteText = ''; badgesExpanded = false;
+    editing = false; noteText = '';
     if (!wasOpen) {
       isOpen = true;
       view.classList.remove('hidden');
@@ -411,16 +457,9 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
       case 'profile-message-btn': if (typeof selectFriend === 'function') selectFriend(viewing); break;   // wrapper below closes the panel
       case 'profile-add-btn': addFriend(t); break;
       case 'profile-photo-btn': photoInput.click(); break;
-      case 'profile-badges-toggle': toggleBadges(); break;
+      case 'profile-badges-toggle': openBadgesDialog(); break;
       default: break;
     }
-  }
-  function toggleBadges() {
-    const sec = $('profile-badges-section');
-    if (!sec || !lastModel) return;
-    badgesExpanded = !badgesExpanded;
-    sec.outerHTML = badgesHTML(lastModel);
-    const b = $('profile-badges-toggle'); if (b) b.focus({ preventScroll: true });
   }
   function toggleChip(chip) {
     const on = !chip.classList.contains('selected');
@@ -544,5 +583,5 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
   wrap('logout', closeProfile);
   wrap('onPresenceChange', null, refreshStatusOnly);
 
-  window.NexoraProfile = { open: openProfile, close: closeProfile, _userFromElement: userFromElement, _sanitize: sanitizeProfileInput };
+  window.NexoraProfile = { open: openProfile, close: closeProfile, _userFromElement: userFromElement, _sanitize: sanitizeProfileInput, registerBadge, awardBadge };
 })();
