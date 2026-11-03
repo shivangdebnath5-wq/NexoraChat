@@ -34,6 +34,14 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
   try { const app = getApp(); fb = { auth: getAuth(app), db: getFirestore(app) }; }
   catch (err) { console.warn('[profile] Firebase unavailable — using local profile data only.', err); }
 
+  /* ---------- Fonts: "Creepster" (Google Fonts) for the featured badge title ---------- */
+  if (document.head && !document.getElementById('nexora-creepster')) {
+    const link = document.createElement('link');
+    link.id = 'nexora-creepster'; link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Creepster&display=swap';
+    document.head.appendChild(link);
+  }
+
   /* ---------- Fonts: "Metal Mania" (Google Fonts) for trophy titles ---------- */
   if (document.head && !document.getElementById('nexora-metal-mania')) {
     const link = document.createElement('link');
@@ -254,6 +262,9 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     { id: 'shutterbug', icon: '📸', name: 'Shutterbug', hint: 'Send 5 images', type: 'achievement', test: (m, s) => (s.images || 0) >= 5 },
     { id: 'reactor', icon: '😄', name: 'Reactor', hint: 'React 25 times', type: 'achievement', test: (m, s) => (s.reactions || 0) >= 25 },
     { id: 'hub-member', icon: '🏠', name: 'Hub Member', hint: 'Be in a Hub', type: 'achievement', test: (m) => m.hubCount > 0 || m.sharedHubs.length > 0 },
+    // Featured art badge: `image` replaces the emoji, `featured` gives it a full-width glowing tile. Shown to everyone for now;
+    // later swap `test` for a real rule (or award it with NexoraProfile.awardBadge).
+    { id: 'beyond-the-last-light', image: 'badge-beyond-the-last-light.png', name: 'Beyond the Last Light', hint: 'Special event badge', type: 'event', featured: true, test: () => true },
     { id: 'profile-pro', icon: '✨', name: 'Profile Pro', hint: 'Add a bio and interests', type: 'achievement', test: (m) => !!m.bio && m.interests.length > 0 }
   ];
   const BADGE_GROUPS = [['achievement', 'Achievements'], ['event', 'Events'], ['occasion', 'Special occasions'], ['secret', 'Secret']];
@@ -283,9 +294,12 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     return true;
   }
   function badgesHTML(m) {
-    const earned = badgeState(m).filter((x) => x.earned).map((x) => x.b);
+    const earned = badgeState(m).filter((x) => x.earned).map((x) => x.b).sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+    const tile = (b) => b.featured
+      ? `<div class="profile-badge-feature" role="img" title="${esc(b.name)}" aria-label="${esc(b.name)}"><span class="profile-badge-glow" aria-hidden="true"></span><img src="${esc(b.image)}" alt="" loading="lazy"><span class="profile-badge-feature-name">${esc(b.name)}</span></div>`
+      : `<span class="profile-badge-tile" role="img" title="${esc(b.name)}" aria-label="${esc(b.name)}"><span class="profile-badge-icon">${esc(b.icon)}</span></span>`;
     const grid = earned.length
-      ? `<div class="profile-badges">${earned.slice(0, BADGES_COMPACT).map((b) => `<span class="profile-badge-tile" role="img" title="${esc(b.name)}" aria-label="${esc(b.name)}"><span class="profile-badge-icon">${esc(b.icon)}</span></span>`).join('')}</div>`
+      ? `<div class="profile-badges">${earned.slice(0, BADGES_COMPACT).map(tile).join('')}</div>`
       : `<p class="profile-muted">${m.isMe ? 'Badges you earn will show up here.' : 'No badges earned yet.'}</p>`;
     return `<section class="profile-section profile-badges-section" id="profile-badges-section"><div class="profile-section-head"><h3>Badges <span class="profile-badges-count">${earned.length}</span></h3><button type="button" class="profile-link-btn" id="profile-badges-toggle">View All</button></div>${grid}</section>`;
   }
@@ -294,7 +308,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     const state = badgeState(lastModel), total = state.filter((x) => !x.b.secret || x.earned).length;
     const tile = ({ b, earned }) => {
       const hidden = b.secret && !earned;
-      return `<div class="profile-badge-card${earned ? '' : ' locked'}"><span class="profile-badge-icon" aria-hidden="true">${hidden ? '❔' : esc(b.icon)}</span><strong>${hidden ? '???' : esc(b.name)}</strong><small>${hidden ? 'Secret badge' : esc(earned ? 'Earned' : b.hint)}</small></div>`;
+      return `<div class="profile-badge-card${earned ? '' : ' locked'}">${b.image && !hidden ? `<img class="profile-badge-card-img" src="${esc(b.image)}" alt="">` : `<span class="profile-badge-icon" aria-hidden="true">${hidden ? '❔' : esc(b.icon)}</span>`}<strong${b.featured && !hidden ? ' class="profile-badge-feature-name"' : ''}>${hidden ? '???' : esc(b.name)}</strong><small>${hidden ? 'Secret badge' : esc(earned ? 'Earned' : b.hint)}</small></div>`;
     };
     const groups = BADGE_GROUPS.map(([type, label]) => {
       const items = state.filter((x) => (x.b.secret ? 'secret' : x.b.type) === type);
