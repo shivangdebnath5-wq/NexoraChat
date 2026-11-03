@@ -55,7 +55,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
   /* ---------- State ---------- */
   let view = null, scrollEl = null, photoInput = null;
   let isOpen = false, pushed = false, editing = false;
-  let viewing = null, renderToken = 0, lastModel = null, noteText = '';
+  let viewing = null, renderToken = 0, lastModel = null, noteText = '', badgesExpanded = false;
   const cache = new Map();
 
   /* ---------- Small helpers ---------- */
@@ -240,6 +240,32 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     return `<div class="profile-trophies">${items.map((t) => `<div class="profile-trophy" title="${esc(t.name)}"><span class="profile-trophy-art"><img src="${esc(t.image)}" alt="${esc(t.name)}" loading="lazy"></span><span class="profile-trophy-name">${esc(t.name)}</span></div>`).join('')}</div>`;
   }
 
+  /* Badges (compact grid on the right of the profile). A badge is earned when its test passes; later, pass
+     `m.badges` (array of badge ids) to show exactly the ones a user earned from the server instead. */
+  const BADGES = [
+    { id: 'first-words', icon: '💬', name: 'First Words', hint: 'Send 5 messages', test: (m, s) => (s.messages || 0) >= 5 },
+    { id: 'chatterbox', icon: '🗣️', name: 'Chatterbox', hint: 'Send 50 messages', test: (m, s) => (s.messages || 0) >= 50 },
+    { id: 'shutterbug', icon: '📸', name: 'Shutterbug', hint: 'Send 5 images', test: (m, s) => (s.images || 0) >= 5 },
+    { id: 'reactor', icon: '😄', name: 'Reactor', hint: 'React 25 times', test: (m, s) => (s.reactions || 0) >= 25 },
+    { id: 'hub-member', icon: '🏠', name: 'Hub Member', hint: 'Be in a Hub', test: (m) => m.hubCount > 0 || m.sharedHubs.length > 0 },
+    { id: 'profile-pro', icon: '✨', name: 'Profile Pro', hint: 'Add a bio and interests', test: (m) => !!m.bio && m.interests.length > 0 }
+  ];
+  const BADGES_COMPACT = 6;
+  function questStats(username) {
+    try { const q = JSON.parse(localStorage.getItem('quest_crates_' + username) || 'null'); return (q && q.stats) || {}; } catch (e) { return {}; }
+  }
+  function badgesHTML(m) {
+    const stats = questStats(m.username);
+    const has = (b) => (Array.isArray(m.badges) ? m.badges.includes(b.id) : b.test(m, stats));
+    const earned = BADGES.filter(has), list = badgesExpanded ? BADGES : earned.slice(0, BADGES_COMPACT);
+    const tile = (b) => { const on = earned.includes(b); return `<div class="profile-badge-tile${on ? '' : ' locked'}" title="${esc(b.name)} — ${esc(on ? 'Earned' : b.hint)}"><span class="profile-badge-icon" aria-hidden="true">${b.icon}</span><span class="profile-badge-name">${esc(b.name)}</span></div>`; };
+    const grid = list.length ? `<div class="profile-badges">${list.map(tile).join('')}</div>`
+      : `<p class="profile-muted">${m.isMe ? 'Badges you earn will show up here.' : 'No badges earned yet.'}</p>`;
+    const more = BADGES.length > list.length || badgesExpanded
+      ? `<button type="button" class="profile-link-btn" id="profile-badges-toggle" aria-expanded="${badgesExpanded}">${badgesExpanded ? 'Show less' : 'View All'}</button>` : '';
+    return `<section class="profile-section profile-badges-section" id="profile-badges-section"><div class="profile-section-head"><h3>Badges <span class="profile-badges-count">${earned.length}/${BADGES.length}</span></h3>${more}</div>${grid}</section>`;
+  }
+
   function bodyHTML(m) {
     if (m.loading && !m.known) return '<div class="profile-empty">Loading profile…</div>';
     if (!m.known) return '<div class="profile-empty"><strong>Profile unavailable</strong><span>We couldn\'t find or load this profile.</span></div>';
@@ -250,10 +276,11 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     const interests = m.interests.length
       ? `<div class="profile-chips">${chips(m.interests)}</div>`
       : `<p class="profile-muted">${m.isMe ? 'No interests selected yet.' : 'No interests shared.'}</p>`;
-    return `<section class="profile-section"><h3>About</h3>${bio}</section>
+    return `<div class="profile-main"><section class="profile-section"><h3>About</h3>${bio}</section>
       <section class="profile-section"><h3>Interests</h3>${interests}</section>
       <section class="profile-section profile-victories"><h3>Hall of Victories</h3>${trophiesHTML(m)}</section>
-      ${detailsHTML(m)}`;
+      ${detailsHTML(m)}</div>
+      <aside class="profile-side">${badgesHTML(m)}</aside>`;
   }
 
   function profileHTML(m) {
@@ -343,7 +370,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     if (!view) return;
     const wasOpen = isOpen;
     if (wasOpen && sameUser(viewing, username)) { scrollEl.scrollTop = 0; return; }
-    editing = false; noteText = '';
+    editing = false; noteText = ''; badgesExpanded = false;
     if (!wasOpen) {
       isOpen = true;
       view.classList.remove('hidden');
@@ -384,8 +411,16 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
       case 'profile-message-btn': if (typeof selectFriend === 'function') selectFriend(viewing); break;   // wrapper below closes the panel
       case 'profile-add-btn': addFriend(t); break;
       case 'profile-photo-btn': photoInput.click(); break;
+      case 'profile-badges-toggle': toggleBadges(); break;
       default: break;
     }
+  }
+  function toggleBadges() {
+    const sec = $('profile-badges-section');
+    if (!sec || !lastModel) return;
+    badgesExpanded = !badgesExpanded;
+    sec.outerHTML = badgesHTML(lastModel);
+    const b = $('profile-badges-toggle'); if (b) b.focus({ preventScroll: true });
   }
   function toggleChip(chip) {
     const on = !chip.classList.contains('selected');
