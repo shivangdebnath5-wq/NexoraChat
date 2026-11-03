@@ -977,3 +977,34 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 
 /* status (e.g. "Studying") sits on the same line as the You / Friend tag */
 .profile-handle .profile-status { margin-top:0; }
+/* ---- Badges (right-hand column of the profile body) ---- */
+.profile-card { max-width:860px; }
+.profile-body:has(.profile-side) { grid-template-columns:minmax(0,1fr) 230px; align-items:start; gap:20px 24px; }
+.profile-main { display:grid; gap:20px; min-width:0; }
+.profile-side { min-width:0; }
+.profile-badges-section { padding:14px; background:var(--input-bg); border:1px solid var(--border); border-radius:14px; }
+.profile-section-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.profile-section-head h3 { margin:0; }
+.profile-badges-count { margin-left:4px; font-weight:600; letter-spacing:0; opacity:.8; }
+#profile-view button.profile-link-btn { width:auto; margin:0; padding:2px 6px; background:none; box-shadow:none; border:0; border-radius:6px; color:var(--primary); font-size:12px; font-weight:600; cursor:pointer; }
+#profile-view button.profile-link-btn:hover { text-decoration:underline; }
+#profile-view button.profile-link-btn:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.profile-badges { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; }
+.profile-badge-tile { display:grid; place-items:center; aspect-ratio:1; border-radius:12px; background:var(--bg-card); border:1px solid var(--border); cursor:default; transition:border-color .2s ease, transform .2s ease; }
+.profile-badge-tile:hover { border-color:var(--primary); transform:translateY(-1px); }
+.profile-badge-icon { font-size:22px; line-height:1.2; }
+@media (max-width: 720px) {
+  .profile-body:has(.profile-side) { grid-template-columns:minmax(0,1fr); }
+  .profile-badges { grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .profile-badge-tile { transition:none; } .profile-badge-tile:hover { transform:none; } }
+.profile-badges-dialog { max-width:520px; max-height:85vh; overflow-y:auto; position:relative; text-align:left; }
+.profile-badges-dialog h2 { margin:0 0 6px; text-align:left; }
+.profile-badges-dialog h4 { margin:16px 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); }
+.profile-badge-collection { display:grid; grid-template-columns:repeat(auto-fill, minmax(112px, 1fr)); gap:10px; }
+.profile-badge-card { display:flex; flex-direction:column; align-items:center; gap:3px; padding:12px 6px; text-align:center; background:var(--input-bg); border:1px solid var(--border); border-radius:12px; min-width:0; }
+.profile-badge-card .profile-badge-icon { font-size:28px; }
+.profile-badge-card strong { font-size:13px; word-break:break-word; }
+.profile-badge-card small { font-size:11px; color:var(--text-muted); }
+.profile-badge-card.locked { opacity:.5; }
+.profile-badge-card.locked .profile-badge-icon { filter:grayscale(1); }
