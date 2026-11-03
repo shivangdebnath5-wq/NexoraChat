@@ -862,10 +862,12 @@ html[data-theme="moonlight-sparkle"] .card:hover { box-shadow:0 18px 55px rgba(1
 .profile-head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px 18px; align-items:start; padding:0 24px 12px; margin-top:-46px; }
 .profile-avatar-wrap { position:relative; width:104px; height:104px; }
 .profile-avatar-wrap .profile-avatar { width:104px; height:104px; margin:0; border:4px solid var(--bg-card); background:var(--input-bg); }
-.profile-avatar-wrap .status-badge { right:5px; bottom:5px; width:24px; height:24px; border-width:4px; }
+.profile-avatar-wrap .status-badge { right:3px; bottom:3px; width:24px; height:24px; border-width:4px; z-index:5; }   /* sits on the circle's bottom-right edge */
 .profile-avatar-wrap .status-badge .status-icon { display:flex; width:100%; height:100%; }
-.profile-view .profile-avatar-edit { position:absolute; left:2px; bottom:2px; width:30px; height:30px; padding:0; margin:0; border-radius:50%; font-size:14px; line-height:1; border:3px solid var(--bg-card); }
+.profile-view .profile-avatar-edit { position:absolute; z-index:5; left:0; bottom:0; width:30px; height:30px; padding:0; margin:0; border-radius:50%; font-size:14px; line-height:1; border:3px solid var(--bg-card); }
 
+/* Special frames (e.g. Spectral Flame) wrap the photo in .spectral-wrap, sized for the 70px Settings avatar — keep it exactly the size of the profile photo so the badge stays on the edge. */
+.profile-avatar-wrap .spectral-wrap, .profile-avatar-wrap .spectral-wrap.spectral-lg { display:block; width:104px; height:104px; margin:0; }
 .profile-ident { min-width:0; padding:54px 0 6px; text-align:left; }   /* 54px = sits below the banner, beside the avatar */
 .profile-name { margin:0; text-align:left; font-size:22px; line-height:1.2; word-break:break-word; outline:none; }
 .profile-handle { min-height:20px; margin-top:2px; color:var(--text-muted); font-size:14px; display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
