@@ -4292,5 +4292,7 @@
   onAuthStateChanged(auth, user => { if (user) setupFriendListeners(user.uid); else teardownFriendListeners(); });
 </script>
   <script src="script.js"></script>
+  <!-- User Profile feature (self-contained module; see profile.js) -->
+  <script type="module" src="profile.js"></script>
 </body>
 </html>
