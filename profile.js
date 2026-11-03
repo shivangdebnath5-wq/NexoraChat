@@ -34,6 +34,14 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
   try { const app = getApp(); fb = { auth: getAuth(app), db: getFirestore(app) }; }
   catch (err) { console.warn('[profile] Firebase unavailable — using local profile data only.', err); }
 
+  /* ---------- Fonts: "Metal Mania" (Google Fonts) for trophy titles ---------- */
+  if (document.head && !document.getElementById('nexora-metal-mania')) {
+    const link = document.createElement('link');
+    link.id = 'nexora-metal-mania'; link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Metal+Mania&display=swap';
+    document.head.appendChild(link);
+  }
+
   /* ---------- Constants ---------- */
   const BIO_MAX = 160, NAME_MAX = 32, INTEREST_MAX = 12;
   const FALLBACK_INTERESTS = ['Gaming', 'Study', 'Coding', 'Creative', 'Music', 'Sports', 'Friends', 'Communities'];
@@ -229,7 +237,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     if (!items.length) {
       return `<div class="profile-trophies-empty">${TROPHY_ICON}<strong>No trophies yet</strong><span>${m.isMe ? 'Trophies you earn will be displayed here.' : 'Trophies they earn will be displayed here.'}</span></div>`;
     }
-    return `<div class="profile-trophies">${items.map((t) => `<div class="profile-trophy" title="${esc(t.name)}"><img src="${esc(t.image)}" alt="${esc(t.name)}" loading="lazy"><span>${esc(t.name)}</span></div>`).join('')}</div>`;
+    return `<div class="profile-trophies">${items.map((t) => `<div class="profile-trophy" title="${esc(t.name)}"><span class="profile-trophy-art"><img src="${esc(t.image)}" alt="${esc(t.name)}" loading="lazy"></span><span class="profile-trophy-name">${esc(t.name)}</span></div>`).join('')}</div>`;
   }
 
   function bodyHTML(m) {
