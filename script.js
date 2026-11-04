@@ -1508,15 +1508,20 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 /* ===== Rangoli Diwali: exclusive limited-time profile frame =====
    Added to every signed-in user's frame inventory (like the Spectral Flame reward) and listed in Settings. */
 FRAME_NAMES['frame-rangoli'] = 'Rangoli Diwali';
+FRAME_NAMES['frame-diya'] = 'Diya Glow';
+const EXCLUSIVE_DIWALI_FRAMES = [['frame-rangoli', '⭐ Rangoli Diwali (Exclusive)'], ['frame-diya', '⭐ Diya Glow (Exclusive)']];
 function ensureRangoliOption() {
-  const select = document.getElementById('frame-select');
-  if (!select || [...select.options].some(option => option.value === 'frame-rangoli')) return;
-  const option = document.createElement('option'); option.value = 'frame-rangoli'; option.textContent = '⭐ Rangoli Diwali (Exclusive)'; select.appendChild(option);
+  const select = document.getElementById('frame-select'); if (!select) return;
+  EXCLUSIVE_DIWALI_FRAMES.forEach(([value, label]) => {
+    if ([...select.options].some(option => option.value === value)) return;
+    const option = document.createElement('option'); option.value = value; option.textContent = label; select.appendChild(option);
+  });
 }
 function grantRangoliDiwali() {
   if (typeof currentUser === 'undefined' || !currentUser) return;
-  const profile = getQuestProfile();
-  if (!profile.inventory.includes('frame-rangoli')) { profile.inventory.push('frame-rangoli'); saveQuestProfile(profile); }
+  const profile = getQuestProfile(); let changed = false;
+  EXCLUSIVE_DIWALI_FRAMES.forEach(([value]) => { if (!profile.inventory.includes(value)) { profile.inventory.push(value); changed = true; } });
+  if (changed) saveQuestProfile(profile);
   ensureRangoliOption();
 }
 const loadAppWithRangoli = loadApp;
@@ -1537,6 +1542,26 @@ openSettings = function() { grantRangoliDiwali(); openSettingsWithRangoli.apply(
     document.querySelectorAll('.rangoli-wrap').forEach(wrap => {
       const img = wrap.querySelector(':scope > img');
       if (!img || !img.classList.contains('frame-rangoli')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
+    });
+  }
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
+  new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+  queue();
+})();
+
+/* Diya Glow: wrap framed avatars so the lamp ring sits around the (still round, fully visible) photo. */
+(function () {
+  let queued = false;
+  function sync() {
+    queued = false;
+    document.querySelectorAll('img.frame-diya').forEach(img => {
+      if (img.parentElement && img.parentElement.classList.contains('diya-wrap')) return;
+      const wrap = document.createElement('span'); wrap.className = 'diya-wrap' + (img.classList.contains('avatar-large') ? ' diya-lg' : '');
+      img.parentNode.insertBefore(wrap, img); wrap.appendChild(img); wrap.insertAdjacentHTML('beforeend', '<i class="dg-flame"></i>');
+    });
+    document.querySelectorAll('.diya-wrap').forEach(wrap => {
+      const img = wrap.querySelector(':scope > img');
+      if (!img || !img.classList.contains('frame-diya')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
     });
   }
   function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
