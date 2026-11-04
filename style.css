@@ -1101,3 +1101,28 @@ html[data-theme="midnight-diwali"] h3 { font-size:1.15em; }
 html[data-theme="midnight-diwali"] button, html[data-theme="midnight-diwali"] input, html[data-theme="midnight-diwali"] textarea, html[data-theme="midnight-diwali"] select, html[data-theme="midnight-diwali"] label,
 html[data-theme="midnight-diwali"] .settings-tab, html[data-theme="midnight-diwali"] .home-greeting-sub, html[data-theme="midnight-diwali"] .home-clock, html[data-theme="midnight-diwali"] .theme-section-label,
 html[data-theme="midnight-diwali"] .diwali-sub { font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+/* ===== Rangoli Diwali — exclusive profile frame (Midnight Diwali palette: antique gold, deep violet, jewel accents) =====
+   script.js wraps any avatar with the frame-rangoli class in .rangoli-wrap. The ring art (rangoli-diwali-frame.svg) is
+   drawn at 185% of the photo with a transparent centre, so the picture stays fully visible. Shimmer = a soft light
+   sweep rotating around the ring + three tiny orbiting glints (transform/opacity only). */
+.rangoli-wrap { position:relative; display:inline-block; flex:0 0 auto; line-height:0; vertical-align:middle; isolation:isolate; }
+.rangoli-wrap > img { margin:0 !important; position:relative; z-index:1; }
+.rangoli-wrap.rangoli-lg { display:block; width:70px; margin:34px auto 44px auto; }
+.rangoli-wrap::before { content:''; position:absolute; inset:-2px; border-radius:50%; z-index:0; pointer-events:none; animation:rangoliAura 4.2s ease-in-out infinite; }
+.rangoli-wrap::after { content:''; position:absolute; left:50%; top:50%; width:185%; height:185%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
+  background:url('rangoli-diwali-frame.svg?v=1') center/100% 100% no-repeat; filter:drop-shadow(0 0 3px rgba(214,168,75,.45)); }
+.rangoli-wrap .rg-shine, .rangoli-wrap .rg-glint { position:absolute; inset:-42.5%; z-index:3; pointer-events:none; border-radius:50%; }
+.rangoli-wrap .rg-shine { overflow:hidden; mix-blend-mode:screen;
+  -webkit-mask:radial-gradient(farthest-side,#0000 54%,#000 62%,#000 86%,#0000 97%); mask:radial-gradient(farthest-side,#0000 54%,#000 62%,#000 86%,#0000 97%); }
+.rangoli-wrap .rg-shine b { position:absolute; inset:-30%; animation:rangoliSpin 8s linear infinite;
+  background:conic-gradient(from 0deg, transparent 0 322deg, rgba(255,232,160,.16) 344deg, rgba(255,246,214,.4) 354deg, transparent 360deg),
+             conic-gradient(from 180deg, transparent 0 340deg, rgba(214,168,75,.18) 354deg, transparent 360deg); }
+.rangoli-wrap .rg-glint { animation:rangoliSpin 14s linear infinite reverse, rangoliTwinkle 3.2s ease-in-out infinite;
+  background:radial-gradient(circle at 50% 8%,#fff 0 1.2px,#0000 2.8px), radial-gradient(circle at 92% 54%,#F5D98A 0 1px,#0000 2.4px), radial-gradient(circle at 22% 88%,#fff 0 1px,#0000 2.4px); }
+.message-wrapper.msg-grouped .rangoli-wrap { visibility:hidden; }
+.profile-avatar-wrap .rangoli-wrap, .profile-avatar-wrap .rangoli-wrap.rangoli-lg { display:block; width:104px; height:104px; margin:0; }
+@keyframes rangoliSpin { to { transform:rotate(360deg); } }
+@keyframes rangoliTwinkle { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+@keyframes rangoliAura { 0%,100% { box-shadow:0 0 6px 1px rgba(214,168,75,.4), 0 0 12px 2px rgba(107,52,184,.3); } 50% { box-shadow:0 0 9px 2px rgba(245,217,138,.55), 0 0 18px 4px rgba(107,52,184,.42); } }
+@media (prefers-reduced-motion: reduce) { .rangoli-wrap::before, .rangoli-wrap .rg-shine b, .rangoli-wrap .rg-glint { animation:none; } }
