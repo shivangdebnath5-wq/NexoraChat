@@ -1126,3 +1126,21 @@ html[data-theme="midnight-diwali"] .diwali-sub { font-family:'Inter', -apple-sys
 @keyframes rangoliTwinkle { 0%,100% { opacity:.55; } 50% { opacity:1; } }
 @keyframes rangoliAura { 0%,100% { box-shadow:0 0 6px 1px rgba(214,168,75,.4), 0 0 12px 2px rgba(107,52,184,.3); } 50% { box-shadow:0 0 9px 2px rgba(245,217,138,.55), 0 0 18px 4px rgba(107,52,184,.42); } }
 @media (prefers-reduced-motion: reduce) { .rangoli-wrap::before, .rangoli-wrap .rg-shine b, .rangoli-wrap .rg-glint { animation:none; } }
+
+/* ===== Diya Glow — exclusive profile frame (your diya-glow-profile-frame.svg + a soft warm glow) =====
+   Wrapped by script.js like Rangoli Diwali. The art is drawn at 170% so the photo fills its opening exactly; the glow is
+   an amber breathing aura around the photo, a gently pulsing drop-shadow on the art and a flickering light at the flame. */
+.diya-wrap { position:relative; display:inline-block; flex:0 0 auto; line-height:0; vertical-align:middle; isolation:isolate; }
+.diya-wrap > img { margin:0 !important; position:relative; z-index:1; }
+.diya-wrap.diya-lg { display:block; width:70px; margin:34px auto 44px auto; }
+.diya-wrap::before { content:''; position:absolute; inset:-2px; border-radius:50%; z-index:0; pointer-events:none; animation:diyaAura 4.4s ease-in-out infinite; }
+.diya-wrap::after { content:''; position:absolute; left:50%; top:50%; width:170%; height:170%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
+  background:url('diya-glow-profile-frame.svg?v=1') center/100% 100% no-repeat; animation:diyaArt 4.4s ease-in-out infinite; }
+.diya-wrap .dg-flame { position:absolute; left:50%; top:80.6%; width:36%; height:36%; transform:translate(-50%,-50%); z-index:3; pointer-events:none; border-radius:50%; mix-blend-mode:screen;
+  background:radial-gradient(circle, rgba(255,214,120,.55), rgba(255,160,50,.2) 45%, transparent 70%); animation:diyaFlame 2.6s ease-in-out infinite; }
+.message-wrapper.msg-grouped .diya-wrap { visibility:hidden; }
+.profile-avatar-wrap .diya-wrap, .profile-avatar-wrap .diya-wrap.diya-lg { display:block; width:104px; height:104px; margin:0; }
+@keyframes diyaAura { 0%,100% { box-shadow:0 0 6px 1px rgba(255,170,60,.3), 0 0 14px 3px rgba(255,140,40,.18); } 50% { box-shadow:0 0 9px 2px rgba(255,200,90,.5), 0 0 20px 5px rgba(255,150,40,.3); } }
+@keyframes diyaArt { 0%,100% { filter:drop-shadow(0 0 2px rgba(255,170,60,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(255,200,90,.65)); } }
+@keyframes diyaFlame { 0%,100% { opacity:.6; transform:translate(-50%,-50%) scale(.92); } 40% { opacity:1; transform:translate(-50%,-50%) scale(1.07); } 70% { opacity:.78; transform:translate(-50%,-50%) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .diya-wrap::before, .diya-wrap::after, .diya-wrap .dg-flame { animation:none; } }
