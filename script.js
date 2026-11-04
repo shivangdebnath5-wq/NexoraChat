@@ -1473,7 +1473,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     if (document.getElementById('nexora-diwali-fonts') || !document.head) return;
     const l = document.createElement('link');
     l.id = 'nexora-diwali-fonts'; l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap';
+    l.href = 'https://fonts.googleapis.com/css2?family=Dr+Sugiyama&family=Inter:wght@400;500;600&display=swap';
     document.head.appendChild(l);
   }
   function build() {
