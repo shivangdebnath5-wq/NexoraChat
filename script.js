@@ -1458,3 +1458,49 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   window.addEventListener('focus', refresh);
   refresh();
 })();
+
+/* ===== Midnight Diwali theme FX (limited-time Special theme) =====
+   Same lifecycle as Moonlight Sparkle: the #diwali-fx layer exists only while data-theme="midnight-diwali".
+   ~26 tiny gold particles (2-4px, 8-18s loops) float up and shimmer/fade, plus a few diya sparks and two
+   breathing gold glows. Pure CSS animation (transform/opacity) - no per-frame JS. Skipped for reduced motion. */
+(function initMidnightDiwaliFx() {
+  const THEME = 'midnight-diwali';
+  const reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
+  let fx = null;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  function loadFonts() {
+    if (document.getElementById('nexora-diwali-fonts') || !document.head) return;
+    const l = document.createElement('link');
+    l.id = 'nexora-diwali-fonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap';
+    document.head.appendChild(l);
+  }
+  function build() {
+    const small = window.innerWidth < 640;
+    const nP = small ? 16 : 26, nS = small ? 4 : 7;
+    let h = '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>';
+    for (let i = 0; i < nP; i++) {
+      const d = rnd(8, 18);
+      h += `<span class="dw-p" style="--x:${rnd(1, 99).toFixed(1)}%;--s:${rnd(2, 4).toFixed(1)}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-36, 36).toFixed(0)}px;--o:${rnd(.45, .9).toFixed(2)};--sh:${rnd(1.6, 3.4).toFixed(1)}s"><i></i></span>`;
+    }
+    // Diya sparks: short bursts from two "lamp" spots low in the chat area
+    for (let i = 0; i < nS; i++) {
+      const d = rnd(5, 9), spot = i % 2 ? 84 : 52;
+      h += `<span class="dw-spark" style="--x:${(spot + rnd(-3, 3)).toFixed(1)}%;--b:${rnd(70, 96).toFixed(0)}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-26, 26).toFixed(0)}px;--dy:-${rnd(40, 110).toFixed(0)}px"></span>`;
+    }
+    return h;
+  }
+  function activate() {
+    if (fx || !document.body) return;
+    loadFonts();
+    fx = document.createElement('div'); fx.id = 'diwali-fx'; fx.setAttribute('aria-hidden', 'true');
+    fx.innerHTML = reduceMq.matches ? '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>' : build();
+    document.body.insertBefore(fx, document.body.firstChild);
+  }
+  function deactivate() { if (fx) { fx.remove(); fx = null; } }
+  function sync() { (document.documentElement.getAttribute('data-theme') === THEME) ? activate() : deactivate(); }
+
+  new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
+})();
