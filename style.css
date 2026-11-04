@@ -1144,3 +1144,22 @@ html[data-theme="midnight-diwali"] .diwali-sub { font-family:'Inter', -apple-sys
 @keyframes diyaArt { 0%,100% { filter:drop-shadow(0 0 2px rgba(255,170,60,.35)); } 50% { filter:drop-shadow(0 0 6px rgba(255,200,90,.65)); } }
 @keyframes diyaFlame { 0%,100% { opacity:.6; transform:translate(-50%,-50%) scale(.92); } 40% { opacity:1; transform:translate(-50%,-50%) scale(1.07); } 70% { opacity:.78; transform:translate(-50%,-50%) scale(.98); } }
 @media (prefers-reduced-motion: reduce) { .diya-wrap::before, .diya-wrap::after, .diya-wrap .dg-flame { animation:none; } }
+
+/* ===== Celestial Night — exclusive profile frame (celestial-night-profile-frame.svg: your art cropped to the ring) =====
+   Wrapped by script.js like the other Diwali frames. Drawn at 152% so the photo fills the golden ring exactly; stars sit
+   outside the photo. Glow: soft aura around the photo, twinkling art, and a faint light slowly circling the ring. */
+.celestial-wrap { position:relative; display:inline-block; flex:0 0 auto; line-height:0; vertical-align:middle; isolation:isolate; }
+.celestial-wrap > img { margin:0 !important; position:relative; z-index:1; }
+.celestial-wrap.celestial-lg { display:block; width:70px; margin:34px auto 44px auto; }
+.celestial-wrap::before { content:''; position:absolute; inset:-2px; border-radius:50%; z-index:0; pointer-events:none; animation:celestialAura 5s ease-in-out infinite; }
+.celestial-wrap::after { content:''; position:absolute; left:50%; top:50%; width:152%; height:152%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
+  background:url('celestial-night-profile-frame.svg?v=1') center/100% 100% no-repeat; animation:celestialTwinkle 3.6s ease-in-out infinite; }
+.celestial-wrap .cn-shine { position:absolute; inset:-26%; z-index:3; pointer-events:none; border-radius:50%; overflow:hidden; mix-blend-mode:screen;
+  -webkit-mask:radial-gradient(farthest-side,#0000 63%,#000 66%,#000 71%,#0000 75%); mask:radial-gradient(farthest-side,#0000 63%,#000 66%,#000 71%,#0000 75%); }
+.celestial-wrap .cn-shine b { position:absolute; inset:-30%; animation:rangoliSpin 9s linear infinite;
+  background:conic-gradient(from 0deg, transparent 0 318deg, rgba(255,236,170,.18) 342deg, rgba(255,250,225,.5) 354deg, transparent 360deg); }
+.message-wrapper.msg-grouped .celestial-wrap { visibility:hidden; }
+.profile-avatar-wrap .celestial-wrap, .profile-avatar-wrap .celestial-wrap.celestial-lg { display:block; width:104px; height:104px; margin:0; }
+@keyframes celestialAura { 0%,100% { box-shadow:0 0 6px 1px rgba(214,168,75,.3), 0 0 14px 3px rgba(99,102,241,.2); } 50% { box-shadow:0 0 9px 2px rgba(245,217,138,.5), 0 0 20px 5px rgba(99,102,241,.32); } }
+@keyframes celestialTwinkle { 0%,100% { opacity:.88; filter:drop-shadow(0 0 2px rgba(245,217,138,.35)); } 50% { opacity:1; filter:drop-shadow(0 0 6px rgba(245,217,138,.7)); } }
+@media (prefers-reduced-motion: reduce) { .celestial-wrap::before, .celestial-wrap::after, .celestial-wrap .cn-shine b { animation:none; } }
