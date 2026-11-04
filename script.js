@@ -1504,3 +1504,42 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
   if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
 })();
+
+/* ===== Rangoli Diwali: exclusive limited-time profile frame =====
+   Added to every signed-in user's frame inventory (like the Spectral Flame reward) and listed in Settings. */
+FRAME_NAMES['frame-rangoli'] = 'Rangoli Diwali';
+function ensureRangoliOption() {
+  const select = document.getElementById('frame-select');
+  if (!select || [...select.options].some(option => option.value === 'frame-rangoli')) return;
+  const option = document.createElement('option'); option.value = 'frame-rangoli'; option.textContent = '⭐ Rangoli Diwali (Exclusive)'; select.appendChild(option);
+}
+function grantRangoliDiwali() {
+  if (typeof currentUser === 'undefined' || !currentUser) return;
+  const profile = getQuestProfile();
+  if (!profile.inventory.includes('frame-rangoli')) { profile.inventory.push('frame-rangoli'); saveQuestProfile(profile); }
+  ensureRangoliOption();
+}
+const loadAppWithRangoli = loadApp;
+loadApp = function() { loadAppWithRangoli.apply(this, arguments); grantRangoliDiwali(); };
+const openSettingsWithRangoli = openSettings;
+openSettings = function() { grantRangoliDiwali(); openSettingsWithRangoli.apply(this, arguments); };
+
+/* Rangoli Diwali: wrap framed avatars so the ring art sits around the (still round, fully visible) photo. */
+(function () {
+  let queued = false;
+  function sync() {
+    queued = false;
+    document.querySelectorAll('img.frame-rangoli').forEach(img => {
+      if (img.parentElement && img.parentElement.classList.contains('rangoli-wrap')) return;
+      const wrap = document.createElement('span'); wrap.className = 'rangoli-wrap' + (img.classList.contains('avatar-large') ? ' rangoli-lg' : '');
+      img.parentNode.insertBefore(wrap, img); wrap.appendChild(img); wrap.insertAdjacentHTML('beforeend', '<i class="rg-shine"><b></b></i><i class="rg-glint"></i>');
+    });
+    document.querySelectorAll('.rangoli-wrap').forEach(wrap => {
+      const img = wrap.querySelector(':scope > img');
+      if (!img || !img.classList.contains('frame-rangoli')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
+    });
+  }
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
+  new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+  queue();
+})();
