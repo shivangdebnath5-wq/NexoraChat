@@ -1509,7 +1509,8 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
    Added to every signed-in user's frame inventory (like the Spectral Flame reward) and listed in Settings. */
 FRAME_NAMES['frame-rangoli'] = 'Rangoli Diwali';
 FRAME_NAMES['frame-diya'] = 'Diya Glow';
-const EXCLUSIVE_DIWALI_FRAMES = [['frame-rangoli', '⭐ Rangoli Diwali (Exclusive)'], ['frame-diya', '⭐ Diya Glow (Exclusive)']];
+FRAME_NAMES['frame-celestial'] = 'Celestial Night';
+const EXCLUSIVE_DIWALI_FRAMES = [['frame-rangoli', '⭐ Rangoli Diwali (Exclusive)'], ['frame-diya', '⭐ Diya Glow (Exclusive)'], ['frame-celestial', '⭐ Celestial Night (Exclusive)']];
 function ensureRangoliOption() {
   const select = document.getElementById('frame-select'); if (!select) return;
   EXCLUSIVE_DIWALI_FRAMES.forEach(([value, label]) => {
@@ -1562,6 +1563,26 @@ openSettings = function() { grantRangoliDiwali(); openSettingsWithRangoli.apply(
     document.querySelectorAll('.diya-wrap').forEach(wrap => {
       const img = wrap.querySelector(':scope > img');
       if (!img || !img.classList.contains('frame-diya')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
+    });
+  }
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
+  new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+  queue();
+})();
+
+/* Celestial Night: wrap framed avatars so the starry ring sits around the (still round, fully visible) photo. */
+(function () {
+  let queued = false;
+  function sync() {
+    queued = false;
+    document.querySelectorAll('img.frame-celestial').forEach(img => {
+      if (img.parentElement && img.parentElement.classList.contains('celestial-wrap')) return;
+      const wrap = document.createElement('span'); wrap.className = 'celestial-wrap' + (img.classList.contains('avatar-large') ? ' celestial-lg' : '');
+      img.parentNode.insertBefore(wrap, img); wrap.appendChild(img); wrap.insertAdjacentHTML('beforeend', '<i class="cn-shine"><b></b></i>');
+    });
+    document.querySelectorAll('.celestial-wrap').forEach(wrap => {
+      const img = wrap.querySelector(':scope > img');
+      if (!img || !img.classList.contains('frame-celestial')) { if (img) wrap.replaceWith(img); else wrap.remove(); }
     });
   }
   function queue() { if (!queued) { queued = true; requestAnimationFrame(sync); } }
