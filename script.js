@@ -1589,3 +1589,388 @@ openSettings = function() { grantRangoliDiwali(); openSettingsWithRangoli.apply(
   new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
   queue();
 })();
+/* =========================================================================
+   NEXORA DIWALI GREETING STUDIO — FLOATING SIDE TAB & STUDIO CONTROLLER
+   ========================================================================= */
+const GS_TEMPLATES = [
+  { id: 'royal-amavasya', name: 'Midnight Amavasya', c1: '#1c1136', c2: '#090d20', accent: '#F5D98A', glow: 'rgba(214,168,75,0.32)' },
+  { id: 'marigold-palace', name: 'Royal Marigold', c1: '#4a151b', c2: '#1f0812', accent: '#FFD166', glow: 'rgba(255,159,28,0.35)' },
+  { id: 'lotus-silk', name: 'Lotus Magenta', c1: '#3b0d3e', c2: '#170626', accent: '#F5D5E0', glow: 'rgba(232,95,199,0.3)' },
+  { id: 'emerald-darbar', name: 'Emerald Darbar', c1: '#0c382c', c2: '#061914', accent: '#F5D98A', glow: 'rgba(52,211,153,0.25)' }
+];
+
+let gsState = {
+  templateId: 'royal-amavasya',
+  frame: 'royal-gold',
+  customBgUrl: '',
+  customBgImg: null,
+  heading: 'Shubh Deepavali',
+  subheading: 'May the divine light of Diwali bring peace, prosperity, and endless joy to your home.',
+  footer: 'Warm wishes from Nexora',
+  headingFont: "'Cinzel Decorative', serif",
+  bodyFont: "'Poppins', sans-serif",
+  headingColor: '#F5D98A',
+  bodyColor: '#EEEAF7',
+  textOffsetY: 0,
+  brightness: 100,
+  contrast: 100,
+  saturation: 110,
+  temperature: 15,
+  stickers: [
+    { id: 1, emoji: '🪔', x: 360, y: 210, size: 64 },
+    { id: 2, emoji: '✨', x: 150, y: 170, size: 42 },
+    { id: 3, emoji: '✨', x: 570, y: 170, size: 42 }
+  ]
+};
+
+let gsDraggingSticker = null;
+
+function toggleGreetingStudioTab(event) {
+  if (event) event.stopPropagation();
+  const root = document.getElementById('greeting-studio-tab');
+  const handle = document.getElementById('gs-tab-handle');
+  const panel = document.getElementById('gs-floating-panel');
+  if (!root) return;
+
+  // Close other transient popovers so multiple panels don't overlap
+  document.getElementById('header-more-menu')?.classList.add('hidden');
+  document.getElementById('hub-more-menu')?.classList.add('hidden');
+
+  const willExpand = !root.classList.contains('is-expanded');
+  root.classList.toggle('is-expanded', willExpand);
+  handle?.setAttribute('aria-expanded', String(willExpand));
+  panel?.setAttribute('aria-hidden', String(!willExpand));
+}
+
+function collapseGreetingStudioTab(event) {
+  if (event) event.stopPropagation();
+  const root = document.getElementById('greeting-studio-tab');
+  const handle = document.getElementById('gs-tab-handle');
+  const panel = document.getElementById('gs-floating-panel');
+  if (!root || !root.classList.contains('is-expanded')) return;
+  root.classList.remove('is-expanded');
+  handle?.setAttribute('aria-expanded', 'false');
+  panel?.setAttribute('aria-hidden', 'true');
+}
+
+// Close on outside click or Escape key
+document.addEventListener('click', (event) => {
+  const root = document.getElementById('greeting-studio-tab');
+  if (!root || !root.classList.contains('is-expanded')) return;
+  if (event.target.closest('#greeting-studio-tab')) return;
+  collapseGreetingStudioTab();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    collapseGreetingStudioTab();
+    const modal = document.getElementById('greeting-studio-modal');
+    if (modal && !modal.classList.contains('hidden')) closeDiwaliGreetingStudio();
+  }
+});
+
+function openDiwaliGreetingStudio() {
+  collapseGreetingStudioTab();
+  const modal = document.getElementById('greeting-studio-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  // Show "Send to Chat" button if a DM or Hub is currently open
+  const sendBtn = document.getElementById('gs-send-chat-btn');
+  if (sendBtn) sendBtn.classList.toggle('hidden', !(activeFriend || activeHub));
+
+  renderGreetingTemplateSelector();
+  renderGreetingStickerLayers();
+  initGreetingCanvasInteractions();
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => renderGreetingStudioCanvas());
+  }
+  renderGreetingStudioCanvas();
+}
+
+function closeDiwaliGreetingStudio() {
+  document.getElementById('greeting-studio-modal')?.classList.add('hidden');
+}
+
+function switchGreetingStudioTab(tabId) {
+  document.querySelectorAll('.gs-ctrl-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.gsTab === tabId);
+  });
+  document.querySelectorAll('.gs-ctrl-panel').forEach(panel => {
+    panel.classList.toggle('hidden', panel.dataset.gsPanel !== tabId);
+  });
+}
+
+function renderGreetingTemplateSelector() {
+  const grid = document.getElementById('gs-template-grid');
+  if (!grid) return;
+  grid.innerHTML = GS_TEMPLATES.map(t => `
+    <button type="button" class="gs-template-card ${gsState.templateId === t.id ? 'active' : ''}"
+      style="background: linear-gradient(145deg, ${t.c1}, ${t.c2});"
+      onclick="selectGreetingTemplate('${t.id}')">
+      <span>${t.name}</span>
+    </button>
+  `).join('');
+}
+
+function selectGreetingTemplate(id) {
+  gsState.templateId = id;
+  renderGreetingTemplateSelector();
+  renderGreetingStudioCanvas();
+}
+
+function updateGreetingStudioState() {
+  gsState.frame = document.getElementById('gs-frame-style')?.value || 'royal-gold';
+  gsState.heading = document.getElementById('gs-heading-input')?.value || '';
+  gsState.subheading = document.getElementById('gs-subheading-input')?.value || '';
+  gsState.footer = document.getElementById('gs-footer-input')?.value || '';
+  gsState.headingFont = document.getElementById('gs-heading-font')?.value || "'Cinzel Decorative', serif";
+  gsState.bodyFont = document.getElementById('gs-body-font')?.value || "'Poppins', sans-serif";
+  gsState.headingColor = document.getElementById('gs-heading-color')?.value || '#F5D98A';
+  gsState.bodyColor = document.getElementById('gs-body-color')?.value || '#EEEAF7';
+  gsState.textOffsetY = parseInt(document.getElementById('gs-text-y')?.value || '0', 10);
+
+  gsState.brightness = parseInt(document.getElementById('gs-filter-bright')?.value || '100', 10);
+  gsState.contrast = parseInt(document.getElementById('gs-filter-contrast')?.value || '100', 10);
+  gsState.saturation = parseInt(document.getElementById('gs-filter-sat')?.value || '110', 10);
+  gsState.temperature = parseInt(document.getElementById('gs-filter-temp')?.value || '15', 10);
+
+  document.getElementById('gs-val-bright').textContent = gsState.brightness;
+  document.getElementById('gs-val-contrast').textContent = gsState.contrast;
+  document.getElementById('gs-val-sat').textContent = gsState.saturation;
+  document.getElementById('gs-val-temp').textContent = gsState.temperature;
+
+  const bgUrl = (document.getElementById('gs-custom-bg')?.value || '').trim();
+  if (bgUrl !== gsState.customBgUrl) {
+    gsState.customBgUrl = bgUrl;
+    if (bgUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => { gsState.customBgImg = img; renderGreetingStudioCanvas(); };
+      img.onerror = () => { gsState.customBgImg = null; renderGreetingStudioCanvas(); };
+      img.src = bgUrl;
+    } else {
+      gsState.customBgImg = null;
+    }
+  }
+
+  renderGreetingStudioCanvas();
+}
+
+function addGreetingSticker(emoji) {
+  gsState.stickers.push({
+    id: Date.now() + Math.random(),
+    emoji,
+    x: 360 + (Math.random() * 120 - 60),
+    y: 450 + (Math.random() * 120 - 60),
+    size: 56
+  });
+  renderGreetingStickerLayers();
+  renderGreetingStudioCanvas();
+}
+
+function removeGreetingSticker(id) {
+  gsState.stickers = gsState.stickers.filter(s => s.id !== id);
+  renderGreetingStickerLayers();
+  renderGreetingStudioCanvas();
+}
+
+function renderGreetingStickerLayers() {
+  const list = document.getElementById('gs-layers-list');
+  if (!list) return;
+  if (!gsState.stickers.length) {
+    list.innerHTML = '<div style="font-size:12px;color:#B3AFCB;">No active stickers on card.</div>';
+    return;
+  }
+  list.innerHTML = gsState.stickers.map((s, idx) => `
+    <div class="gs-layer-item">
+      <span>${s.emoji} Layer ${idx + 1}</span>
+      <button type="button" class="gs-layer-del" onclick="removeGreetingSticker(${s.id})">Remove</button>
+    </div>
+  `).join('');
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  const lines = [];
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+      lines.push(line.trim());
+      line = words[n] + ' ';
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line.trim());
+  lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+}
+
+function renderGreetingStudioCanvas() {
+  const canvas = document.getElementById('gs-card-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const tpl = GS_TEMPLATES.find(t => t.id === gsState.templateId) || GS_TEMPLATES[0];
+
+  ctx.save();
+  ctx.clearRect(0, 0, W, H);
+  ctx.filter = `brightness(${gsState.brightness}%) contrast(${gsState.contrast}%) saturate(${gsState.saturation}%)`;
+
+  // Background gradient or custom image
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, tpl.c1);
+  grad.addColorStop(1, tpl.c2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  if (gsState.customBgImg) {
+    ctx.globalAlpha = 0.45;
+    ctx.drawImage(gsState.customBgImg, 0, 0, W, H);
+    ctx.globalAlpha = 1;
+  }
+
+  // Radial festive glow
+  const radial = ctx.createRadialGradient(W / 2, H * 0.36, 20, W / 2, H * 0.36, 360);
+  radial.addColorStop(0, tpl.glow);
+  radial.addColorStop(1, 'transparent');
+  ctx.fillStyle = radial;
+  ctx.fillRect(0, 0, W, H);
+
+  // Warm temperature overlay
+  if (gsState.temperature > 0) {
+    ctx.fillStyle = `rgba(255, 168, 52, ${(gsState.temperature / 100) * 0.24})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Decorative Frame
+  ctx.strokeStyle = tpl.accent;
+  if (gsState.frame === 'royal-gold') {
+    ctx.lineWidth = 3;
+    ctx.strokeRect(34, 34, W - 68, H - 68);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(46, 46, W - 92, H - 92);
+  } else if (gsState.frame === 'minimal-glow') {
+    ctx.lineWidth = 2;
+    ctx.strokeRect(42, 42, W - 84, H - 84);
+  } else if (gsState.frame === 'arch-mandala') {
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(38, 38, W - 76, H - 76, [140, 140, 24, 24]);
+    ctx.stroke();
+  }
+
+  // Stickers
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  gsState.stickers.forEach(s => {
+    ctx.font = `${s.size}px sans-serif`;
+    ctx.fillText(s.emoji, s.x, s.y);
+  });
+
+  // Heading
+  const offsetY = gsState.textOffsetY;
+  ctx.fillStyle = gsState.headingColor;
+  ctx.font = `700 52px ${gsState.headingFont}`;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+  ctx.shadowBlur = 14;
+  wrapCanvasText(ctx, gsState.heading, W / 2, 370 + offsetY, W - 130, 62);
+
+  // Subheading
+  ctx.fillStyle = gsState.bodyColor;
+  ctx.font = `400 24px ${gsState.bodyFont}`;
+  ctx.shadowBlur = 8;
+  wrapCanvasText(ctx, gsState.subheading, W / 2, 500 + offsetY, W - 150, 36);
+
+  // Footer
+  ctx.fillStyle = tpl.accent;
+  ctx.font = `600 18px ${gsState.bodyFont}`;
+  ctx.fillText(gsState.footer, W / 2, H - 86);
+
+  ctx.restore();
+}
+
+function initGreetingCanvasInteractions() {
+  const canvas = document.getElementById('gs-card-canvas');
+  if (!canvas || canvas.dataset.bound === 'true') return;
+  canvas.dataset.bound = 'true';
+
+  const getCoords = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  };
+
+  canvas.addEventListener('pointerdown', (e) => {
+    const pt = getCoords(e);
+    for (let i = gsState.stickers.length - 1; i >= 0; i--) {
+      const s = gsState.stickers[i];
+      if (Math.hypot(pt.x - s.x, pt.y - s.y) <= s.size * 0.7) {
+        gsDraggingSticker = s;
+        canvas.setPointerCapture(e.pointerId);
+        break;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!gsDraggingSticker) return;
+    const pt = getCoords(e);
+    gsDraggingSticker.x = pt.x;
+    gsDraggingSticker.y = pt.y;
+    renderGreetingStudioCanvas();
+  });
+
+  const stopDrag = () => { gsDraggingSticker = null; };
+  canvas.addEventListener('pointerup', stopDrag);
+  canvas.addEventListener('pointercancel', stopDrag);
+}
+
+function resetGreetingStudio() {
+  document.getElementById('gs-heading-input').value = 'Shubh Deepavali';
+  document.getElementById('gs-subheading-input').value = 'May the divine light of Diwali bring peace, prosperity, and endless joy to your home.';
+  document.getElementById('gs-footer-input').value = 'Warm wishes from Nexora';
+  document.getElementById('gs-filter-bright').value = 100;
+  document.getElementById('gs-filter-contrast').value = 100;
+  document.getElementById('gs-filter-sat').value = 110;
+  document.getElementById('gs-filter-temp').value = 15;
+  document.getElementById('gs-text-y').value = 0;
+  updateGreetingStudioState();
+}
+
+function exportGreetingCardPNG() {
+  const canvas = document.getElementById('gs-card-canvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = `nexora-diwali-greeting-${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function sendGreetingCardToActiveChat() {
+  const canvas = document.getElementById('gs-card-canvas');
+  if (!canvas || (!activeFriend && !activeHub)) return;
+  currentAttachment = {
+    name: 'diwali-greeting.png',
+    type: 'image',
+    data: canvas.toDataURL('image/png')
+  };
+  sendMessage();
+  closeDiwaliGreetingStudio();
+}
+
+window.toggleGreetingStudioTab = toggleGreetingStudioTab;
+window.collapseGreetingStudioTab = collapseGreetingStudioTab;
+window.openDiwaliGreetingStudio = openDiwaliGreetingStudio;
+window.closeDiwaliGreetingStudio = closeDiwaliGreetingStudio;
+window.switchGreetingStudioTab = switchGreetingStudioTab;
+window.selectGreetingTemplate = selectGreetingTemplate;
+window.updateGreetingStudioState = updateGreetingStudioState;
+window.addGreetingSticker = addGreetingSticker;
+window.removeGreetingSticker = removeGreetingSticker;
+window.resetGreetingStudio = resetGreetingStudio;
+window.exportGreetingCardPNG = exportGreetingCardPNG;
+window.sendGreetingCardToActiveChat = sendGreetingCardToActiveChat;
