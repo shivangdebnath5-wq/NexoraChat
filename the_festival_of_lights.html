@@ -190,6 +190,9 @@
             <button onclick="UI.openModal('pause')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Pause / Settings (ESC)">
                 <span>⚙️</span>
             </button>
+            <button onclick="NexoraExit.ask()" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Back to Nexora">
+                <span>🏠</span><span class="hidden md:inline">Nexora</span>
+            </button>
         </div>
     </div>
 
@@ -260,6 +263,9 @@
                 <button onclick="UI.openHowToPlay()" class="festival-btn-secondary py-2.5 px-5 rounded-xl font-pixel text-xs text-amber-200">
                     📖 HOW TO PLAY & CONTROLS
                 </button>
+                <button onclick="NexoraExit.ask()" class="festival-btn-secondary py-2.5 px-5 rounded-xl font-pixel text-xs text-amber-200">
+                    ← BACK TO NEXORA
+                </button>
             </div>
 
             <!-- Action Buttons -->
@@ -288,6 +294,47 @@
             <div id="modalBody" class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4"></div>
         </div>
     </div>
+
+    <!-- BACK TO NEXORA CONFIRMATION -->
+    <div id="exitConfirm" class="hidden fixed inset-0 z-[80] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="exitConfirmTitle">
+        <div class="festival-panel modal-enter rounded-2xl max-w-sm w-full p-6 text-center">
+            <div class="text-3xl mb-2 diya-glow">🪔</div>
+            <h2 id="exitConfirmTitle" class="font-festival text-lg sm:text-xl font-bold text-amber-300 mb-2">Back to Nexora?</h2>
+            <p class="text-xs sm:text-sm text-amber-100/85 leading-relaxed mb-5">Are you sure you want to go back? Your progress is saved automatically.</p>
+            <div class="flex items-center justify-center gap-3">
+                <button id="exitConfirmNo" type="button" onclick="NexoraExit.cancel()" class="festival-btn-secondary py-2.5 px-6 rounded-xl font-pixel text-xs text-amber-200">NO</button>
+                <button id="exitConfirmYes" type="button" onclick="NexoraExit.confirm()" class="festival-btn py-2.5 px-6 rounded-xl font-pixel text-xs text-amber-950 font-bold">YES</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Back to Nexora: asks first, saves the game, then returns to the app (index.html). */
+        const NexoraExit = (() => {
+            const NEXORA_URL = 'index.html';
+            let lastFocus = null;
+            const box = () => document.getElementById('exitConfirm');
+            const isOpen = () => !box().classList.contains('hidden');
+            function ask() { lastFocus = document.activeElement; box().classList.remove('hidden'); document.getElementById('exitConfirmNo').focus(); }
+            function cancel() { box().classList.add('hidden'); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+            function confirm() {
+                try { if (typeof Game !== 'undefined' && Game.state) Game.saveGame(); } catch (e) {}
+                window.location.href = NEXORA_URL;
+            }
+            // Capture phase so the game never sees keys while the question is open (Esc = No, Tab stays inside the dialog).
+            document.addEventListener('keydown', (e) => {
+                if (!isOpen()) return;
+                if (e.key === 'Tab') {
+                    const btns = [document.getElementById('exitConfirmNo'), document.getElementById('exitConfirmYes')], i = btns.indexOf(document.activeElement);
+                    e.preventDefault(); btns[(i + (e.shiftKey ? btns.length - 1 : 1)) % btns.length].focus();
+                } else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+                else if (e.key !== 'Enter' && e.key !== ' ') { e.preventDefault(); }
+                e.stopImmediatePropagation();
+            }, true);
+            box().addEventListener('click', (e) => { if (e.target === box()) cancel(); });
+            return { ask, cancel, confirm };
+        })();
+    </script>
 
     <script>
     /********************************************************************
@@ -3734,6 +3781,9 @@
                         <button onclick="UI.closeModal(); document.getElementById('mainMenuOverlay').classList.remove('hidden'); Game.checkExistingSave();"
                             class="festival-btn-secondary px-4 py-2 rounded-xl font-pixel text-xs">
                             🏠 Return to Title Screen
+                        </button>
+                        <button onclick="NexoraExit.ask()" class="festival-btn-secondary px-4 py-2 rounded-xl font-pixel text-xs">
+                            ← Back to Nexora
                         </button>
                     </div>
                 </div>
