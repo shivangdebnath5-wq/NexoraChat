@@ -6,7 +6,10 @@
   <title>NexoraChat</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/Cj76XZz/d5b34859-cdfb-4a7d-9b72-6cea78857d5f.png">
   <link rel="stylesheet" href="style.css">
-
+<!-- Google Fonts for Nexora Diwali Greeting Studio -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Dancing+Script:wght@700&family=Dr+Sugiyama&family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Poppins:wght@400;600;700&family=Rozha+One&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-main: #f3f4f6;
@@ -834,6 +837,193 @@
         <span class="ff-arcs" aria-hidden="true"><i></i><i></i></span>
         <svg class="ff-diya" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="ffBowl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC85A"/><stop offset=".55" stop-color="#D9701A"/><stop offset="1" stop-color="#7A3210"/></linearGradient><linearGradient id="ffFlame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF7A18"/><stop offset=".6" stop-color="#FFC83D"/><stop offset="1" stop-color="#FFF3B0"/></linearGradient></defs><g class="ff-flame"><path d="M32 4C39.500 13 42 19 42 25.500A10 10 0 0 1 22 25.500C22 19 24.500 13 32 4Z" fill="url(#ffFlame)"/><path d="M32 15C35.800 20.500 37 23.500 37 27A5 5 0 0 1 27 27C27 23.500 28.200 20.500 32 15Z" fill="#FFF6D0"/></g><rect x="31" y="27" width="2" height="8" rx="1" fill="#5A2A10"/><path d="M5 34H59C59 48 47.500 58 32 58S5 48 5 34Z" fill="url(#ffBowl)"/><path d="M5 34H59" stroke="#FFE08A" stroke-width="2.600" stroke-linecap="round"/><path d="M14 41.500Q32 50 50 41.500" fill="none" stroke="#FFE08A" stroke-width="1.400" stroke-linecap="round" opacity=".85"/><g fill="#FFE08A"><circle cx="32" cy="46.500" r="1.800"/><circle cx="23" cy="45" r="1.300"/><circle cx="41" cy="45" r="1.300"/></g><path d="M23 59.500H41" stroke="#7A3210" stroke-width="3" stroke-linecap="round"/></svg>
       </a>
+      <!-- Expandable Floating Diwali Greeting Studio Side Tab -->
+      <aside id="greeting-studio-tab" class="gs-floating-root" aria-label="Nexora Diwali Greeting Studio quick access">
+        <!-- Collapsed Vertical Handle attached to Right Edge -->
+        <button type="button" id="gs-tab-handle" class="gs-tab-handle" onclick="toggleGreetingStudioTab(event)" aria-expanded="false" aria-controls="gs-floating-panel" title="Nexora Greeting Studio">
+          <span class="gs-handle-glow" aria-hidden="true"></span>
+          <span class="gs-handle-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+              <path d="M12 2L14.2 7.8L20 10L14.2 12.2L12 18L9.8 12.2L4 10L9.8 7.8L12 2Z" fill="url(#gsGoldGrad)"/>
+              <path d="M18.5 15L19.4 17.6L22 18.5L19.4 19.4L18.5 22L17.6 19.4L15 18.5L17.6 17.6L18.5 15Z" fill="#F5D98A" opacity="0.85"/>
+              <defs>
+                <linearGradient id="gsGoldGrad" x1="4" y1="2" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFF3B0"/>
+                  <stop offset="55%" stop-color="#F5D98A"/>
+                  <stop offset="100%" stop-color="#D6A84B"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="gs-handle-pill-bar" aria-hidden="true"></span>
+        </button>
+
+        <!-- Expanded Compact Frosted-Glass Floating Panel -->
+        <div id="gs-floating-panel" class="gs-floating-panel" role="dialog" aria-modal="false" aria-labelledby="gs-panel-title" aria-hidden="true">
+          <div class="gs-panel-ambient" aria-hidden="true"></div>
+          <div class="gs-panel-header">
+            <div class="gs-panel-badge">
+              <span class="gs-panel-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 28 28" width="22" height="22" fill="none">
+                  <rect x="4" y="5" width="16" height="19" rx="3" stroke="#F5D98A" stroke-width="1.6" fill="rgba(214,168,75,0.12)"/>
+                  <path d="M8 5V3.8C8 2.8 8.8 2 9.8 2H21.2C22.2 2 23 2.8 23 3.8V19.2C23 20.2 22.2 21 21.2 21H20" stroke="#D6A84B" stroke-width="1.4" opacity="0.8"/>
+                  <path d="M12 10.5C13.3 12 14 13.1 14 14.2C14 15.3 13.1 16.2 12 16.2C10.9 16.2 10 15.3 10 14.2C10 13.1 10.7 12 12 10.5Z" fill="#F5D98A"/>
+                  <path d="M8.5 18.2H15.5" stroke="#F5D98A" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <div>
+                <h4 id="gs-panel-title" class="gs-panel-title">Nexora Greeting Studio</h4>
+                <p class="gs-panel-subtitle">Create something beautiful this Diwali.</p>
+              </div>
+            </div>
+            <button type="button" class="gs-panel-close" onclick="collapseGreetingStudioTab(event)" aria-label="Collapse Greeting Studio panel" title="Collapse">×</button>
+          </div>
+
+          <p class="gs-panel-desc">
+            Craft bespoke festive cards with curated templates, Google Fonts typography, ambient filters, and golden stickers.
+          </p>
+
+          <div class="gs-panel-actions">
+            <button type="button" class="gs-create-btn" onclick="openDiwaliGreetingStudio()">
+              <span class="gs-create-btn-sparkle" aria-hidden="true">✦</span>
+              <span>Create Greeting</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Nexora Diwali Greeting Studio Workspace Modal -->
+      <div id="greeting-studio-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="gs-workspace-title">
+        <div class="card gs-studio-workspace">
+          <div class="gs-workspace-topbar">
+            <div class="gs-workspace-brand">
+              <span class="gs-workspace-badge">✦ DIWALI EDITION</span>
+              <h2 id="gs-workspace-title">Nexora Greeting Studio</h2>
+            </div>
+            <div class="gs-workspace-top-actions">
+              <button type="button" class="secondary gs-top-btn" onclick="resetGreetingStudio()">Reset</button>
+              <button type="button" class="gs-top-btn gs-export-btn" onclick="exportGreetingCardPNG()">⬇ Download PNG</button>
+              <button type="button" id="gs-send-chat-btn" class="gs-top-btn gs-send-chat-btn hidden" onclick="sendGreetingCardToActiveChat()">Send to Chat</button>
+              <button type="button" class="modal-close-btn gs-workspace-close" onclick="closeDiwaliGreetingStudio()" aria-label="Close Greeting Studio">&times;</button>
+            </div>
+          </div>
+
+          <div class="gs-workspace-body">
+            <!-- Left Controls Sidebar -->
+            <div class="gs-controls-pane">
+              <div class="gs-control-tabs" role="tablist">
+                <button type="button" class="gs-ctrl-tab active" data-gs-tab="templates" onclick="switchGreetingStudioTab('templates')">Templates</button>
+                <button type="button" class="gs-ctrl-tab" data-gs-tab="typography" onclick="switchGreetingStudioTab('typography')">Typography</button>
+                <button type="button" class="gs-ctrl-tab" data-gs-tab="adjust" onclick="switchGreetingStudioTab('adjust')">Filters</button>
+                <button type="button" class="gs-ctrl-tab" data-gs-tab="decor" onclick="switchGreetingStudioTab('decor')">Stickers</button>
+              </div>
+
+              <!-- 1. Templates & Backgrounds -->
+              <div class="gs-ctrl-panel" data-gs-panel="templates">
+                <label class="gs-field-label">Template Gallery</label>
+                <div id="gs-template-grid" class="gs-template-grid"></div>
+
+                <label class="gs-field-label">Card Frame Style</label>
+                <select id="gs-frame-style" onchange="updateGreetingStudioState()">
+                  <option value="royal-gold">Royal Gold Filigree</option>
+                  <option value="minimal-glow">Minimal Golden Border</option>
+                  <option value="arch-mandala">Palace Arch Frame</option>
+                  <option value="none">Borderless Modern</option>
+                </select>
+
+                <label class="gs-field-label">Custom Background Image URL (optional)</label>
+                <input type="text" id="gs-custom-bg" placeholder="https://..." oninput="updateGreetingStudioState()">
+              </div>
+
+              <!-- 2. Typography (Google Fonts) -->
+              <div class="gs-ctrl-panel hidden" data-gs-panel="typography">
+                <label class="gs-field-label">Heading Text</label>
+                <input type="text" id="gs-heading-input" value="Shubh Deepavali" oninput="updateGreetingStudioState()">
+
+                <label class="gs-field-label">Subheading / Message</label>
+                <textarea id="gs-subheading-input" rows="3" oninput="updateGreetingStudioState()">May the divine light of Diwali bring peace, prosperity, and endless joy to your home.</textarea>
+
+                <label class="gs-field-label">Footer / From Line</label>
+                <input type="text" id="gs-footer-input" value="Warm wishes from Nexora" oninput="updateGreetingStudioState()">
+
+                <label class="gs-field-label">Heading Google Font</label>
+                <select id="gs-heading-font" onchange="updateGreetingStudioState()">
+                  <option value="'Cinzel Decorative', serif">Cinzel Decorative (Royal)</option>
+                  <option value="'Great Vibes', cursive">Great Vibes (Calligraphy)</option>
+                  <option value="'Dr Sugiyama', cursive">Dr Sugiyama (Festive Script)</option>
+                  <option value="'Playfair Display', serif">Playfair Display (Editorial)</option>
+                  <option value="'Rozha One', serif">Rozha One (Classic Heritage)</option>
+                  <option value="'Dancing Script', cursive">Dancing Script (Warm)</option>
+                  <option value="'Cormorant Garamond', serif">Cormorant Garamond (Luxe)</option>
+                  <option value="'Montserrat', sans-serif">Montserrat (Modern Geometric)</option>
+                  <option value="'Poppins', sans-serif">Poppins (Clean Contemporary)</option>
+                </select>
+
+                <label class="gs-field-label">Body Google Font</label>
+                <select id="gs-body-font" onchange="updateGreetingStudioState()">
+                  <option value="'Poppins', sans-serif">Poppins</option>
+                  <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+                  <option value="'Playfair Display', serif">Playfair Display</option>
+                  <option value="'Montserrat', sans-serif">Montserrat</option>
+                  <option value="'Inter', sans-serif">Inter</option>
+                </select>
+
+                <div class="gs-row-2col">
+                  <div>
+                    <label class="gs-field-label">Heading Colour</label>
+                    <input type="color" id="gs-heading-color" value="#F5D98A" oninput="updateGreetingStudioState()">
+                  </div>
+                  <div>
+                    <label class="gs-field-label">Body Colour</label>
+                    <input type="color" id="gs-body-color" value="#EEEAF7" oninput="updateGreetingStudioState()">
+                  </div>
+                </div>
+
+                <label class="gs-field-label">Text Vertical Position</label>
+                <input type="range" id="gs-text-y" min="-60" max="60" value="0" oninput="updateGreetingStudioState()">
+              </div>
+
+              <!-- 3. Filters & Adjustments -->
+              <div class="gs-ctrl-panel hidden" data-gs-panel="adjust">
+                <label class="gs-field-label">Brightness (<span id="gs-val-bright">100</span>%)</label>
+                <input type="range" id="gs-filter-bright" min="60" max="140" value="100" oninput="updateGreetingStudioState()">
+
+                <label class="gs-field-label">Contrast (<span id="gs-val-contrast">100</span>%)</label>
+                <input type="range" id="gs-filter-contrast" min="70" max="140" value="100" oninput="updateGreetingStudioState()">
+
+                <label class="gs-field-label">Saturation (<span id="gs-val-sat">110</span>%)</label>
+                <input type="range" id="gs-filter-sat" min="50" max="180" value="110" oninput="updateGreetingStudioState()">
+
+                <label class="gs-field-label">Warmth / Temperature (<span id="gs-val-temp">15</span>%)</label>
+                <input type="range" id="gs-filter-temp" min="0" max="60" value="15" oninput="updateGreetingStudioState()">
+              </div>
+
+              <!-- 4. Decorative Elements & Stickers -->
+              <div class="gs-ctrl-panel hidden" data-gs-panel="decor">
+                <label class="gs-field-label">Add Festive Stickers</label>
+                <div class="gs-sticker-palette">
+                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🪔')">🪔 Diya</button>
+                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('✨')">✨ Sparkles</button>
+                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🎆')">🎆 Fireworks</button>
+                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🪷')">🪷 Lotus</button>
+                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🏮')">🏮 Lantern</button>
+                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🕉️')">🕉️ Om</button>
+                </div>
+                <label class="gs-field-label">Active Sticker Layers (Click on preview to drag)</label>
+                <div id="gs-layers-list" class="gs-layers-list"></div>
+              </div>
+            </div>
+
+            <!-- Right Live Preview Stage -->
+            <div class="gs-preview-stage">
+              <div id="gs-card-canvas-wrap" class="gs-card-canvas-wrap">
+                <canvas id="gs-card-canvas" width="720" height="900"></canvas>
+              </div>
+              <p class="gs-stage-hint">Live Preview · Drag stickers directly on the card to reposition them.</p>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="hub-search-panel" class="hub-search-panel hidden" role="search">
         <span aria-hidden="true">⌕</span>
         <input id="hub-message-search" type="search" placeholder="Search in Hub" oninput="filterHubMessages()" autocomplete="off">
