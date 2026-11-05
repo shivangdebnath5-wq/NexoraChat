@@ -146,11 +146,11 @@
                 <div id="hudAreaName" class="text-sm sm:text-base font-bold text-amber-100 font-festival tracking-wide">Lantern Village</div>
             </div>
             <div class="h-8 w-px bg-amber-500/30"></div>
-            <div class="flex items-center gap-2" title="Restored Diyas">
+            <div class="flex items-center gap-2" title="Sacred Diyas Restored">
                 <span class="text-xl diya-glow">🪔</span>
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-amber-300/80 font-pixel">Diyas Lit</div>
-                    <div id="hudDiyaCount" class="text-xs sm:text-sm font-pixel text-amber-300">0 / 16</div>
+                    <div id="hudDiyaCount" class="text-xs sm:text-sm font-pixel text-amber-200">0 / 16</div>
                 </div>
             </div>
             <div class="h-8 w-px bg-amber-500/30"></div>
@@ -159,6 +159,13 @@
                 <div>
                     <div class="text-[10px] uppercase tracking-wider text-amber-300/80 font-pixel">Coins</div>
                     <div id="hudCoinCount" class="text-xs sm:text-sm font-pixel text-yellow-300">0</div>
+                </div>
+            </div>
+            <div id="hudWeaponBadge" class="hidden items-center gap-2 pl-2 border-l border-amber-500/30" title="Sacred Bow Equipped — Left Click or [F] to Fire">
+                <span class="text-xl diya-glow">🏹</span>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider text-amber-300/80 font-pixel">Sacred Bow</div>
+                    <div class="text-[10px] sm:text-xs font-pixel text-yellow-300">Click / [F]</div>
                 </div>
             </div>
         </div>
@@ -189,9 +196,6 @@
             </button>
             <button onclick="UI.openModal('pause')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Pause / Settings (ESC)">
                 <span>⚙️</span>
-            </button>
-            <button onclick="NexoraExit.ask()" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Back to Nexora">
-                <span>🏠</span><span class="hidden md:inline">Nexora</span>
             </button>
         </div>
     </div>
@@ -231,12 +235,40 @@
             <div></div>
         </div>
 
-        <!-- Interact Button -->
-        <div class="pointer-events-auto flex flex-col items-end gap-2">
+        <!-- Interact & Bow Fire Buttons -->
+        <div class="pointer-events-auto flex items-end gap-2.5">
+            <button id="touchBowBtn" onclick="Game.fireArrow()" class="hidden festival-btn w-16 h-16 rounded-full font-pixel text-[10px] flex flex-col items-center justify-center gap-0.5 shadow-xl border-yellow-200">
+                <span class="text-lg">🏹</span>
+                <span>BOW</span>
+            </button>
             <button onclick="Game.triggerInteract()" class="festival-btn w-20 h-20 rounded-full font-pixel text-xs flex flex-col items-center justify-center gap-1 shadow-xl">
                 <span class="text-xl">✨</span>
                 <span>ACT (E)</span>
             </button>
+        </div>
+    </div>
+
+    <!-- BOSS ENCOUNTER CINEMATIC BANNER & HUD -->
+    <div id="bossEncounterBanner" class="hidden fixed inset-0 z-40 pointer-events-none flex flex-col items-center justify-center bg-black/65 backdrop-blur-[2px] transition-opacity duration-500">
+        <div class="border-y-2 border-amber-400 bg-gradient-to-r from-transparent via-red-950/95 to-transparent py-6 px-12 text-center shadow-2xl">
+            <div class="text-xs sm:text-sm font-pixel tracking-[0.35em] text-amber-400 uppercase mb-2">⚔️ BOSS ENCOUNTER ⚔️</div>
+            <h2 class="font-festival text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-amber-400 to-red-600 drop-shadow">
+                RAVAN — THE KING OF LANKA
+            </h2>
+            <div class="text-xs font-pixel text-red-200/85 mt-2">Sovereign of the Golden Citadel • Wielder of Dark Astras</div>
+        </div>
+    </div>
+
+    <!-- BOSS HEALTH BAR OVERLAY (TOP CENTER IN THRONE OF LANKA) -->
+    <div id="bossHudBar" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-20 w-[92%] max-w-xl pointer-events-none">
+        <div class="festival-panel rounded-xl px-4 py-2 border-red-500/80 bg-slate-950/95">
+            <div class="flex items-center justify-between text-xs font-pixel mb-1">
+                <span class="text-amber-300 flex items-center gap-1.5"><span>👑</span> <span id="bossHudTitle">RAVAN — THE KING OF LANKA</span></span>
+                <span id="bossHudPhase" class="text-red-400 text-[10px]">PHASE I • SOVEREIGN AWAKENED</span>
+            </div>
+            <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden border border-amber-500/50 p-0.5">
+                <div id="bossHpFill" class="h-full bg-gradient-to-r from-red-700 via-orange-500 to-yellow-400 rounded-full transition-all duration-150" style="width: 100%;"></div>
+            </div>
         </div>
     </div>
 
@@ -263,16 +295,13 @@
                 <button onclick="UI.openHowToPlay()" class="festival-btn-secondary py-2.5 px-5 rounded-xl font-pixel text-xs text-amber-200">
                     📖 HOW TO PLAY & CONTROLS
                 </button>
-                <button onclick="NexoraExit.ask()" class="festival-btn-secondary py-2.5 px-5 rounded-xl font-pixel text-xs text-amber-200">
-                    ← BACK TO NEXORA
-                </button>
             </div>
 
             <!-- Action Buttons -->
             <div class="mt-6 pt-4 border-t border-amber-500/20 flex items-center justify-between text-[11px] text-amber-200/60">
                 <span>WASD / Arrows: Move</span>
                 <span>E / Space: Interact</span>
-                <span>B: Bazaar • M: Map</span>
+                <span>Click / F: Sacred Bow</span>
             </div>
         </div>
     </div>
@@ -294,47 +323,6 @@
             <div id="modalBody" class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4"></div>
         </div>
     </div>
-
-    <!-- BACK TO NEXORA CONFIRMATION -->
-    <div id="exitConfirm" class="hidden fixed inset-0 z-[80] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="exitConfirmTitle">
-        <div class="festival-panel modal-enter rounded-2xl max-w-sm w-full p-6 text-center">
-            <div class="text-3xl mb-2 diya-glow">🪔</div>
-            <h2 id="exitConfirmTitle" class="font-festival text-lg sm:text-xl font-bold text-amber-300 mb-2">Back to Nexora?</h2>
-            <p class="text-xs sm:text-sm text-amber-100/85 leading-relaxed mb-5">Are you sure you want to go back? Your progress is saved automatically.</p>
-            <div class="flex items-center justify-center gap-3">
-                <button id="exitConfirmNo" type="button" onclick="NexoraExit.cancel()" class="festival-btn-secondary py-2.5 px-6 rounded-xl font-pixel text-xs text-amber-200">NO</button>
-                <button id="exitConfirmYes" type="button" onclick="NexoraExit.confirm()" class="festival-btn py-2.5 px-6 rounded-xl font-pixel text-xs text-amber-950 font-bold">YES</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        /* Back to Nexora: asks first, saves the game, then returns to the app (index.html). */
-        const NexoraExit = (() => {
-            const NEXORA_URL = 'index.html';
-            let lastFocus = null;
-            const box = () => document.getElementById('exitConfirm');
-            const isOpen = () => !box().classList.contains('hidden');
-            function ask() { lastFocus = document.activeElement; box().classList.remove('hidden'); document.getElementById('exitConfirmNo').focus(); }
-            function cancel() { box().classList.add('hidden'); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
-            function confirm() {
-                try { if (typeof Game !== 'undefined' && Game.state) Game.saveGame(); } catch (e) {}
-                window.location.href = NEXORA_URL;
-            }
-            // Capture phase so the game never sees keys while the question is open (Esc = No, Tab stays inside the dialog).
-            document.addEventListener('keydown', (e) => {
-                if (!isOpen()) return;
-                if (e.key === 'Tab') {
-                    const btns = [document.getElementById('exitConfirmNo'), document.getElementById('exitConfirmYes')], i = btns.indexOf(document.activeElement);
-                    e.preventDefault(); btns[(i + (e.shiftKey ? btns.length - 1 : 1)) % btns.length].focus();
-                } else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
-                else if (e.key !== 'Enter' && e.key !== ' ') { e.preventDefault(); }
-                e.stopImmediatePropagation();
-            }, true);
-            box().addEventListener('click', (e) => { if (e.target === box()) cancel(); });
-            return { ask, cancel, confirm };
-        })();
-    </script>
 
     <script>
     /********************************************************************
@@ -409,6 +397,22 @@
         sfxQuestComplete() {
             const chord = [392.00, 493.88, 587.33, 783.99];
             chord.forEach((f, i) => this.playTone(f, 0.55, 'triangle', 0.35, i * 0.09));
+        },
+
+        sfxBowShoot() {
+            this.playTone(523.25, 0.09, 'triangle', 0.28, 0);
+            this.playTone(783.99, 0.16, 'sine', 0.32, 0.03);
+        },
+
+        sfxArrowHit() {
+            this.playTone(349.23, 0.12, 'sawtooth', 0.25, 0);
+            this.playTone(587.33, 0.18, 'triangle', 0.28, 0.04);
+        },
+
+        sfxBossRumble() {
+            this.playTone(98.00, 0.55, 'sawtooth', 0.35, 0);
+            this.playTone(130.81, 0.65, 'triangle', 0.35, 0.12);
+            this.playTone(196.00, 0.75, 'sine', 0.3, 0.25);
         },
 
         startAmbientMusic() {
@@ -512,19 +516,43 @@
             key: 'shrine',
             name: 'Ancient Shrine',
             subtitle: 'Sanctum of the Eternal Flame',
-            reqDiyas: 10,
+            reqDiyas: 6,
             skyColor: '#160b18',
             floorColor: '#231426',
             pathColor: '#4a253b',
             accentColor: '#facc15',
-            description: 'Carved sandstone pillars, Vedic symbol altars, and the Great Mahadiya waiting to crown the festival.',
+            description: 'Carved sandstone pillars, Vedic symbol altars, the Shrine Guardian, and the threshold to Lanka.',
             buildings: [
                 { x: 340, y: 65, w: 320, h: 145, name: 'Sanctum of Eternal Light', roof: '#b45309', wall: '#451a03', style: 'temple' },
                 { x: 80, y: 240, w: 150, h: 190, name: 'Pillar of Dawn', roof: '#92400e', wall: '#291509', style: 'temple' },
                 { x: 770, y: 240, w: 150, h: 190, name: 'Pillar of Dusk', roof: '#92400e', wall: '#291509', style: 'temple' }
             ],
             portals: [
-                { x: 460, y: 680, w: 80, h: 36, toArea: 2, spawnX: 500, spawnY: 75, label: '▼ To Royal Gardens' }
+                { x: 460, y: 680, w: 80, h: 36, toArea: 2, spawnX: 500, spawnY: 75, label: '▼ To Royal Gardens' },
+                { x: 445, y: 8, w: 110, h: 36, toArea: 4, spawnX: 500, spawnY: 635, label: '▲ To Throne of Lanka' }
+            ]
+        },
+        {
+            id: 4,
+            key: 'lanka',
+            name: 'The Throne of Lanka',
+            subtitle: 'Golden Citadel of King Ravan',
+            reqDiyas: 0,
+            reqBow: true,
+            skyColor: '#1a0508',
+            floorColor: '#28090e',
+            pathColor: '#541218',
+            accentColor: '#f97316',
+            description: 'Massive golden palace pillars, dark crimson shadows, blazing braziers, and the Sovereign Throne of Lanka.',
+            buildings: [
+                { x: 350, y: 55, w: 300, h: 135, name: 'Sovereign Throne of Lanka', roof: '#b45309', wall: '#450a0a', style: 'throne', isThrone: true },
+                { x: 75, y: 120, w: 95, h: 95, name: 'Golden Pillar I', roof: '#d97706', wall: '#78350f', style: 'pillar', isPillar: true },
+                { x: 830, y: 120, w: 95, h: 95, name: 'Golden Pillar II', roof: '#d97706', wall: '#78350f', style: 'pillar', isPillar: true },
+                { x: 75, y: 455, w: 95, h: 95, name: 'Golden Pillar III', roof: '#d97706', wall: '#78350f', style: 'pillar', isPillar: true },
+                { x: 830, y: 455, w: 95, h: 95, name: 'Golden Pillar IV', roof: '#d97706', wall: '#78350f', style: 'pillar', isPillar: true }
+            ],
+            portals: [
+                { x: 445, y: 678, w: 110, h: 38, toArea: 3, spawnX: 500, spawnY: 80, label: '▼ Return to Ancient Shrine' }
             ]
         }
     ];
@@ -627,11 +655,28 @@
             ],
             urlis: [
                 { x: 410, y: 340 }, { x: 590, y: 340 },
-                { x: 410, y: 465 }, { x: 590, y: 465 }
+                { x: 410, y: 465 }, { x: 590, y: 465 },
+                { x: 320, y: 340 }, { x: 680, y: 340 }
             ],
             lightStrings: [
                 { x1: 305, y1: 195, x2: 695, y2: 195, bulbs: 11 },
                 { x1: 305, y1: 440, x2: 695, y2: 440, bulbs: 11 }
+            ]
+        },
+        4: {
+            trees: [],
+            bushes: [],
+            urlis: [
+                { x: 310, y: 220, isBrazier: true },
+                { x: 690, y: 220, isBrazier: true },
+                { x: 310, y: 390, isBrazier: true },
+                { x: 690, y: 390, isBrazier: true },
+                { x: 380, y: 580, isBrazier: true },
+                { x: 620, y: 580, isBrazier: true }
+            ],
+            lightStrings: [
+                { x1: 170, y1: 145, x2: 350, y2: 120, bulbs: 7 },
+                { x1: 650, y1: 120, x2: 830, y2: 145, bulbs: 7 }
             ]
         }
     };
@@ -652,7 +697,23 @@
             ctx.arc(12, 12, 10, 0, Math.PI * 2);
             ctx.fill();
 
-            if (key === 'diya_brass' || key === 'ach_first_light' || key === 'ach_lightkeeper') {
+            if (key === 'weapon_sacred_bow') {
+                // Radiant Golden Pixel-Art Bow & Arrow
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(10, 12, 7, -Math.PI * 0.45, Math.PI * 0.45);
+                ctx.stroke();
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(10, 5, 2, 2);
+                ctx.fillRect(10, 17, 2, 2);
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(9, 6, 1, 12);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(6, 11, 12, 2);
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(17, 10, 3, 4);
+            } else if (key === 'diya_brass' || key === 'ach_first_light' || key === 'ach_lightkeeper') {
                 ctx.fillStyle = '#fde047';
                 ctx.fillRect(10, 4, 4, 5);
                 ctx.fillStyle = '#f97316';
@@ -776,276 +837,269 @@
     const DIYA_DEFINITIONS = [
         // Area 0: Lantern Village
         {
-            id: 'v_diya_1', area: 0, x: 430, y: 310, name: 'Courtyard Welcome Diya',
+            id: 'v_diya_1', area: 0, x: 500, y: 310, name: 'Courtyard Welcome Diya',
             puzzleType: 'instant',
-            clue: 'A gentle ceremonial lamp at the village crossroads. Spark the wick to begin your journey!'
+            clue: 'The heart of Lantern Village awaits your first spark. Touch the sacred wick to awaken the courtyard!'
         },
         {
-            id: 'v_diya_2', area: 0, x: 250, y: 245, name: 'Haveli Threshold Diya',
+            id: 'v_diya_2', area: 0, x: 315, y: 215, name: 'Elder Haveli Threshold Diya',
             puzzleType: 'sequence',
-            sequence: [1, 3, 2],
-            clue: 'Inscription on the Haveli steps: "First the Dawn (1), then the Evening Star (3), and finally the Noon Sun (2)."'
+            sequence: [0, 2, 1, 3],
+            clue: 'Count the marigold blossoms on the archway: First (#1), Third (#3), Second (#2), then Fourth (#4).'
         },
         {
-            id: 'v_diya_3', area: 0, x: 750, y: 245, name: 'Artisan Rangoli Diya',
+            id: 'v_diya_3', area: 0, x: 685, y: 215, name: 'Artisan Rangoli Lamp',
             puzzleType: 'rangoli',
-            pattern: [
-                1, 0, 1,
-                0, 2, 0,
-                1, 0, 1
-            ],
-            clue: 'Meera says: "Place Crimson petals in the four corners and Marigold Gold in the very center."'
+            pattern: [1, 2, 1, 2, 3, 2, 1, 2, 1],
+            clue: 'Recreate Meera’s symmetrical 3x3 courtyard mandala: Crimson corners, Gold edges, and a Peacock Teal center.'
         },
         {
-            id: 'v_diya_4', area: 0, x: 580, y: 535, name: 'Weaver’s Hidden Ember Diya',
+            id: 'v_diya_4', area: 0, x: 315, y: 475, name: 'Weaver’s Hidden Hearth Diya',
             puzzleType: 'hidden_flame',
             reqItem: 'ember_village',
-            clue: 'Its sacred wick requires the Golden Ember hidden near the Silk Weaver House in the southwest corner.'
+            clue: 'Requires the Sacred Banyan Ember hidden in the northeast garden corner of Lantern Village.'
         },
 
         // Area 1: Forgotten Bazaar
         {
-            id: 'b_diya_1', area: 1, x: 350, y: 245, name: 'Merchant’s Prosperity Diya',
+            id: 'b_diya_1', area: 1, x: 330, y: 220, name: 'Merchant Guild Diya',
             puzzleType: 'sequence',
-            sequence: [2, 0, 3, 1],
-            clue: 'Market chime cipher: "South-West (3), North-West (1), South-East (4), North-East (2)."'
+            sequence: [3, 1, 0, 2],
+            clue: 'Follow the spice-scale chimes from highest to lowest: Wick #4, Wick #2, Wick #1, then Wick #3.'
         },
         {
-            id: 'b_diya_2', area: 1, x: 650, y: 245, name: 'Jeweler’s Rangoli Diya',
-            puzzleType: 'rangoli',
-            pattern: [
-                0, 2, 0,
-                2, 3, 2,
-                0, 2, 0
-            ],
-            clue: 'Create a blooming diamond of Marigold (Gold) around a Peacock Teal heart.'
-        },
-        {
-            id: 'b_diya_3', area: 1, x: 260, y: 435, name: 'Spice Caravan Mirror Diya',
+            id: 'b_diya_2', area: 1, x: 670, y: 220, name: 'Jeweler’s Prism Lamp',
             puzzleType: 'mirror',
-            // 4x4 grid: S(0,0) -> (0,2)[/] -> (2,2)[\] -> (2,3)[Target]
             gridSize: 4,
             source: { r: 0, c: 0, dir: 'right' },
-            target: { r: 2, c: 3 },
+            target: { r: 3, c: 3 },
             mirrors: [
-                { r: 0, c: 2, type: 0 },
-                { r: 2, c: 2, type: 0 },
+                { r: 0, c: 2, type: 1 },
+                { r: 2, c: 2, type: 2 },
+                { r: 2, c: 3, type: 1 },
                 { r: 1, c: 1, type: 1 }
             ],
-            clue: 'Rotate the polished brass mirrors so the sunbeam bends down at column 3 and right across row 3.'
+            clue: 'Rotate the brass bazaar mirrors so the golden beam travels from the top-left lantern to the bottom-right lamp.'
         },
         {
-            id: 'b_diya_4', area: 1, x: 740, y: 435, name: 'Vedic Guild Diya',
+            id: 'b_diya_3', area: 1, x: 320, y: 445, name: 'Silk & Zari Mandala Diya',
+            puzzleType: 'rangoli',
+            pattern: [2, 1, 2, 1, 3, 1, 2, 1, 2],
+            clue: 'Weave a diamond rangoli: Marigold Gold corners, Crimson petals on the four sides, and Peacock Teal at the heart.'
+        },
+        {
+            id: 'b_diya_4', area: 1, x: 680, y: 445, name: 'Ancient Spice-Vault Diya',
             puzzleType: 'symbols',
-            targetSymbols: ['🪷', '🐚', '☀️', '🪔'],
-            clue: 'Ancient Bazaar proverb: "From the Lotus (🪷) sounds the Conch (🐚), greeting the Sun (☀️) before the Lamp (🪔)."'
+            targetSymbols: ['🪷', '🐘', '☀️', '🪔'],
+            clue: 'Carved on the spice vault pillar: "First blooms the Lotus (🪷), carried by the Royal Elephant (🐘), beneath the Sun (☀️), to light the Diya (🪔)."'
         },
 
         // Area 2: Royal Gardens
         {
-            id: 'g_diya_1', area: 2, x: 260, y: 255, name: 'West Baradari Mirror Diya',
+            id: 'g_diya_1', area: 2, x: 320, y: 215, name: 'West Baradari Mirror Lamp',
             puzzleType: 'mirror',
             gridSize: 4,
-            source: { r: 0, c: 0, dir: 'down' },
-            target: { r: 3, c: 3 },
-            mirrors: [
-                { r: 2, c: 0, type: 0 },
-                { r: 2, c: 2, type: 0 },
-                { r: 3, c: 2, type: 0 }
-            ],
-            clue: 'Guide the moonbeam down the left waterway, across the center bridge, and down into the corner lotus.'
-        },
-        {
-            id: 'g_diya_2', area: 2, x: 740, y: 255, name: 'East Baradari Mirror Diya',
-            puzzleType: 'mirror',
-            gridSize: 4,
-            source: { r: 3, c: 0, dir: 'right' },
+            source: { r: 1, c: 0, dir: 'right' },
             target: { r: 0, c: 3 },
             mirrors: [
-                { r: 3, c: 1, type: 0 },
-                { r: 1, c: 1, type: 0 },
-                { r: 1, c: 3, type: 0 },
-                { r: 0, c: 3, type: 0 } // not needed if target is at 0,3
-            ].slice(0, 3),
-            clue: 'Reflect the fountain ray upward at column 2, across row 2, and straight up to the northeast alcove.'
-        },
-        {
-            id: 'g_diya_3', area: 2, x: 310, y: 540, name: 'Charbagh Lotus Rangoli Diya',
-            puzzleType: 'rangoli',
-            pattern: [
-                3, 1, 3,
-                1, 2, 1,
-                3, 1, 3
+                { r: 1, c: 1, type: 2 },
+                { r: 3, c: 1, type: 1 },
+                { r: 3, c: 3, type: 2 },
+                { r: 2, c: 2, type: 1 }
             ],
-            clue: 'Royal Garden tapestry: Peacock Teal corners, Crimson cross-petals, and a Golden sun center.'
+            clue: 'Guide the moonlight beam across the water basin: Down at col 2, Right across the bottom row, and Up to the northeast lotus.'
         },
         {
-            id: 'g_diya_4', area: 2, x: 690, y: 540, name: 'Fountain Spirit Diya',
+            id: 'g_diya_2', area: 2, x: 680, y: 215, name: 'East Baradari Mirror Lamp',
+            puzzleType: 'mirror',
+            gridSize: 4,
+            source: { r: 0, c: 1, dir: 'down' },
+            target: { r: 2, c: 0 },
+            mirrors: [
+                { r: 2, c: 1, type: 2 },
+                { r: 2, c: 3, type: 1 },
+                { r: 1, c: 2, type: 2 }
+            ],
+            clue: 'Reflect the descending starlight west into the sacred garden alcove.'
+        },
+        {
+            id: 'g_diya_3', area: 2, x: 340, y: 500, name: 'Fountain Lotus Mandala Diya',
+            puzzleType: 'rangoli',
+            pattern: [3, 2, 3, 2, 1, 2, 3, 2, 3],
+            clue: 'Mirror the Royal Fountain: Peacock Teal water corners, Golden bridges on the sides, and a Crimson Lotus center.'
+        },
+        {
+            id: 'g_diya_4', area: 2, x: 660, y: 500, name: 'Moonlit Cypress Diya',
             puzzleType: 'hidden_flame',
             reqItem: 'ember_gardens',
-            clue: 'Seek the Azure Flame concealed behind the West Marble Baradari.'
+            clue: 'Requires the Sacred Lotus Flame concealed near the northwest marble pavilion of the Royal Gardens.'
         },
 
         // Area 3: Ancient Shrine
         {
-            id: 's_diya_1', area: 3, x: 275, y: 290, name: 'Pillar of Dawn Diya',
-            puzzleType: 'sequence',
-            sequence: [0, 4, 1, 3, 2],
-            clue: 'Five-pointed star harmony: Outer Left (1), Outer Right (5), Inner Left (2), Inner Right (4), Crown Center (3).'
-        },
-        {
-            id: 's_diya_2', area: 3, x: 725, y: 290, name: 'Pillar of Dusk Diya',
+            id: 's_diya_1', area: 3, x: 270, y: 260, name: 'Vedic Altar of Dawn',
             puzzleType: 'symbols',
-            targetSymbols: ['🐘', '🪷', '🦚', '☀️', '🔱'],
-            clue: 'Shrine frieze order: "Gaja the Elephant, Padma the Lotus, Mayura the Peacock, Surya the Sun, and the Sacred Trident."'
+            targetSymbols: ['🐚', '☀️', '🪷', '🦚'],
+            clue: 'The Dawn Hymn reads: "The Conch (🐚) heralds the Rising Sun (☀️), opening the Lotus (🪷) where the Peacock (🦚) dances."'
         },
         {
-            id: 's_diya_3', area: 3, x: 365, y: 520, name: 'Sanctum Prism Diya',
+            id: 's_diya_2', area: 3, x: 730, y: 260, name: 'Vedic Altar of Stars',
+            puzzleType: 'sequence',
+            sequence: [2, 0, 4, 1, 3],
+            clue: 'Five planetary flames: Ignite the Center (#3), Far-Left (#1), Far-Right (#5), Inner-Left (#2), then Inner-Right (#4).'
+        },
+        {
+            id: 's_diya_3', area: 3, x: 270, y: 495, name: 'Sanctum Mirror Conduit',
             puzzleType: 'mirror',
             gridSize: 4,
-            source: { r: 0, c: 1, dir: 'down' },
+            source: { r: 0, c: 0, dir: 'down' },
             target: { r: 0, c: 3 },
             mirrors: [
-                { r: 3, c: 1, type: 0 },
-                { r: 3, c: 3, type: 0 }
+                { r: 3, c: 0, type: 1 },
+                { r: 3, c: 3, type: 1 },
+                { r: 1, c: 2, type: 2 }
             ],
-            clue: 'Send the sacred beam deep to the bottom of the sanctum and reflect it back up the eastern colonnade.'
+            clue: 'Channel the eternal flame down the western pillar, across the sanctum floor, and up to the eastern brazier.'
         },
         {
-            id: 's_diya_4', area: 3, x: 635, y: 520, name: 'Grand Mandala Diya',
+            id: 's_diya_4', area: 3, x: 730, y: 495, name: 'Sovereign Mandala Diya',
             puzzleType: 'rangoli',
-            pattern: [
-                2, 1, 2,
-                1, 3, 1,
-                2, 1, 2
-            ],
-            clue: 'Crown Mandala: Marigold Gold corners, Crimson bridges, and a Peacock Teal bindu center.'
+            pattern: [1, 3, 1, 3, 2, 3, 1, 3, 1],
+            clue: 'Complete the Sovereign Shrine Seal: Crimson corners, Peacock Teal guardians on each side, and a Golden Sun center.'
         }
     ];
 
-    // TREASURE CHESTS (+30 Coins each, 10 across the world for the 'Treasure Finder' achievement)
+    // 10 HIDDEN TREASURE CHESTS (30 COINS EACH)
     const WORLD_CHESTS = [
-        { id: 'chest_1', area: 0, x: 115, y: 235, coins: 30, label: 'Haveli Alcove Chest' },
-        { id: 'chest_2', area: 0, x: 890, y: 235, coins: 30, label: 'Artisan Supply Chest' },
-        { id: 'chest_3', area: 0, x: 895, y: 655, coins: 30, label: 'Sweetmeat Cellar Chest' },
-        { id: 'chest_4', area: 1, x: 110, y: 230, coins: 30, label: 'Silk Merchant Coffer' },
-        { id: 'chest_5', area: 1, x: 890, y: 230, coins: 30, label: 'Brass Guild Coffer' },
-        { id: 'chest_6', area: 1, x: 110, y: 635, coins: 30, label: 'Cardamom Crate Chest' },
-        { id: 'chest_7', area: 2, x: 115, y: 635, coins: 30, label: 'Sunken Lily Chest' },
-        { id: 'chest_8', area: 2, x: 885, y: 635, coins: 30, label: 'Cypress Hedge Chest' },
-        { id: 'chest_9', area: 3, x: 120, y: 120, coins: 30, label: 'Ancient Offering Coffer' },
-        { id: 'chest_10', area: 3, x: 880, y: 120, coins: 30, label: 'Vedic Vault Chest' }
+        { id: 'chest_1', area: 0, x: 85, y: 245, coins: 30, label: 'Carved Teak Chest' },
+        { id: 'chest_2', area: 0, x: 915, y: 460, coins: 30, label: 'Weaver’s Dowry Box' },
+        { id: 'chest_3', area: 0, x: 85, y: 665, coins: 30, label: 'Courtyard Brass Coffer' },
+        { id: 'chest_4', area: 1, x: 85, y: 245, coins: 30, label: 'Merchant’s Lockbox' },
+        { id: 'chest_5', area: 1, x: 920, y: 245, coins: 30, label: 'Zari Treasury Chest' },
+        { id: 'chest_6', area: 1, x: 85, y: 645, coins: 30, label: 'Spice Route Strongbox' },
+        { id: 'chest_7', area: 2, x: 85, y: 235, coins: 30, label: 'Marble Garden Reliquary' },
+        { id: 'chest_8', area: 2, x: 915, y: 635, coins: 30, label: 'Royal Charbagh Chest' },
+        { id: 'chest_9', area: 3, x: 105, y: 120, coins: 30, label: 'Ancient Temple Coffer' },
+        { id: 'chest_10', area: 3, x: 895, y: 120, coins: 30, label: 'Sanctum Offering Chest' }
     ];
 
-    // COLLECTIBLE QUEST & FLAME ITEMS IN THE WORLD
+    // HIDDEN FLAMES & QUEST COLLECTIBLE ITEMS IN THE WORLD
     const WORLD_COLLECTIBLES = [
-        { id: 'ember_village', area: 0, x: 115, y: 655, icon: '🔥', name: 'Weaver’s Golden Ember', desc: 'Used to ignite the Weaver’s Hidden Ember Diya in Lantern Village.' },
-        { id: 'quest_sketchbook', area: 0, x: 885, y: 455, icon: '📒', name: 'Meera’s Rangoli Sketchbook', desc: 'Lost geometry patterns belonging to Meera the Rangoli Artist.' },
-        { id: 'quest_toran', area: 1, x: 890, y: 635, icon: '🌼', name: 'Sacred Marigold Toran', desc: 'A festive doorway garland Kiran the Merchant misplaced.' },
-        { id: 'ember_gardens', area: 2, x: 125, y: 235, icon: '💠', name: 'Azure Lotus Flame', desc: 'Used to kindle the Fountain Spirit Diya in the Royal Gardens.' },
-        { id: 'quest_brass_key', area: 2, x: 880, y: 235, icon: '🗝️', name: 'Devraj’s Brass Fountain Key', desc: 'An antique water-valve key sought by Devraj the Garden Caretaker.' }
+        { id: 'ember_village', area: 0, x: 925, y: 240, name: 'Sacred Banyan Ember', icon: '🔥', type: 'ember' },
+        { id: 'item_sketchbook', area: 0, x: 915, y: 660, name: 'Meera’s Rangoli Sketchbook', icon: '📒', type: 'quest' },
+        { id: 'item_toran', area: 1, x: 915, y: 640, name: 'Sacred Marigold Toran', icon: '🌼', type: 'quest' },
+        { id: 'ember_gardens', area: 2, x: 330, y: 95, name: 'Sacred Lotus Flame', icon: '🔥', type: 'ember' },
+        { id: 'item_fountain_key', area: 2, x: 915, y: 235, name: 'Brass Fountain Key', icon: '🗝️', type: 'quest' }
     ];
 
-    // SECRET DISCOVERY ZONES (+50 Coins when stepped into)
+    // SECRET DISCOVERY ZONES (50 COINS EACH WHEN WALKED INTO)
     const SECRET_ZONES = [
-        { id: 'sec_village', area: 0, x: 65, y: 360, r: 42, name: 'Whispering Banyan Nook' },
-        { id: 'sec_bazaar', area: 1, x: 935, y: 360, r: 42, name: 'Smuggler’s Lantern Alley' },
-        { id: 'sec_gardens', area: 2, x: 500, y: 245, r: 42, name: 'Moonlit Lotus Arch' },
-        { id: 'sec_shrine', area: 3, x: 500, y: 225, r: 45, name: 'Altar of the First Spark' }
+        { id: 'sec_village_well', area: 0, x: 640, y: 645, r: 42, name: 'Whispering Wishing Well' },
+        { id: 'sec_bazaar_oasis', area: 1, x: 195, y: 365, r: 42, name: 'Hidden Rooftop Chai Alcove' },
+        { id: 'sec_garden_gazebo', area: 2, x: 500, y: 165, r: 45, name: 'Moonlight Peacock Gazebo' },
+        { id: 'sec_shrine_sanctum', area: 3, x: 500, y: 240, r: 45, name: 'Altar of the Seven Rishis' }
     ];
 
-    // NPCS & SIDE QUEST GIVERS
+    // NPCS AND SIDE QUESTS
     const NPCS = [
         {
-            id: 'npc_aarav', area: 0, x: 500, y: 265, name: 'Aarav', role: 'The Lantern Keeper', icon: '🧓',
-            palette: { robe: '#d97706', turban: '#fef08a', skin: '#d69e72' },
+            id: 'npc_aarav', area: 0, x: 435, y: 375, name: 'Aarav', role: 'The Lantern Keeper', icon: '🧓',
+            palette: { robe: '#d97706', turban: '#fef08a', skin: '#e0a96d' },
+            questId: 'q_courtyard',
             getDialogue() {
-                const lit = Game.state.litDiyas.length;
+                const lit = Game.state.litDiyas.filter(id => id.startsWith('v_')).length;
                 if (lit === 0) {
-                    return "Namaste, young light-bearer! A sudden twilight hush has extinguished our village diyas before Diwali night. Approach the Courtyard Welcome Diya nearby and press [E] to rekindle our first flame!";
+                    return "Namaste, young traveler! A sudden gust of twilight has extinguished our village diyas. Start by lighting the Courtyard Welcome Diya just north of me!";
+                } else if (lit < 4) {
+                    return `Wonderful work! You have restored ${lit} of the 4 diyas in Lantern Village. Once at least 2 diyas shine, the northern gate to the Forgotten Bazaar will open!`;
+                } else {
+                    if (Game.state.quests.q_courtyard !== 'completed') {
+                        Game.completeQuest('q_courtyard', 40, 'Village Lightbringer');
+                    }
+                    return "Every diya in Lantern Village glows with golden warmth! The elders bless your journey toward the Ancient Shrine.";
                 }
-                if (lit < 4) {
-                    return `You have restored ${lit} diya(s)! Restore at least 2 diyas here in Lantern Village to unlock the northern gate to the Forgotten Bazaar.`;
-                }
-                if (lit < 16) {
-                    return `The village glows warmly thanks to you (${lit}/16 Diyas restored). Keep exploring north toward the Royal Gardens and the Ancient Shrine!`;
-                }
-                return "Miraculous! Every single diya across all four realms shines once more! Step up to the Grand Altar in the Ancient Shrine—or celebrate right here with us!";
             }
         },
         {
-            id: 'npc_meera', area: 0, x: 660, y: 370, name: 'Meera', role: 'The Rangoli Artist', icon: '👩‍🎨',
-            palette: { robe: '#db2777', turban: '#fbcfe8', skin: '#e0a96d' },
+            id: 'npc_meera', area: 0, x: 635, y: 350, name: 'Meera', role: 'The Rangoli Artist', icon: '👩‍🎨',
+            palette: { robe: '#db2777', turban: '#fbbf24', skin: '#e0a96d' },
             questId: 'q_rangoli',
-            reqItem: 'quest_sketchbook',
             getDialogue() {
                 const q = Game.state.quests.q_rangoli;
+                const hasBook = Game.state.collectibles.includes('item_sketchbook');
                 if (q === 'unstarted') {
                     Game.state.quests.q_rangoli = 'active';
                     Game.saveGame();
                     UI.toast('📜 New Side Quest: Meera’s Lost Sketchbook', 'amber');
-                    return "Oh dear! While preparing colors for the Artisan Rangoli Diya, I dropped my Rangoli Sketchbook near the Sweetmeat Pavilion in the southeast. Could you find it for me?";
+                    return "Oh dear! I dropped my Rangoli Pattern Sketchbook near the Sweetmeat Pavilion in the southeast corner of the village. Could you find it for me?";
+                } else if (q === 'active' && !hasBook) {
+                    return "My Rangoli Sketchbook is somewhere near the southeast pavilion of Lantern Village. Its symmetry clues will help you solve Rangoli Diya puzzles!";
+                } else if (q === 'active' && hasBook) {
+                    Game.completeQuest('q_rangoli', 40, 'Meera’s Lost Sketchbook');
+                    return "You found my Rangoli Sketchbook! Please accept these 40 Festival Coins. Remember: Rangoli puzzles always balance colors around the center tile!";
                 }
-                if (q === 'active') {
-                    if (Game.state.collectibles.includes('quest_sketchbook')) {
-                        Game.completeQuest('q_rangoli', 40, 'Meera’s Lost Sketchbook');
-                        return "You found my Rangoli Sketchbook! Thank you so much! Here are 40 Festival Coins—and remember: my courtyard rangoli uses Crimson corners around a Golden center!";
-                    }
-                    return "My Rangoli Sketchbook is somewhere in the southeast corner of Lantern Village near the Sweetmeat Pavilion.";
-                }
-                return "Your rangoli patterns bring auspicious blessings to the entire village! Visit the Bazaar to buy new Rangoli templates.";
+                return "Your rangoli patterns bring such festive joy to our doorsteps!";
             }
         },
         {
-            id: 'npc_kiran', area: 1, x: 240, y: 240, name: 'Kiran', role: 'The Bazaar Merchant', icon: '👳‍♂️',
-            palette: { robe: '#0284c7', turban: '#facc15', skin: '#c68642' },
+            id: 'npc_kiran', area: 1, x: 375, y: 325, name: 'Kiran', role: 'The Bazaar Merchant', icon: '👳‍♂️',
+            palette: { robe: '#0284c7', turban: '#f43f5e', skin: '#c68642' },
             questId: 'q_toran',
-            reqItem: 'quest_toran',
             opensBazaar: true,
             getDialogue() {
                 const q = Game.state.quests.q_toran;
+                const hasToran = Game.state.collectibles.includes('item_toran');
                 if (q === 'unstarted') {
                     Game.state.quests.q_toran = 'active';
                     Game.saveGame();
                     UI.toast('📜 New Side Quest: The Missing Marigold Toran', 'amber');
-                    return "Welcome to the Forgotten Bazaar! Before we trade, a gust of wind blew my Sacred Marigold Toran to the southeast caravan corner. Bring it back for 40 Festival Coins, or browse the Bazaar right now!";
-                }
-                if (q === 'active' && Game.state.collectibles.includes('quest_toran')) {
+                    return "Welcome to the Forgotten Bazaar! While setting up my stall, a monkey ran off with my Sacred Marigold Toran toward the southeast tent! Bring it back for 40 Coins, or browse the Bazaar anytime!";
+                } else if (q === 'active' && hasToran) {
                     Game.completeQuest('q_toran', 40, 'The Missing Marigold Toran');
-                    return "My Sacred Marigold Toran! You have a keen eye, traveler. Take these 40 Festival Coins and peruse my finest festival wares!";
+                    return "Aha! My Sacred Marigold Toran! Here are 40 Festival Coins. Come inspect my Grand Bazaar wares whenever you wish!";
                 }
-                return "Step right up! From lotus diyas and festive sherwanis to puzzle hint scrolls, the Festival Bazaar has everything a light-bearer needs!";
+                return "Step right up to the Festival Bazaar! From ornate diyas and festive kurtas to Seeker's Compasses, your Festival Coins unlock wonders!";
             }
         },
         {
-            id: 'npc_devraj', area: 2, x: 500, y: 465, name: 'Devraj', role: 'The Garden Caretaker', icon: '🧔🏽',
-            palette: { robe: '#059669', turban: '#a7f3d0', skin: '#b97a56' },
+            id: 'npc_devraj', area: 2, x: 430, y: 455, name: 'Devraj', role: 'The Garden Caretaker', icon: '👨‍🌾',
+            palette: { robe: '#0d9488', turban: '#fde047', skin: '#c68642' },
             questId: 'q_key',
-            reqItem: 'quest_brass_key',
             getDialogue() {
                 const q = Game.state.quests.q_key;
+                const hasKey = Game.state.collectibles.includes('item_fountain_key');
                 if (q === 'unstarted') {
                     Game.state.quests.q_key = 'active';
                     Game.saveGame();
                     UI.toast('📜 New Side Quest: The Caretaker’s Fountain Key', 'amber');
-                    return "Peace be with you in the Royal Gardens. I left my Brass Fountain Key near the East Marble Baradari. If you retrieve it, I’ll reward you richly and share the secret of the mirror beams!";
-                }
-                if (q === 'active' && Game.state.collectibles.includes('quest_brass_key')) {
+                    return "Peace be with you in the Royal Gardens. I misplaced my Brass Fountain Key near the East Marble Baradari. If you spot it, bring it to me!";
+                } else if (q === 'active' && hasKey) {
                     Game.completeQuest('q_key', 40, 'The Caretaker’s Fountain Key');
-                    return "Splendid! My antique Brass Fountain Key! Take these 40 Festival Coins. Tip: In mirror puzzles, click any mirror tile to flip its angle between '/' and '\\'!";
+                    return "My Brass Fountain Key! Thank you, friend—here are 40 Festival Coins. Tip: The Sacred Lotus Flame is tucked just behind the West Baradari!";
                 }
-                return "Listen to the lotus fountain! The mirrors in these gardens bend moonlight toward the unlit diyas.";
+                return "When rotating the garden's brass mirrors, trace the beam from the glowing source tile step by step until it kisses the unlit lamp.";
             }
         },
         {
-            id: 'npc_priya', area: 3, x: 500, y: 265, name: 'High Priestess Priya', role: 'Keeper of the Shrine', icon: '🧘‍♀️',
+            id: 'npc_priya', area: 3, x: 350, y: 270, name: 'High Priestess Priya', role: 'Keeper of the Shrine', icon: '🧘‍♀️',
             palette: { robe: '#9333ea', turban: '#fde047', skin: '#d69e72' },
             getDialogue() {
                 const lit = Game.state.litDiyas.length;
                 if (lit < 16) {
-                    return `Welcome to the Ancient Shrine. You have rekindled ${lit} of the 16 sacred diyas. When all 16 burn bright, interact with the Grand Mahadiya Altar in the center of this sanctum!`;
+                    return `Welcome to the Ancient Shrine. You have rekindled ${lit} of the 16 sacred diyas. Speak with the Ancient Guardian at the center of the Shrine, or restore all 16 diyas to ignite the Grand Mahadiya!`;
                 }
                 return "All 16 sacred diyas are alight! Step up to the Grand Mahadiya Altar at the center of the Shrine to usher in the Grand Festival Finale!";
+            }
+        },
+        {
+            id: 'npc_guardian', area: 3, x: 500, y: 315, name: 'Maharishi Agastya', role: 'The Shrine Guardian', icon: '🧙‍♂️',
+            palette: { robe: '#d97706', turban: '#fef08a', skin: '#d69e72', beard: true },
+            isGuardian: true,
+            getDialogue() {
+                if (Game.state.hasSacredBow) {
+                    return "The Sacred Bow shines in your hands, traveller. Press Left Click or [F] to loose arrows of pure golden light. The northern gate to The Throne of Lanka stands open—may your aim remain true!";
+                }
+                return "Stop, traveller. You know not what lies beyond these sacred grounds.";
             }
         },
         // Zafar the Wandering Merchant (Deterministically appears once 3+ diyas are lit; rotates between Bazaar, Gardens, and Village)
@@ -1199,8 +1253,328 @@
         { id: 'ach_quest_helper', title: 'Beloved Neighbor', desc: 'Complete 3 NPC side quests.', icon: '🤝' },
         { id: 'ach_secret', title: 'Seeker of Whispers', desc: 'Discover a hidden secret sanctuary.', icon: '✨' },
         { id: 'ach_wandering', title: 'Caravan Patron', desc: 'Acquire a rare relic from Zafar the Wandering Merchant.', icon: '🐪' },
-        { id: 'ach_lightkeeper', title: 'Festival Guardian', desc: 'Restore all 16 Diyas and complete the Grand Festival Finale.', icon: '👑' }
+        { id: 'ach_sacred_bow', title: 'Bearer of the Sacred Bow', desc: 'Receive the Sacred Bow from the Guardian in the Ancient Shrine.', icon: '🏹' },
+        { id: 'ach_lanka_challenger', title: 'Challenger of Lanka', desc: 'Enter the Throne of Lanka and confront King Ravan.', icon: '👑' },
+        { id: 'ach_lightkeeper', title: 'Festival Guardian', desc: 'Restore all 16 Diyas and complete the Grand Festival Finale.', icon: '🏆' }
     ];
+
+    /********************************************************************
+     * 2B. RAVAN BOSS & SACRED BOW COMBAT ENGINE (MODULAR PREPARATION)
+     ********************************************************************/
+    const BossSystem = {
+        active: false,
+        introPlaying: false,
+        x: 500,
+        y: 205,
+        hp: 500,
+        maxHp: 500,
+        phase: 1,
+        tenHeadedAwakened: false,
+        hitFlash: 0,
+        floatTick: 0,
+        abilityCooldown: 3.0,
+        warningZones: [],
+        soldiers: [],
+        infernalWaves: [],
+
+        resetForArena() {
+            this.x = 500;
+            this.y = 205;
+            this.hp = this.maxHp;
+            this.phase = 1;
+            this.tenHeadedAwakened = false;
+            this.hitFlash = 0;
+            this.warningZones = [];
+            this.soldiers = [];
+            this.infernalWaves = [];
+            this.abilityCooldown = 3.2;
+        },
+
+        triggerEntranceCinematic() {
+            this.introPlaying = true;
+            this.active = false;
+            Game.cutsceneLocked = true;
+            Game.playerVel.vx = 0;
+            Game.playerVel.vy = 0;
+            Game.state.player.moving = false;
+            Game.state.player.dir = 'up';
+            Sound.sfxBossRumble();
+
+            // Dramatic crimson & gold shockwaves around the throne
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    Game.shockwaves.push({
+                        x: this.x,
+                        y: this.y,
+                        r: 10,
+                        maxR: 260,
+                        alpha: 0.95,
+                        color: i % 2 === 0 ? '#ef4444' : '#f59e0b'
+                    });
+                }, i * 240);
+            }
+
+            const ravanLines = [
+                "So... another warrior comes seeking glory?",
+                "You carry a weapon blessed by the light. How amusing.",
+                "This kingdom has already fallen to my power.",
+                "Come then, little traveller. Let me see whether your courage is as strong as your words."
+            ];
+
+            setTimeout(() => {
+                UI.openDialogueSequence({
+                    name: 'Ravan — The King of Lanka',
+                    role: 'Sovereign of the Golden Citadel',
+                    icon: '👹',
+                    lines: ravanLines,
+                    onComplete: () => {
+                        this.showBossEncounterBanner();
+                    }
+                });
+            }, 650);
+        },
+
+        showBossEncounterBanner() {
+            Sound.sfxBossRumble();
+            const banner = document.getElementById('bossEncounterBanner');
+            banner.classList.remove('hidden');
+            Game.unlockAchievement('ach_lanka_challenger');
+
+            setTimeout(() => {
+                banner.classList.add('hidden');
+                this.introPlaying = false;
+                this.active = true;
+                Game.cutsceneLocked = false;
+                Game.state.ravanIntroSeen = true;
+                Game.saveGame();
+                document.getElementById('bossHudBar').classList.remove('hidden');
+                this.updateHud();
+                UI.toast('🏹 Boss Encounter Started! Left-Click or press [F] to fire the Sacred Bow!', 'gold');
+            }, 2800);
+        },
+
+        updateHud() {
+            const bar = document.getElementById('bossHudBar');
+            if (Game.state.area !== 4 || !this.active) {
+                bar.classList.add('hidden');
+                return;
+            }
+            bar.classList.remove('hidden');
+            const pct = Math.max(0, Math.min(100, (this.hp / this.maxHp) * 100));
+            document.getElementById('bossHpFill').style.width = `${pct}%`;
+            const phaseEl = document.getElementById('bossHudPhase');
+            if (this.tenHeadedAwakened) {
+                phaseEl.textContent = 'PHASE II • TENFOLD AWAKENING (DASHAMUKHA)';
+            } else {
+                phaseEl.textContent = `PHASE I • HP ${Math.ceil(this.hp)} / ${this.maxHp}`;
+            }
+        },
+
+        onArrowHit(arrow) {
+            this.hp = Math.max(0, this.hp - 20);
+            this.hitFlash = 0.22;
+            Sound.sfxArrowHit();
+
+            for (let i = 0; i < 12; i++) {
+                const a = Math.random() * Math.PI * 2;
+                const s = 35 + Math.random() * 65;
+                Game.particles.push({
+                    x: arrow.x,
+                    y: arrow.y,
+                    vx: Math.cos(a) * s,
+                    vy: Math.sin(a) * s,
+                    size: 3,
+                    color: i % 2 === 0 ? '#fde047' : '#ef4444',
+                    life: 0.45
+                });
+            }
+
+            if (this.hp <= this.maxHp * 0.5 && !this.tenHeadedAwakened) {
+                this.prepareTenfoldAwakening();
+            }
+
+            if (this.hp <= 0) {
+                this.hp = this.maxHp;
+                Game.addCoins(50, 'Ravan Staggered!', this.x, this.y);
+                UI.toast('⚡ You staggered Ravan and earned +50 Festival Coins! (Full Boss Phases ready for expansion)', 'gold');
+            }
+            this.updateHud();
+        },
+
+        // Modular Boss Ability Preparation (Ready for future expansion)
+        prepareAstraRain() {
+            // Places warning indicators on the arena floor before magical arrows descend
+            for (let i = 0; i < 3; i++) {
+                this.warningZones.push({
+                    x: 240 + Math.random() * 520,
+                    y: 280 + Math.random() * 300,
+                    r: 34,
+                    timer: 1.5
+                });
+            }
+        },
+
+        prepareArmyOfLanka() {
+            // Hook for summoning pixel-art Lanka soldiers
+            this.soldiers = [];
+        },
+
+        prepareInfernalWave() {
+            // Hook for sweeping flame wave across the arena
+            this.infernalWaves.push({ y: 245, vy: 110, alpha: 0.75 });
+        },
+
+        prepareTenfoldAwakening() {
+            this.tenHeadedAwakened = true;
+            this.phase = 2;
+            Sound.sfxBossRumble();
+            Game.shockwaves.push({ x: this.x, y: this.y, r: 12, maxR: 220, alpha: 0.9, color: '#ef4444' });
+            UI.toast('🔥 Ravan invokes Tenfold Awakening (Dashamukha Silhouette)!', 'red');
+        },
+
+        update(dt) {
+            this.floatTick += dt * 2.4;
+            if (this.hitFlash > 0) this.hitFlash = Math.max(0, this.hitFlash - dt);
+
+            if (Game.state.area !== 4) return;
+
+            if (this.active && !this.introPlaying) {
+                // Subtle menacing hover near the throne
+                this.x = 500 + Math.sin(this.floatTick * 0.8) * 55;
+
+                // Update warning zone indicators
+                for (let i = this.warningZones.length - 1; i >= 0; i--) {
+                    const wz = this.warningZones[i];
+                    wz.timer -= dt;
+                    if (wz.timer <= 0) {
+                        Game.shockwaves.push({ x: wz.x, y: wz.y, r: 4, maxR: wz.r, alpha: 0.85, color: '#ef4444' });
+                        this.warningZones.splice(i, 1);
+                    }
+                }
+
+                // Periodic ambient Astra telegraphs to make the arena feel alive
+                this.abilityCooldown -= dt;
+                if (this.abilityCooldown <= 0) {
+                    this.abilityCooldown = 4.5;
+                    this.prepareAstraRain();
+                }
+            }
+        },
+
+        drawRavan(ctx) {
+            ctx.save();
+            const hoverY = Math.sin(this.floatTick) * 4;
+            ctx.translate(this.x, this.y + hoverY);
+
+            // Ground shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+            ctx.beginPath();
+            ctx.ellipse(0, 28 - hoverY, 28, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dark Crimson & Gold Aura Halo
+            const auraGrad = ctx.createRadialGradient(0, -8, 4, 0, -8, 56);
+            auraGrad.addColorStop(0, 'rgba(239, 68, 68, 0.55)');
+            auraGrad.addColorStop(0.6, 'rgba(217, 119, 6, 0.22)');
+            auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = auraGrad;
+            ctx.beginPath();
+            ctx.arc(0, -8, 56, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tenfold Awakening Spectral Crown Silhouettes (when Phase II active or intro)
+            if (this.tenHeadedAwakened || this.introPlaying) {
+                ctx.fillStyle = 'rgba(220, 38, 38, 0.38)';
+                for (let h = -4; h <= 4; h++) {
+                    if (h === 0) continue;
+                    const hx = h * 11;
+                    const hy = -26 + Math.abs(h) * 2.5;
+                    ctx.fillRect(hx - 4, hy, 8, 9);
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(hx - 3, hy - 4, 6, 4);
+                    ctx.fillStyle = 'rgba(220, 38, 38, 0.38)';
+                }
+            }
+
+            // Royal Crimson Cape
+            ctx.fillStyle = this.hitFlash > 0 ? '#ffffff' : '#7f1d1d';
+            ctx.beginPath();
+            ctx.moveTo(-18, -14);
+            ctx.lineTo(18, -14);
+            ctx.lineTo(26, 24);
+            ctx.lineTo(-26, 24);
+            ctx.closePath();
+            ctx.fill();
+
+            // Golden Armor Torso (Lanka Sovereign)
+            ctx.fillStyle = this.hitFlash > 0 ? '#fef08a' : '#d97706';
+            ctx.fillRect(-15, -14, 30, 28);
+            ctx.fillStyle = '#450a0a';
+            ctx.fillRect(-11, -10, 22, 20);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(-15, -14, 30, 4);
+            ctx.fillRect(-3, -10, 6, 20);
+            ctx.fillRect(-15, 10, 30, 4);
+
+            // Pauldrons (Shoulder Armor)
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(-23, -16, 9, 10);
+            ctx.fillRect(14, -16, 9, 10);
+
+            // Head & Fierce Mustache/Visage
+            ctx.fillStyle = '#7c2d12';
+            ctx.fillRect(-10, -30, 20, 16);
+
+            // Glowing Fiery Eyes
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(-7, -24, 5, 3);
+            ctx.fillRect(2, -24, 5, 3);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(-5, -24, 2, 2);
+            ctx.fillRect(4, -24, 2, 2);
+
+            // Towering Golden Mukut (Crown of Lanka)
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(-12, -38, 24, 8);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(-4, -36, 8, 4);
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.moveTo(-8, -38);
+            ctx.lineTo(0, -48);
+            ctx.lineTo(8, -38);
+            ctx.closePath();
+            ctx.fill();
+
+            // Nameplate
+            ctx.font = 'bold 10px "Silkscreen", monospace';
+            ctx.textAlign = 'center';
+            const label = 'RAVAN — KING OF LANKA';
+            const tw = ctx.measureText(label).width + 12;
+            ctx.fillStyle = 'rgba(24, 5, 8, 0.88)';
+            ctx.fillRect(-tw / 2, -64, tw, 14);
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-tw / 2, -64, tw, 14);
+            ctx.fillStyle = '#fde047';
+            ctx.fillText(label, 0, -54);
+
+            ctx.restore();
+
+            // Draw Astra Rain Warning Indicators on ground
+            for (const wz of this.warningZones) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.85)';
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.18)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(wz.x, wz.y, wz.r * (1 - wz.timer * 0.2), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+    };
 
     /********************************************************************
      * 3. CORE GAME ENGINE & STATE MANAGEMENT
@@ -1221,6 +1595,12 @@
         shockwaves: [],
         floatingTexts: [],
         fireworks: [],
+        arrows: [],
+        bowCooldown: 0,
+        bowShootAnimTimer: 0,
+        cutsceneLocked: false,
+        mouseWorld: { x: 500, y: 360, active: false },
+        weaponCeremonyTimer: 0,
         nearestInteractable: null,
         animTick: 0,
         playerVel: { vx: 0, vy: 0 },
@@ -1240,13 +1620,17 @@
                 discoveredSecrets: [],
                 inventory: [],
                 hintScrolls: 1,
+                hasSacredBow: false,
+                guardianStorySeen: false,
+                ravanIntroSeen: false,
                 equipped: {
                     diyaStyle: null,
                     worldDecor: null,
                     courtyardDecor: null,
                     outfit: null,
                     hat: null,
-                    backpack: null
+                    backpack: null,
+                    weapon: null
                 },
                 quests: {
                     q_courtyard: 'active',
@@ -1365,6 +1749,14 @@
             } else {
                 tc.classList.add('hidden');
             }
+            const bowBtn = document.getElementById('touchBowBtn');
+            if (bowBtn) {
+                if (this.state && this.state.hasSacredBow && this.state.equipped.weapon === 'weapon_sacred_bow') {
+                    bowBtn.classList.remove('hidden');
+                } else {
+                    bowBtn.classList.add('hidden');
+                }
+            }
         },
 
         setupInput() {
@@ -1378,7 +1770,7 @@
                     if (!document.getElementById('modalBackdrop').classList.contains('hidden')) {
                         UI.closeModal();
                     } else if (!document.getElementById('dialogueOverlay').classList.contains('hidden')) {
-                        UI.closeDialogue();
+                        if (!this.cutsceneLocked) UI.closeDialogue();
                     } else {
                         UI.openModal('pause');
                     }
@@ -1390,14 +1782,17 @@
 
                 if (dialogueOpen && (k === 'e' || k === ' ' || k === 'enter')) {
                     e.preventDefault();
-                    UI.closeDialogue();
+                    UI.advanceDialogue();
                     return;
                 }
 
-                if (!modalOpen && !dialogueOpen) {
+                if (!modalOpen && !dialogueOpen && !this.cutsceneLocked) {
                     if (k === 'e' || k === ' ') {
                         e.preventDefault();
                         this.triggerInteract();
+                    } else if (k === 'f') {
+                        e.preventDefault();
+                        this.fireArrow();
                     } else if (k === 'b') {
                         UI.openModal('bazaar');
                     } else if (k === 'i') {
@@ -1412,6 +1807,32 @@
 
             window.addEventListener('keyup', (e) => {
                 this.keys[e.key.toLowerCase()] = false;
+            });
+
+            // Mouse Aiming & Left-Click Sacred Bow Firing on Canvas
+            this.canvas.addEventListener('mousemove', (e) => {
+                const rect = this.canvas.getBoundingClientRect();
+                const scale = Math.min(this.canvas.width / this.worldW, this.canvas.height / this.worldH);
+                const offsetX = (this.canvas.width - this.worldW * scale) / 2;
+                const offsetY = (this.canvas.height - this.worldH * scale) / 2;
+                this.mouseWorld.x = (e.clientX - rect.left - offsetX) / scale;
+                this.mouseWorld.y = (e.clientY - rect.top - offsetY) / scale;
+                this.mouseWorld.active = true;
+            });
+
+            this.canvas.addEventListener('mousedown', (e) => {
+                if (e.button !== 0 || !this.running) return;
+                const modalOpen = !document.getElementById('modalBackdrop').classList.contains('hidden');
+                const dialogueOpen = !document.getElementById('dialogueOverlay').classList.contains('hidden');
+                if (modalOpen || dialogueOpen || this.cutsceneLocked) return;
+
+                const rect = this.canvas.getBoundingClientRect();
+                const scale = Math.min(this.canvas.width / this.worldW, this.canvas.height / this.worldH);
+                const offsetX = (this.canvas.width - this.worldW * scale) / 2;
+                const offsetY = (this.canvas.height - this.worldH * scale) / 2;
+                const wx = (e.clientX - rect.left - offsetX) / scale;
+                const wy = (e.clientY - rect.top - offsetY) / scale;
+                this.fireArrow(wx, wy);
             });
 
             // Mobile Touch D-Pad
@@ -1434,6 +1855,19 @@
             document.getElementById('hudAreaName').textContent = areaObj.name;
             document.getElementById('hudDiyaCount').textContent = `${this.state.litDiyas.length} / ${DIYA_DEFINITIONS.length}`;
             document.getElementById('hudCoinCount').textContent = this.state.coins;
+
+            const weaponBadge = document.getElementById('hudWeaponBadge');
+            if (weaponBadge) {
+                if (this.state.hasSacredBow && this.state.equipped.weapon === 'weapon_sacred_bow') {
+                    weaponBadge.classList.remove('hidden');
+                    weaponBadge.classList.add('flex');
+                } else {
+                    weaponBadge.classList.add('hidden');
+                    weaponBadge.classList.remove('flex');
+                }
+            }
+            this.updateTouchVisibility();
+            BossSystem.updateHud();
 
             // Wandering merchant deterministic appearance once 3+ diyas are restored
             const zafarActive = this.state.litDiyas.length >= 3;
@@ -1578,16 +2012,24 @@
         },
 
         canEnterArea(areaId) {
-            if (this.state.inventory.includes('tool_passkey')) return true;
             const target = AREAS[areaId];
+            if (!target) return false;
+            if (target.reqBow) {
+                return !!this.state.hasSacredBow;
+            }
+            if (this.state.inventory.includes('tool_passkey')) return true;
             return this.state.litDiyas.length >= target.reqDiyas;
         },
 
         transitionToArea(areaId, spawnX = 500, spawnY = 380) {
+            const target = AREAS[areaId];
             if (!this.canEnterArea(areaId)) {
-                const req = AREAS[areaId].reqDiyas;
                 Sound.sfxError();
-                UI.toast(`🔒 Restore ${req} Diyas (or own Sanctum Master Seal) to enter ${AREAS[areaId].name}!`, 'red');
+                if (target && target.reqBow) {
+                    UI.toast(`🔒 Speak with Maharishi Agastya in the Ancient Shrine to receive the Sacred Bow first!`, 'red');
+                } else {
+                    UI.toast(`🔒 Restore ${target.reqDiyas} Diyas (or own Sanctum Master Seal) to enter ${target.name}!`, 'red');
+                }
                 return false;
             }
             Sound.sfxClick();
@@ -1597,11 +2039,105 @@
             this.playerVel.vx = 0;
             this.playerVel.vy = 0;
             this.particles = [];
+            this.arrows = [];
             this.shockwaves = [];
             this.updateHUD();
             this.saveGame();
             UI.toast(`✨ Entered ${AREAS[areaId].name}`, 'amber');
+
+            if (areaId === 4) {
+                BossSystem.resetForArena();
+                if (!this.state.ravanIntroSeen) {
+                    BossSystem.triggerEntranceCinematic();
+                } else {
+                    BossSystem.active = true;
+                    BossSystem.updateHud();
+                }
+            } else {
+                BossSystem.active = false;
+                BossSystem.updateHud();
+            }
             return true;
+        },
+
+        unlockSacredBow() {
+            this.state.hasSacredBow = true;
+            this.state.guardianStorySeen = true;
+            if (!this.state.inventory.includes('weapon_sacred_bow')) {
+                this.state.inventory.push('weapon_sacred_bow');
+            }
+            this.state.equipped.weapon = 'weapon_sacred_bow';
+            this.weaponCeremonyTimer = 2.2;
+            this.interactAnimTimer = 0.9;
+            Sound.sfxQuestComplete();
+
+            // Golden presentation shockwaves & rising sparks around player and Guardian
+            this.shockwaves.push({ x: this.state.player.x, y: this.state.player.y, r: 8, maxR: 185, alpha: 0.95, color: '#fde047' });
+            for (let i = 0; i < 36; i++) {
+                const a = (Math.PI * 2 * i) / 36;
+                const spd = 40 + Math.random() * 80;
+                this.particles.push({
+                    x: this.state.player.x,
+                    y: this.state.player.y - 16,
+                    vx: Math.cos(a) * spd,
+                    vy: Math.sin(a) * spd - 20,
+                    size: 3,
+                    color: i % 2 === 0 ? '#fef08a' : '#f97316',
+                    life: 0.9
+                });
+            }
+
+            this.floatingTexts.push({
+                x: this.state.player.x,
+                y: this.state.player.y - 42,
+                text: '🏹 SACRED BOW UNLOCKED!',
+                color: '#fde047',
+                life: 2.2
+            });
+
+            this.unlockAchievement('ach_sacred_bow');
+            UI.toast('🏹 Weapon Unlocked: Sacred Bow! Left-Click or press [F] to fire arrows of light!', 'gold');
+            UI.toast('🔓 New Realm Unlocked: The Throne of Lanka (North Gate)!', 'amber');
+            this.updateHUD();
+            this.saveGame();
+        },
+
+        fireArrow(targetX = null, targetY = null) {
+            if (!this.state || !this.state.hasSacredBow) return;
+            if (this.state.equipped.weapon !== 'weapon_sacred_bow') {
+                UI.toast('Equip the Sacred Bow in your Bag [I] first!', 'amber');
+                return;
+            }
+            if (this.bowCooldown > 0 || this.cutsceneLocked) return;
+
+            this.bowCooldown = 0.32;
+            this.bowShootAnimTimer = 0.25;
+            Sound.sfxBowShoot();
+
+            const p = this.state.player;
+            let angle = 0;
+
+            if (targetX !== null && targetY !== null) {
+                angle = Math.atan2(targetY - p.y, targetX - p.x);
+                if (Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle))) {
+                    p.dir = Math.cos(angle) > 0 ? 'right' : 'left';
+                } else {
+                    p.dir = Math.sin(angle) > 0 ? 'down' : 'up';
+                }
+            } else {
+                const dirAngles = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 };
+                angle = dirAngles[p.dir] ?? 0;
+            }
+
+            const speed = 460;
+            this.arrows.push({
+                x: p.x + Math.cos(angle) * 16,
+                y: p.y - 6 + Math.sin(angle) * 16,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                angle,
+                life: 1.8
+            });
         },
 
         findNearestInteractable() {
@@ -1788,10 +2324,16 @@
             const modalOpen = !document.getElementById('modalBackdrop').classList.contains('hidden');
             const dialogueOpen = !document.getElementById('dialogueOverlay').classList.contains('hidden');
 
+            if (this.bowCooldown > 0) this.bowCooldown = Math.max(0, this.bowCooldown - dt);
+            if (this.bowShootAnimTimer > 0) this.bowShootAnimTimer = Math.max(0, this.bowShootAnimTimer - dt);
+            if (this.weaponCeremonyTimer > 0) this.weaponCeremonyTimer = Math.max(0, this.weaponCeremonyTimer - dt);
+
+            BossSystem.update(dt);
+
             // Player movement with smooth acceleration & deceleration inertia
             const p = this.state.player;
             let inputX = 0, inputY = 0;
-            if (!modalOpen && !dialogueOpen) {
+            if (!modalOpen && !dialogueOpen && !this.cutsceneLocked) {
                 if (this.keys['w'] || this.keys['arrowup']) inputY -= 1;
                 if (this.keys['s'] || this.keys['arrowdown']) inputY += 1;
                 if (this.keys['a'] || this.keys['arrowleft']) inputX -= 1;
@@ -1910,6 +2452,59 @@
                 pt.y += pt.vy * dt;
                 pt.life -= dt;
                 if (pt.life <= 0) this.particles.splice(i, 1);
+            }
+
+            // Update Sacred Bow glowing arrows & collision detection
+            for (let i = this.arrows.length - 1; i >= 0; i--) {
+                const arr = this.arrows[i];
+                arr.x += arr.vx * dt;
+                arr.y += arr.vy * dt;
+                arr.life -= dt;
+
+                // Glowing golden trail particles
+                if (!this.state.reducedMotion && Math.random() < 0.85) {
+                    this.particles.push({
+                        x: arr.x - Math.cos(arr.angle) * 8 + (Math.random() - 0.5) * 4,
+                        y: arr.y - Math.sin(arr.angle) * 8 + (Math.random() - 0.5) * 4,
+                        vx: -arr.vx * 0.08,
+                        vy: -arr.vy * 0.08,
+                        size: 2.5,
+                        color: Math.random() < 0.65 ? '#fef08a' : '#f97316',
+                        life: 0.25
+                    });
+                }
+
+                let hit = false;
+
+                // Check collision with Ravan in Area 4
+                if (this.state.area === 4 && BossSystem.active) {
+                    if (Math.hypot(arr.x - BossSystem.x, arr.y - BossSystem.y) < 34) {
+                        BossSystem.onArrowHit(arr);
+                        hit = true;
+                    }
+                }
+
+                // Check collision with world boundaries or buildings
+                if (!hit && (arr.x < 42 || arr.x > this.worldW - 42 || arr.y < 42 || arr.y > this.worldH - 42 || this.collides(arr.x, arr.y))) {
+                    Sound.sfxArrowHit();
+                    for (let s = 0; s < 7; s++) {
+                        const a = Math.random() * Math.PI * 2;
+                        this.particles.push({
+                            x: arr.x,
+                            y: arr.y,
+                            vx: Math.cos(a) * 45,
+                            vy: Math.sin(a) * 45,
+                            size: 2.5,
+                            color: '#fde047',
+                            life: 0.3
+                        });
+                    }
+                    hit = true;
+                }
+
+                if (hit || arr.life <= 0) {
+                    this.arrows.splice(i, 1);
+                }
             }
 
             // Update floating texts
@@ -2040,7 +2635,7 @@
                 }
             }
 
-            // 7. NPCs & Player depth-sorted by Y coordinate with swaying Trees
+            // 7. NPCs, Ravan Boss & Player depth-sorted by Y coordinate with swaying Trees
             const renderEntities = [];
             for (const t of scenery.trees) {
                 renderEntities.push({ y: t.y, draw: () => this.drawSwayingTree(ctx, t.x, t.y, t.type, t.scale) });
@@ -2050,12 +2645,21 @@
                 if (npc.wandering && this.state.litDiyas.length < 3) continue;
                 renderEntities.push({
                     y: npc.y,
-                    draw: () => this.drawCharacterSprite(ctx, npc.x, npc.y, 'down', false, 0, npc.palette, npc.name, npc.wandering, false)
+                    draw: () => this.drawCharacterSprite(ctx, npc.x, npc.y, 'down', false, 0, npc.palette, npc.name, npc.wandering, false, npc.isGuardian)
+                });
+            }
+            if (this.state.area === 4) {
+                renderEntities.push({
+                    y: BossSystem.y,
+                    draw: () => BossSystem.drawRavan(ctx)
                 });
             }
             renderEntities.push({ y: this.state.player.y, draw: () => this.drawPlayer(ctx) });
             renderEntities.sort((a, b) => a.y - b.y);
             for (const ent of renderEntities) ent.draw();
+
+            // 8a. Render Sacred Bow Projectiles
+            this.drawArrows(ctx);
 
             // 8b. Overhead Catenary Fairy Light & Kandil Lantern Festoons
             for (const ls of scenery.lightStrings) {
@@ -2287,6 +2891,30 @@
             ctx.ellipse(0, 5, 11, 4, 0, 0, Math.PI * 2);
             ctx.fill();
 
+            if (this.state.area === 4) {
+                // Blazing Royal Lanka Golden Brazier
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(-8, -2, 16, 8);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(-11, -5, 22, 4);
+                const flick = Math.sin(this.animTick * 15 + x) * 2.5;
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(0, -10, 9 + flick * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(-7, -5);
+                ctx.quadraticCurveTo(0, -24 - flick, 7, -5);
+                ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(0, -9, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                return;
+            }
+
             ctx.fillStyle = '#d97706';
             ctx.beginPath();
             ctx.arc(0, 0, 10, 0, Math.PI * 2);
@@ -2405,6 +3033,79 @@
 
         drawIndianBuilding(ctx, b, areaLitCount) {
             ctx.save();
+            if (b.isThrone) {
+                // Imposing Golden & Crimson Sovereign Throne Dais of Lanka
+                ctx.fillStyle = 'rgba(0,0,0,0.65)';
+                ctx.fillRect(b.x + 8, b.y + 10, b.w, b.h);
+
+                // Stepped Crimson & Gold Carpeted Dais
+                ctx.fillStyle = '#450a0a';
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                ctx.fillStyle = '#7f1d1d';
+                ctx.fillRect(b.x + 20, b.y + 16, b.w - 40, b.h - 24);
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(b.x + 20, b.y + 16, b.w - 40, b.h - 24);
+
+                // Towering Ornate Lion-Head Golden Backrest
+                const cx = b.x + b.w / 2;
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(cx - 55, b.y - 12, 110, 62);
+                ctx.strokeStyle = '#fef08a';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(cx - 55, b.y - 12, 110, 62);
+
+                // Crimson Velvet Seat Cushion
+                ctx.fillStyle = '#991b1b';
+                ctx.fillRect(cx - 38, b.y + 24, 76, 26);
+
+                // Spire Crown atop Throne
+                ctx.fillStyle = '#fde047';
+                ctx.beginPath();
+                ctx.moveTo(cx - 30, b.y - 12);
+                ctx.lineTo(cx, b.y - 34);
+                ctx.lineTo(cx + 30, b.y - 12);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.font = '9px "Silkscreen", monospace';
+                ctx.fillStyle = '#fde68a';
+                ctx.textAlign = 'center';
+                ctx.fillText(b.name, cx, b.y + b.h - 10);
+                ctx.restore();
+                return;
+            }
+
+            if (b.isPillar) {
+                // Massive Carved Golden Palace Pillar of Lanka
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.fillRect(b.x + 6, b.y + 8, b.w, b.h);
+
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(b.x + 10, b.y + 10, b.w - 20, b.h - 20);
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(b.x + 14, b.y + 14, b.w - 28, b.h - 28);
+
+                // Glowing ruby inlay at center of pillar
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(b.x + b.w / 2, b.y + b.h / 2, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                return;
+            }
+
             if (b.isFountain) {
                 ctx.fillStyle = 'rgba(0,0,0,0.45)';
                 ctx.fillRect(b.x + 5, b.y + 6, b.w, b.h);
@@ -2676,7 +3377,7 @@
             ctx.restore();
         },
 
-        drawCharacterSprite(ctx, x, y, dir, moving, stepFrame, palette, label = '', isWandering = false, isPlayer = false) {
+        drawCharacterSprite(ctx, x, y, dir, moving, stepFrame, palette, label = '', isWandering = false, isPlayer = false, isGuardian = false) {
             ctx.save();
             ctx.translate(x, y);
 
@@ -2689,6 +3390,22 @@
             ctx.beginPath();
             ctx.ellipse(0, 14, 13, 5.5, 0, 0, Math.PI * 2);
             ctx.fill();
+
+            // Guardian Sacred Golden Halo & Staff
+            if (isGuardian) {
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.22)';
+                ctx.beginPath();
+                ctx.arc(0, -12 - totalLift, 24 + Math.sin(this.animTick * 4) * 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Carved Wooden & Gold Brahpadanda Staff
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(12, -26 - totalLift, 3, 38);
+                ctx.fillStyle = '#fde047';
+                ctx.beginPath();
+                ctx.arc(13.5, -28 - totalLift, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             const scarfSway = moving ? Math.sin(stepFrame) * 3.5 : Math.sin(this.animTick * 2.5) * 1.5;
             ctx.fillStyle = palette.turban || '#fbbf24';
@@ -2724,14 +3441,44 @@
             if (isPlayer) {
                 const lx = dir === 'left' ? -13 : 12;
                 const ly = 1 - totalLift - armSwing * 0.4;
-                ctx.fillStyle = '#d97706';
-                ctx.fillRect(lx - 2, ly, 5, 6);
-                ctx.fillStyle = '#fef08a';
-                ctx.fillRect(lx - 1, ly + 1, 3, 4);
+                if (this.state.hasSacredBow && this.state.equipped.weapon === 'weapon_sacred_bow') {
+                    // Draw Equipped Pixel-Art Golden Sacred Bow
+                    ctx.save();
+                    ctx.translate(lx, ly - 3);
+                    if (dir === 'left') ctx.scale(-1, 1);
+                    ctx.strokeStyle = '#fde047';
+                    ctx.lineWidth = 2.2;
+                    ctx.beginPath();
+                    ctx.arc(-2, 0, 9, -Math.PI * 0.48, Math.PI * 0.48);
+                    ctx.stroke();
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(-2, -8);
+                    ctx.lineTo(-2, 8);
+                    ctx.stroke();
+                    if (this.bowShootAnimTimer > 0) {
+                        ctx.fillStyle = '#fef08a';
+                        ctx.fillRect(-2, -1, 11, 2);
+                    }
+                    ctx.restore();
+                } else {
+                    ctx.fillStyle = '#d97706';
+                    ctx.fillRect(lx - 2, ly, 5, 6);
+                    ctx.fillStyle = '#fef08a';
+                    ctx.fillRect(lx - 1, ly + 1, 3, 4);
+                }
             }
 
             ctx.fillStyle = palette.skin || '#e0a96d';
             ctx.fillRect(-7, -21 - totalLift, 14, 12);
+
+            // Flowing white sage beard for the Shrine Guardian
+            if (palette.beard) {
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(-5, -12 - totalLift, 10, 7);
+                ctx.fillRect(-3, -5 - totalLift, 6, 3);
+            }
 
             ctx.fillStyle = '#1e1b18';
             ctx.fillRect(-7, -22 - totalLift, 14, 3);
@@ -2769,9 +3516,65 @@
                 ctx.fillRect(-tw / 2, -40 - totalLift, tw, 13);
                 ctx.fillStyle = isWandering ? '#e879f9' : '#fde68a';
                 ctx.fillText(label, 0, -30 - totalLift);
+
+                // Prominent floating quest/story indicator above Guardian before bow is unlocked
+                if (isGuardian && !this.state.hasSacredBow) {
+                    const indY = -52 - totalLift + Math.sin(this.animTick * 6) * 3;
+                    ctx.fillStyle = '#fde047';
+                    ctx.font = 'bold 12px "Silkscreen", monospace';
+                    ctx.fillText('! [BOW]', 0, indY);
+                }
             }
 
             ctx.restore();
+        },
+
+        drawArrows(ctx) {
+            for (const arr of this.arrows) {
+                ctx.save();
+                ctx.translate(arr.x, arr.y);
+                ctx.rotate(arr.angle);
+
+                // Outer golden glow
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+                ctx.fillRect(-12, -5, 24, 10);
+
+                // Arrow shaft
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(-10, -1.5, 18, 3);
+
+                // Glowing arrowhead
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(12, 0);
+                ctx.lineTo(6, -4);
+                ctx.lineTo(6, 4);
+                ctx.closePath();
+                ctx.fill();
+
+                // Fletching feathers
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(-11, -3.5, 4, 2);
+                ctx.fillRect(-11, 1.5, 4, 2);
+
+                ctx.restore();
+            }
+
+            // Ceremonial Floating Bow Presentation Animation when newly unlocked
+            if (this.weaponCeremonyTimer > 0 && this.state) {
+                const p = this.state.player;
+                ctx.save();
+                ctx.translate(p.x, p.y - 42 - (2.2 - this.weaponCeremonyTimer) * 8);
+                ctx.fillStyle = 'rgba(253, 224, 71, 0.35)';
+                ctx.beginPath();
+                ctx.arc(0, 0, 22, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.font = '24px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🏹', 0, 0);
+                ctx.restore();
+            }
         },
 
         drawPlayer(ctx) {
@@ -2887,6 +3690,19 @@
 
             if (this.state.area === 3 && this.state.finaleTriggered) {
                 punchLight(500, 415, 290);
+            }
+
+            // Dramatic Boss & Arrow Lighting in Throne of Lanka
+            if (this.state.area === 4) {
+                punchLight(BossSystem.x, BossSystem.y, 175);
+                punchLight(500, 120, 210);
+                for (const u of (scenery ? scenery.urlis : [])) {
+                    punchLight(u.x, u.y, 95);
+                }
+            }
+
+            for (const arr of this.arrows) {
+                punchLight(arr.x, arr.y, 65);
             }
 
             lctx.globalCompositeOperation = 'source-over';
@@ -3316,6 +4132,7 @@
      ********************************************************************/
     const UI = {
         activeBazaarTab: 'decor',
+        dialogueSequence: null,
 
         toast(message, tone = 'amber') {
             const container = document.getElementById('toastContainer');
@@ -3336,6 +4153,35 @@
         },
 
         openDialogue(npc) {
+            // Special Multi-Step Story Sequence for the Shrine Guardian
+            if (npc.isGuardian && !Game.state.hasSacredBow) {
+                const guardianLines = [
+                    "Stop, traveller. You know not what lies beyond these sacred grounds.",
+                    "A terrible darkness has begun to spread across the land.",
+                    "Ravan, the ruler of Lanka, has awakened an ancient power. His influence is slowly consuming everything around us.",
+                    "Many have tried to stand against him. None have returned.",
+                    "But perhaps... you are the one who can restore the light.",
+                    "Take this. An ancient weapon, blessed by the light of the sacred flame.",
+                    "Your journey ahead will not be easy. May your aim remain true."
+                ];
+                this.openDialogueSequence({
+                    name: `${npc.name} — ${npc.role}`,
+                    role: 'Ancient Shrine Guardian',
+                    icon: npc.icon,
+                    lines: guardianLines,
+                    onStep: (idx) => {
+                        if (idx === 5) {
+                            Game.unlockSacredBow();
+                        }
+                    },
+                    onComplete: () => {
+                        Game.updateHUD();
+                    }
+                });
+                return;
+            }
+
+            this.dialogueSequence = null;
             const overlay = document.getElementById('dialogueOverlay');
             document.getElementById('dialoguePortrait').textContent = npc.icon;
             document.getElementById('dialogueSpeaker').textContent = `${npc.name}`;
@@ -3362,7 +4208,56 @@
             overlay.classList.remove('hidden');
         },
 
+        openDialogueSequence(config) {
+            this.dialogueSequence = {
+                lines: config.lines,
+                index: 0,
+                onStep: config.onStep || null,
+                onComplete: config.onComplete || null
+            };
+            const overlay = document.getElementById('dialogueOverlay');
+            document.getElementById('dialoguePortrait').textContent = config.icon || '🧙‍♂️';
+            document.getElementById('dialogueSpeaker').textContent = config.name;
+            document.getElementById('dialogueRole').textContent = config.role;
+            overlay.classList.remove('hidden');
+            this.renderDialogueSequenceStep();
+        },
+
+        renderDialogueSequenceStep() {
+            const seq = this.dialogueSequence;
+            if (!seq) return;
+            Sound.sfxClick();
+            if (seq.onStep) seq.onStep(seq.index);
+
+            document.getElementById('dialogueText').textContent = `"${seq.lines[seq.index]}"`;
+            const isLast = seq.index >= seq.lines.length - 1;
+            const actions = document.getElementById('dialogueActions');
+            actions.innerHTML = `
+                <span class="text-[10px] font-pixel text-amber-300/70 mr-2">Step ${seq.index + 1} / ${seq.lines.length}</span>
+                <button onclick="UI.advanceDialogue()" class="festival-btn px-4 py-2 rounded-xl font-pixel text-xs text-amber-950 font-bold">
+                    ${isLast ? '✨ Accept & Continue [E]' : 'Next ▶ [E]'}
+                </button>
+            `;
+        },
+
+        advanceDialogue() {
+            if (this.dialogueSequence) {
+                this.dialogueSequence.index++;
+                if (this.dialogueSequence.index < this.dialogueSequence.lines.length) {
+                    this.renderDialogueSequenceStep();
+                } else {
+                    const done = this.dialogueSequence.onComplete;
+                    this.dialogueSequence = null;
+                    document.getElementById('dialogueOverlay').classList.add('hidden');
+                    if (done) done();
+                }
+            } else {
+                this.closeDialogue();
+            }
+        },
+
         closeDialogue() {
+            this.dialogueSequence = null;
             document.getElementById('dialogueOverlay').classList.add('hidden');
             Game.updateHUD();
         },
@@ -3570,6 +4465,28 @@
         renderInventory(body) {
             const ownedItems = SHOP_ITEMS.filter(i => Game.state.inventory.includes(i.id));
             const questCollectibles = WORLD_COLLECTIBLES.filter(c => Game.state.collectibles.includes(c.id));
+            const hasBow = Game.state.hasSacredBow;
+            const bowEquipped = Game.state.equipped.weapon === 'weapon_sacred_bow';
+            const bowIconUrl = PixelIcons.getDataURL('weapon_sacred_bow');
+
+            const weaponHtml = hasBow ? `
+                <div class="bg-amber-950/50 border-2 ${bowEquipped ? 'border-yellow-300' : 'border-amber-500/40'} rounded-xl p-3.5 flex items-center justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${bowIconUrl}" alt="Sacred Bow" class="w-11 h-11 rounded-lg bg-slate-950 p-1.5 border border-yellow-400" style="image-rendering: pixelated;" />
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-pixel text-xs sm:text-sm text-yellow-300">Sacred Bow of Light</span>
+                                <span class="text-[10px] font-pixel px-2 py-0.5 rounded bg-amber-500/30 text-amber-100">SACRED WEAPON</span>
+                            </div>
+                            <div class="text-xs text-amber-100/80 mt-0.5">Blessed by Maharishi Agastya. Left-Click anywhere or press [F] to fire glowing arrows.</div>
+                        </div>
+                    </div>
+                    <button onclick="Game.state.equipped.weapon = Game.state.equipped.weapon === 'weapon_sacred_bow' ? null : 'weapon_sacred_bow'; Game.updateHUD(); Game.saveGame(); UI.renderInventory(document.getElementById('modalBody'));"
+                        class="${bowEquipped ? 'festival-btn text-amber-950 font-bold' : 'festival-btn-secondary'} px-3.5 py-2 rounded-lg font-pixel text-xs shrink-0">
+                        ${bowEquipped ? '✓ Equipped' : 'Equip Bow'}
+                    </button>
+                </div>
+            ` : '';
 
             const ownedHtml = ownedItems.length === 0
                 ? `<p class="text-xs text-amber-200/60 italic">No Bazaar items purchased yet. Press [B] or visit the Festival Bazaar to trade your Festival Coins!</p>`
@@ -3596,13 +4513,13 @@
                 }).join('');
 
             const questItemsHtml = questCollectibles.length === 0
-                ? `<p class="text-xs text-amber-200/60 italic">Explore the realms to find hidden sacred embers and lost festival heirlooms.</p>`
+                ? `<p class="text-xs text-amber-200/60 italic">Explore the four realms to discover hidden Sacred Flames and NPC heirlooms.</p>`
                 : questCollectibles.map(c => `
-                    <div class="bg-slate-900/80 border border-sky-400/30 rounded-xl p-3 flex items-center gap-3">
+                    <div class="bg-slate-900/90 border border-sky-500/30 rounded-xl p-3 flex items-center gap-3">
                         <span class="text-2xl">${c.icon}</span>
                         <div>
                             <div class="font-pixel text-xs text-sky-300">${c.name}</div>
-                            <div class="text-[11px] text-amber-100/75">${c.desc}</div>
+                            <div class="text-[11px] text-amber-100/70">Key Exploration Item</div>
                         </div>
                     </div>
                 `).join('');
@@ -3610,21 +4527,22 @@
             body.innerHTML = `
                 <div class="grid grid-cols-3 gap-3 text-center">
                     <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3">
-                        <div class="text-[10px] font-pixel text-amber-300">FESTIVAL COINS</div>
+                        <div class="text-[10px] font-pixel text-amber-300/80 uppercase">Festival Coins</div>
                         <div class="text-lg font-pixel text-yellow-300 mt-1">🪙 ${Game.state.coins}</div>
                     </div>
                     <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3">
-                        <div class="text-[10px] font-pixel text-amber-300">HINT SCROLLS</div>
+                        <div class="text-[10px] font-pixel text-amber-300/80 uppercase">Hint Scrolls</div>
                         <div class="text-lg font-pixel text-amber-200 mt-1">📜 ${Game.state.hintScrolls}</div>
                     </div>
                     <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3">
-                        <div class="text-[10px] font-pixel text-amber-300">CHESTS FOUND</div>
-                        <div class="text-lg font-pixel text-emerald-300 mt-1">🧰 ${Game.state.openedChests.length}/${WORLD_CHESTS.length}</div>
+                        <div class="text-[10px] font-pixel text-amber-300/80 uppercase">Chests Found</div>
+                        <div class="text-lg font-pixel text-emerald-300 mt-1">🧰 ${Game.state.openedChests.length} / ${WORLD_CHESTS.length}</div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 class="font-pixel text-xs uppercase text-amber-300 mb-2">Owned Bazaar Cosmetics, Decor & Relics</h3>
+                    <h3 class="font-pixel text-xs uppercase text-amber-300 mb-2">Sacred Weapons, Bazaar Cosmetics & Relics</h3>
+                    ${weaponHtml}
                     <div class="space-y-2">${ownedHtml}</div>
                 </div>
 
@@ -3678,16 +4596,18 @@
                         <div>
                             <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-pixel uppercase text-amber-400">Realm ${a.id + 1}</span>
-                                <span class="text-xs font-pixel ${litInArea === 4 ? 'text-emerald-300' : 'text-amber-200'}">🪔 ${litInArea} / ${areaDiyas.length} Lit</span>
+                                <span class="text-xs font-pixel ${areaDiyas.length === 0 ? 'text-red-400' : litInArea === 4 ? 'text-emerald-300' : 'text-amber-200'}">
+                                    ${areaDiyas.length === 0 ? '⚔️ Boss Arena' : `🪔 ${litInArea} / ${areaDiyas.length} Lit`}
+                                </span>
                             </div>
                             <h4 class="font-festival text-base sm:text-lg font-bold text-amber-200 mt-0.5">${a.name}</h4>
                             <p class="text-xs text-amber-100/75 mt-1">${a.description}</p>
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-amber-500/20">
                             <span class="text-[11px] font-pixel text-amber-300/80">
-                                ${unlocked ? '🔓 Unlocked' : `🔒 Requires ${a.reqDiyas} Diyas Lit`}
+                                ${unlocked ? '🔓 Unlocked' : a.reqBow ? '🔒 Requires Sacred Bow' : `🔒 Requires ${a.reqDiyas} Diyas Lit`}
                             </span>
-                            <button onclick="if(Game.transitionToArea(${a.id}, 500, 450)) UI.closeModal();"
+                            <button onclick="if(Game.transitionToArea(${a.id}, 500, 560)) UI.closeModal();"
                                 ${!unlocked || isCurrent ? 'disabled' : ''}
                                 class="festival-btn px-3.5 py-1.5 rounded-lg font-pixel text-xs text-amber-950 font-bold">
                                 ${isCurrent ? 'Current Realm' : 'Fast Travel'}
@@ -3705,31 +4625,34 @@
 
         // ACHIEVEMENTS
         renderAchievements(body) {
-            const html = ACHIEVEMENTS.map(ach => {
+            const listHtml = ACHIEVEMENTS.map(ach => {
                 const unlocked = Game.state.achievements.includes(ach.id);
                 return `
-                    <div class="bg-slate-900/90 border ${unlocked ? 'border-yellow-400' : 'border-slate-700 opacity-60'} rounded-xl p-3.5 flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-slate-950 border border-amber-500/40 flex items-center justify-center text-2xl">
+                    <div class="bg-slate-900/90 border ${unlocked ? 'border-yellow-400' : 'border-slate-800 opacity-60'} rounded-xl p-3.5 flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-xl bg-amber-950/80 border border-amber-400/40 flex items-center justify-center text-2xl shrink-0">
                             ${unlocked ? ach.icon : '🔒'}
                         </div>
-                        <div>
-                            <div class="font-pixel text-xs text-amber-300">${ach.title}</div>
-                            <div class="text-xs text-amber-100/75">${ach.desc}</div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-pixel text-xs sm:text-sm ${unlocked ? 'text-yellow-300' : 'text-slate-400'}">${ach.title}</h4>
+                                ${unlocked ? `<span class="text-[10px] font-pixel text-emerald-400">UNLOCKED</span>` : ''}
+                            </div>
+                            <p class="text-xs text-amber-100/75 mt-0.5">${ach.desc}</p>
                         </div>
                     </div>
                 `;
             }).join('');
 
             body.innerHTML = `
-                <div class="flex items-center justify-between text-xs font-pixel text-amber-200 pb-2">
-                    <span>Unlocked: ${Game.state.achievements.length} / ${ACHIEVEMENTS.length}</span>
+                <div class="flex items-center justify-between pb-2 border-b border-amber-500/30 text-xs font-pixel text-amber-200">
+                    <span>Unlocked Achievements: ${Game.state.achievements.length} / ${ACHIEVEMENTS.length}</span>
                     <span>Secrets Found: ${Game.state.discoveredSecrets.length} / ${SECRET_ZONES.length}</span>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${html}</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${listHtml}</div>
             `;
         },
 
-        // PAUSE & SETTINGS
+        // SETTINGS / PAUSE MENU
         renderSettings(body) {
             body.innerHTML = `
                 <div class="space-y-4">
@@ -3782,34 +4705,26 @@
                             class="festival-btn-secondary px-4 py-2 rounded-xl font-pixel text-xs">
                             🏠 Return to Title Screen
                         </button>
-                        <button onclick="NexoraExit.ask()" class="festival-btn-secondary px-4 py-2 rounded-xl font-pixel text-xs">
-                            ← Back to Nexora
-                        </button>
                     </div>
                 </div>
             `;
         },
 
+        // HOW TO PLAY
         renderHowTo(body) {
             body.innerHTML = `
                 <div class="space-y-3 text-xs sm:text-sm text-amber-100/90 leading-relaxed">
                     <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3.5">
                         <h4 class="font-pixel text-xs text-amber-300 mb-1">1. RESTORING THE SACRED DIYAS</h4>
-                        <p>Explore four interconnected realms: <b>Lantern Village</b>, <b>Forgotten Bazaar</b>, <b>Royal Gardens</b>, and the <b>Ancient Shrine</b>. Approach any unlit diya and press <b>[E]</b> or <b>[Space]</b> to inspect its clue and solve its puzzle.</p>
+                        <p>Walk up to any unlit Diya using <b>WASD / Arrow Keys</b> and press <b>E</b> or <b>Space</b>. Solve its Light Sequence, Mirror Beam, Rangoli Symmetry, Vedic Symbol, or Hidden Ember puzzle to ignite its flame and illuminate the village!</p>
                     </div>
                     <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3.5">
-                        <h4 class="font-pixel text-xs text-amber-300 mb-1">2. FIVE FESTIVAL PUZZLE TYPES</h4>
-                        <ul class="list-disc list-inside space-y-1">
-                            <li><b>Light Sequence:</b> Ignite the wicks in the exact order hinted by the inscription.</li>
-                            <li><b>Mirror Reflection:</b> Rotate brass mirrors (╱ and ╲) to guide the sunbeam into the diya.</li>
-                            <li><b>Rangoli Symmetry:</b> Paint Crimson, Marigold, and Peacock Teal petals to match the sacred mandala.</li>
-                            <li><b>Ancient Vedic Symbols:</b> Rotate the stone dials to align the story frieze.</li>
-                            <li><b>Hidden Sacred Embers:</b> Discover concealed flames in the environment to kindle special lamps.</li>
-                        </ul>
+                        <h4 class="font-pixel text-xs text-amber-300 mb-1">2. THE SACRED BOW & THRONE OF LANKA</h4>
+                        <p>Journey to the <b>Ancient Shrine</b> (Realm 4) and speak with <b>Maharishi Agastya</b> to receive the <b>Sacred Bow</b>. Press <b>Left-Click</b> or <b>[F]</b> to fire glowing arrows of light and enter <b>The Throne of Lanka</b> to confront King Ravan!</p>
                     </div>
                     <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3.5">
-                        <h4 class="font-pixel text-xs text-amber-300 mb-1">3. COINS, BAZAAR & THE WANDERING MERCHANT</h4>
-                        <p>Earn <b>Festival Coins</b> from restoring diyas (+10–30), opening treasure chests (+30), completing NPC quests (+40), and finding secret sanctuaries (+50). Spend coins in the <b>Bazaar [B]</b> or with <b>Zafar the Wandering Merchant</b>!</p>
+                        <h4 class="font-pixel text-xs text-amber-300 mb-1">3. FESTIVAL COINS, BAZAAR & WANDERING MERCHANT</h4>
+                        <p>Earn Festival Coins by lighting Diyas (+10), solving puzzles (+20), opening hidden chests (+30), completing NPC quests (+40), and finding secret sanctuaries (+50). Spend Coins in the <b>Bazaar [B]</b> or with <b>Zafar the Wandering Merchant</b>!</p>
                     </div>
                 </div>
             `;
@@ -3817,38 +4732,41 @@
 
         // GRAND FESTIVAL FINALE SCREEN
         renderFinale(body) {
+            Sound.sfxQuestComplete();
             body.innerHTML = `
                 <div class="text-center space-y-4 py-3">
-                    <div class="text-6xl animate-bounce">🎆🪔🎆</div>
-                    <div class="text-xs font-pixel uppercase tracking-widest text-yellow-300">Shubh Deepavali • Triumph of Light</div>
-                    <h3 class="font-festival text-2xl sm:text-3xl font-bold text-amber-200">
-                        All Four Realms Shine in Golden Harmony!
+                    <div class="text-5xl animate-bounce">🎆 🪔 🎆</div>
+                    <div class="text-xs font-pixel uppercase tracking-widest text-amber-400">Shubh Deepavali • Triumph of Light</div>
+                    <h3 class="font-festival text-2xl sm:text-3xl font-bold text-yellow-200">
+                        Nexora Shines in Eternal Splendor!
                     </h3>
                     <p class="text-xs sm:text-sm text-amber-100/90 max-w-lg mx-auto leading-relaxed">
-                        As the Grand Mahadiya roars to life, warm golden light cascades across the Ancient Shrine, Royal Gardens, Forgotten Bazaar, and Lantern Village. Sky lanterns rise into the starry night and fireworks dance above the rooftops!
+                        Every courtyard, bazaar stall, lotus fountain, and ancient temple across the realms is bathed in golden diya light. The villagers have gathered in celebration—thank you for restoring The Festival of Lights!
                     </p>
+
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-xl mx-auto pt-2">
                         <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
                             <div class="text-[10px] font-pixel text-amber-300">DIYAS LIT</div>
-                            <div class="text-base font-pixel text-yellow-300 mt-1">${Game.state.litDiyas.length} / 16</div>
+                            <div class="text-lg font-pixel text-yellow-300 mt-1">${Game.state.litDiyas.length} / 16</div>
                         </div>
                         <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
                             <div class="text-[10px] font-pixel text-amber-300">CHESTS</div>
-                            <div class="text-base font-pixel text-emerald-300 mt-1">${Game.state.openedChests.length} / 10</div>
+                            <div class="text-lg font-pixel text-emerald-300 mt-1">${Game.state.openedChests.length} / ${WORLD_CHESTS.length}</div>
                         </div>
                         <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
                             <div class="text-[10px] font-pixel text-amber-300">SECRETS</div>
-                            <div class="text-base font-pixel text-sky-300 mt-1">${Game.state.discoveredSecrets.length} / 4</div>
+                            <div class="text-lg font-pixel text-sky-300 mt-1">${Game.state.discoveredSecrets.length} / ${SECRET_ZONES.length}</div>
                         </div>
                         <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
                             <div class="text-[10px] font-pixel text-amber-300">ACHIEVEMENTS</div>
-                            <div class="text-base font-pixel text-purple-300 mt-1">${Game.state.achievements.length} / ${ACHIEVEMENTS.length}</div>
+                            <div class="text-lg font-pixel text-purple-300 mt-1">${Game.state.achievements.length} / ${ACHIEVEMENTS.length}</div>
                         </div>
                     </div>
+
                     <div class="pt-4">
                         <button onclick="Game.spawnFireworkBurst(); UI.closeModal();"
-                            class="festival-btn px-6 py-3 rounded-xl font-pixel text-xs sm:text-sm text-amber-950 font-bold">
-                            ✨ CONTINUE EXPLORING THE ILLUMINATED FESTIVAL
+                            class="festival-btn px-6 py-3 rounded-xl font-pixel text-xs text-amber-950 font-bold">
+                            🎇 CONTINUE EXPLORING THE ILLUMINATED WORLD
                         </button>
                     </div>
                 </div>
@@ -3856,9 +4774,9 @@
         }
     };
 
-    window.onload = function () {
+    window.addEventListener('DOMContentLoaded', () => {
         Game.init();
-    };
+    });
     </script>
 </body>
 </html>
