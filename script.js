@@ -1591,4 +1591,3 @@ openSettings = function() { grantRangoliDiwali(); openSettingsWithRangoli.apply(
 })();
 
 /* Greeting Studio (Greeting Wisher) now lives in wishing.js */
-window.sendGreetingCardToActiveChat = sendGreetingCardToActiveChat;
