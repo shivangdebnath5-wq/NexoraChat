@@ -4550,7 +4550,7 @@
   <!-- Diwali Wishes: composer shortcut + festive greeting picker (see diwali-wishes.js) -->
   <script src="diwali-wishes.js"></script>
   <!-- Greeting Wisher / Greeting Card Studio (templates, live preview, sharing) -->
-  <script src="wishing.js"></script>
+  <script src="wishing.js" onerror="window.toggleGreetingStudioTab=window.openDiwaliGreetingStudio=function(){alert('Greeting Studio could not load: wishing.js was not found. Put wishing.js in the same folder as index.html and refresh.');};"></script>
   <!-- User Profile feature (self-contained module; see profile.js) -->
   <script type="module" src="profile.js"></script>
 </body>
