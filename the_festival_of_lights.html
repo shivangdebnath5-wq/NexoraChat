@@ -1,0 +1,3814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Festival of Lights — A Diwali Pixel-Art Puzzle Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-midnight: #090a14;
+            --bg-indigo: #131629;
+            --gold-bright: #ffcf52;
+            --gold-warm: #f59e0b;
+            --terracotta: #c2410c;
+            --crimson: #881337;
+        }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-midnight);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #fef3c7;
+        }
+        .font-pixel {
+            font-family: 'Silkscreen', monospace;
+        }
+        .font-festival {
+            font-family: 'Cinzel Decorative', serif;
+        }
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        /* Ornate Indian Brass & Rosewood Filigree Panels */
+        .festival-panel {
+            background: radial-gradient(circle at top, rgba(34, 29, 62, 0.96) 0%, rgba(12, 13, 28, 0.98) 100%);
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 0 2px #451a03, 0 14px 40px rgba(0, 0, 0, 0.9), inset 0 0 24px rgba(245, 158, 11, 0.16);
+            position: relative;
+        }
+        .festival-panel::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border: 1px solid rgba(251, 191, 36, 0.22);
+            border-radius: inherit;
+            pointer-events: none;
+        }
+        .festival-btn {
+            background: linear-gradient(180deg, #d97706 0%, #92400e 55%, #78350f 100%);
+            border: 2px solid #fde047;
+            box-shadow: 0 3px 0 #451a03, 0 5px 14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.35);
+            transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.14s ease, filter 0.14s ease;
+        }
+        .festival-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, #f59e0b 0%, #b45309 60%, #78350f 100%);
+            transform: translateY(-1.5px);
+            box-shadow: 0 4px 0 #451a03, 0 0 18px rgba(251, 191, 36, 0.55), inset 0 1px 0 rgba(255,255,255,0.45);
+        }
+        .festival-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #451a03;
+        }
+        .festival-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.65);
+        }
+        .festival-btn-secondary {
+            background: linear-gradient(180deg, #262f45 0%, #0f172a 100%);
+            border: 1.5px solid #94a3b8;
+            box-shadow: 0 2px 0 #020617, inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.14s ease;
+        }
+        .festival-btn-secondary:hover:not(:disabled) {
+            border-color: #fbbf24;
+            color: #fde68a;
+            box-shadow: 0 3px 0 #020617, 0 0 12px rgba(251, 191, 36, 0.25);
+            transform: translateY(-1px);
+        }
+        .modal-enter {
+            animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes modalPop {
+            0% { opacity: 0; transform: scale(0.95) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #b45309;
+            border-radius: 4px;
+            border: 1px solid #fbbf24;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.7)); }
+            50% { filter: drop-shadow(0 0 18px rgba(245, 158, 11, 1)); }
+        }
+        .diya-glow {
+            animation: pulseGlow 2.4s infinite ease-in-out;
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .diya-glow, .animate-float, .modal-enter {
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="relative select-none">
+
+    <!-- MAIN PIXEL-ART WORLD CANVAS -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- TOP HUD BAR -->
+    <div id="hudBar" class="hidden fixed top-0 left-0 right-0 z-20 p-2 sm:p-3 pointer-events-none flex flex-wrap items-center justify-between gap-2">
+        <!-- Left: Area & Diya Restoration Progress -->
+        <div class="festival-panel rounded-xl px-3 py-2 pointer-events-auto flex items-center gap-3 sm:gap-5">
+            <div>
+                <div class="text-[10px] uppercase tracking-widest text-amber-300/80 font-pixel">Current Realm</div>
+                <div id="hudAreaName" class="text-sm sm:text-base font-bold text-amber-100 font-festival tracking-wide">Lantern Village</div>
+            </div>
+            <div class="h-8 w-px bg-amber-500/30"></div>
+            <div class="flex items-center gap-2" title="Restored Diyas">
+                <span class="text-xl diya-glow">🪔</span>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider text-amber-300/80 font-pixel">Diyas Lit</div>
+                    <div id="hudDiyaCount" class="text-xs sm:text-sm font-pixel text-amber-300">0 / 16</div>
+                </div>
+            </div>
+            <div class="h-8 w-px bg-amber-500/30"></div>
+            <div class="flex items-center gap-2" title="Festival Coins">
+                <span class="text-xl">🪙</span>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider text-amber-300/80 font-pixel">Coins</div>
+                    <div id="hudCoinCount" class="text-xs sm:text-sm font-pixel text-yellow-300">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Wandering Merchant Banner (when active) -->
+        <div id="wanderingMerchantBanner" class="hidden festival-panel rounded-full px-3.5 py-1.5 pointer-events-auto flex items-center gap-2 border-purple-400 bg-purple-950/90">
+            <span class="text-base">🐪</span>
+            <span id="wanderingBannerText" class="text-xs font-pixel text-purple-200">Zafar the Wandering Merchant is in Forgotten Bazaar!</span>
+        </div>
+
+        <!-- Right: Quick Menu Bar -->
+        <div class="festival-panel rounded-xl p-1.5 pointer-events-auto flex items-center gap-1 sm:gap-1.5">
+            <button onclick="UI.openModal('map')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="World Map (M)">
+                <span>🗺️</span><span class="hidden md:inline">Map</span>
+            </button>
+            <button onclick="UI.openModal('bazaar')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Festival Bazaar (B)">
+                <span>🏪</span><span class="hidden md:inline">Bazaar</span>
+            </button>
+            <button onclick="UI.openModal('inventory')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Inventory & Cosmetics (I)">
+                <span>🎒</span><span class="hidden md:inline">Bag</span>
+            </button>
+            <button onclick="UI.openModal('quests')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1 relative" title="Quest Journal (J)">
+                <span>📜</span><span class="hidden md:inline">Quests</span>
+                <span id="questBadge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+            </button>
+            <button onclick="UI.openModal('achievements')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Achievements">
+                <span>🏆</span>
+            </button>
+            <button onclick="UI.openModal('pause')" class="festival-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1" title="Pause / Settings (ESC)">
+                <span>⚙️</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST / REWARD NOTIFICATION STACK -->
+    <div id="toastContainer" class="fixed top-20 right-4 z-40 flex flex-col gap-2 pointer-events-none max-w-xs w-full"></div>
+
+    <!-- NPC DIALOGUE BOX OVERLAY -->
+    <div id="dialogueOverlay" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[95%] max-w-2xl festival-panel rounded-2xl p-4 sm:p-5">
+        <div class="flex items-start gap-4">
+            <div id="dialoguePortrait" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-amber-950/80 border-2 border-amber-400 flex items-center justify-center text-3xl shrink-0">
+                🧓
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                    <h3 id="dialogueSpeaker" class="font-festival text-base sm:text-lg text-amber-300 font-bold">Aarav — The Lantern Keeper</h3>
+                    <span id="dialogueRole" class="text-[10px] font-pixel uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-200">Village Elder</span>
+                </div>
+                <p id="dialogueText" class="text-sm sm:text-base text-amber-50/95 leading-relaxed min-h-[3rem]"></p>
+                <div id="dialogueActions" class="mt-3 flex flex-wrap items-center justify-end gap-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOUCH / MOBILE CONTROLS -->
+    <div id="touchControls" class="hidden fixed bottom-4 left-4 right-4 z-20 pointer-events-none flex items-end justify-between">
+        <!-- D-Pad -->
+        <div class="grid grid-cols-3 gap-1.5 w-36 h-36 pointer-events-auto opacity-85">
+            <div></div>
+            <button data-dir="up" class="touch-dpad festival-btn-secondary rounded-xl flex items-center justify-center text-lg active:bg-amber-600">▲</button>
+            <div></div>
+            <button data-dir="left" class="touch-dpad festival-btn-secondary rounded-xl flex items-center justify-center text-lg active:bg-amber-600">◀</button>
+            <div class="rounded-xl bg-slate-900/60 border border-amber-500/30 flex items-center justify-center text-xs font-pixel text-amber-300">🪔</div>
+            <button data-dir="right" class="touch-dpad festival-btn-secondary rounded-xl flex items-center justify-center text-lg active:bg-amber-600">▶</button>
+            <div></div>
+            <button data-dir="down" class="touch-dpad festival-btn-secondary rounded-xl flex items-center justify-center text-lg active:bg-amber-600">▼</button>
+            <div></div>
+        </div>
+
+        <!-- Interact Button -->
+        <div class="pointer-events-auto flex flex-col items-end gap-2">
+            <button onclick="Game.triggerInteract()" class="festival-btn w-20 h-20 rounded-full font-pixel text-xs flex flex-col items-center justify-center gap-1 shadow-xl">
+                <span class="text-xl">✨</span>
+                <span>ACT (E)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN MENU OVERLAY -->
+    <div id="mainMenuOverlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="festival-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 text-center relative overflow-hidden">
+            <!-- Decorative Corner Rangoli Flourishes -->
+            <div class="text-4xl mb-2 animate-float diya-glow">🪔</div>
+            <div class="text-xs font-pixel uppercase tracking-[0.25em] text-amber-400 mb-1">Nexora Diwali Celebration</div>
+            <h1 class="font-festival text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-600 drop-shadow mb-3">
+                The Festival of Lights
+            </h1>
+            <p class="text-xs sm:text-sm text-amber-100/85 leading-relaxed mb-6">
+                A mysterious twilight has dimmed the sacred diyas across four ancient realms. Explore the village, solve intricate light and rangoli puzzles, trade Festival Coins in the Bazaar, and rekindle the grand celebration!
+            </p>
+
+            <div class="flex flex-col gap-3 max-w-xs mx-auto">
+                <button id="btnContinueGame" onclick="Game.continueGame()" class="hidden festival-btn py-3 px-6 rounded-xl font-pixel text-sm text-amber-950 font-bold">
+                    ✨ CONTINUE JOURNEY
+                </button>
+                <button onclick="Game.startNewGame()" class="festival-btn py-3 px-6 rounded-xl font-pixel text-sm text-amber-950 font-bold">
+                    🪔 NEW ADVENTURE
+                </button>
+                <button onclick="UI.openHowToPlay()" class="festival-btn-secondary py-2.5 px-5 rounded-xl font-pixel text-xs text-amber-200">
+                    📖 HOW TO PLAY & CONTROLS
+                </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-6 pt-4 border-t border-amber-500/20 flex items-center justify-between text-[11px] text-amber-200/60">
+                <span>WASD / Arrows: Move</span>
+                <span>E / Space: Interact</span>
+                <span>B: Bazaar • M: Map</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- UNIVERSAL MODAL CONTAINER (Puzzles, Bazaar, Inventory, Quests, Map, Achievements, Pause, Finale) -->
+    <div id="modalBackdrop" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+        <div id="modalContent" class="festival-panel modal-enter w-full max-w-3xl max-h-[92vh] rounded-2xl flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-slate-900/90 border-b border-amber-500/40">
+                <div class="flex items-center gap-2.5">
+                    <span id="modalIcon" class="text-2xl">🪔</span>
+                    <h2 id="modalTitle" class="font-festival text-lg sm:text-xl font-bold text-amber-300">Modal Title</h2>
+                </div>
+                <button onclick="UI.closeModal()" class="festival-btn-secondary w-8 h-8 rounded-lg font-pixel text-xs flex items-center justify-center hover:text-amber-300">
+                    ✕
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div id="modalBody" class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+    /********************************************************************
+     * 1. PROCEDURAL WEB AUDIO SYNTHESIZER (INDIAN RAGA & FESTIVAL SFX)
+     ********************************************************************/
+    const Sound = {
+        ctx: null,
+        muted: false,
+        musicVol: 0.35,
+        sfxVol: 0.65,
+        bgmTimer: null,
+        // Raga Yaman / Bhupali inspired pentatonic/heptatonic scale frequencies
+        scale: [261.63, 293.66, 329.63, 370.00, 392.00, 440.00, 493.88, 523.25, 587.33, 659.25],
+
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        },
+
+        playTone(freq, duration = 0.25, type = 'sine', vol = 0.3, delay = 0) {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime + delay;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now);
+
+            const finalVol = Math.max(0.001, vol * this.sfxVol);
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(finalVol, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0008, now + duration);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration + 0.02);
+        },
+
+        sfxDiyaLight() {
+            // Warm ascending sitar/chime arpeggio
+            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+            notes.forEach((n, i) => this.playTone(n, 0.45, 'triangle', 0.35, i * 0.065));
+        },
+
+        sfxCoin() {
+            this.playTone(587.33, 0.12, 'sine', 0.3, 0);
+            this.playTone(880.00, 0.25, 'triangle', 0.35, 0.07);
+        },
+
+        sfxClick() {
+            this.playTone(440, 0.07, 'sine', 0.2, 0);
+        },
+
+        sfxError() {
+            this.playTone(180, 0.2, 'sawtooth', 0.22, 0);
+            this.playTone(145, 0.25, 'sawtooth', 0.22, 0.1);
+        },
+
+        sfxPuzzleStep() {
+            const f = this.scale[Math.floor(Math.random() * this.scale.length)];
+            this.playTone(f, 0.16, 'triangle', 0.25, 0);
+        },
+
+        sfxQuestComplete() {
+            const chord = [392.00, 493.88, 587.33, 783.99];
+            chord.forEach((f, i) => this.playTone(f, 0.55, 'triangle', 0.35, i * 0.09));
+        },
+
+        startAmbientMusic() {
+            if (this.bgmTimer) return;
+            this.bgmTimer = setInterval(() => {
+                if (this.muted || !Game.running || this.musicVol <= 0.01) return;
+                this.init();
+                if (!this.ctx) return;
+
+                // Soft tanpura drone + gentle sitar pluck
+                const note = this.scale[Math.floor(Math.random() * this.scale.length)];
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(note * 0.5, now);
+
+                const v = 0.07 * this.musicVol;
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(v, now + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.0008, now + 2.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 2.2);
+            }, 1900);
+        }
+    };
+
+    /********************************************************************
+     * 2. WORLD DATA: 4 EXPLORABLE AREAS, 16 DIYAS, NPCS, SHOP & QUESTS
+     ********************************************************************/
+    const AREAS = [
+        {
+            id: 0,
+            key: 'village',
+            name: 'Lantern Village',
+            subtitle: 'The Warm Heart of Nexora',
+            reqDiyas: 0,
+            skyColor: '#0a0d1d',
+            floorColor: '#1b192e',
+            pathColor: '#3d2c2e',
+            accentColor: '#f59e0b',
+            description: 'Traditional courtyard homes adorned with marigold garlands, rangoli thresholds, and welcoming elders.',
+            buildings: [
+                { x: 70, y: 70, w: 220, h: 130, name: 'Elder Haveli', roof: '#9a3412', wall: '#431407', style: 'haveli' },
+                { x: 710, y: 70, w: 220, h: 130, name: 'Artisan Studio', roof: '#b45309', wall: '#451a03', style: 'haveli' },
+                { x: 70, y: 500, w: 210, h: 130, name: 'Silk Weaver House', roof: '#9d174d', wall: '#3b0764', style: 'haveli' },
+                { x: 720, y: 500, w: 210, h: 130, name: 'Sweetmeat Pavilion', roof: '#a16207', wall: '#422006', style: 'haveli' }
+            ],
+            portals: [
+                { x: 460, y: 8, w: 80, h: 36, toArea: 1, spawnX: 500, spawnY: 645, label: '▲ To Forgotten Bazaar' }
+            ]
+        },
+        {
+            id: 1,
+            key: 'bazaar',
+            name: 'Forgotten Bazaar',
+            subtitle: 'Grand Marketplace of Jewels & Lanterns',
+            reqDiyas: 2,
+            skyColor: '#120b24',
+            floorColor: '#241734',
+            pathColor: '#4c2838',
+            accentColor: '#ec4899',
+            description: 'A bustling festival chowk lined with spice stalls, brassware merchants, and the Grand Festival Bazaar.',
+            buildings: [
+                { x: 60, y: 80, w: 240, h: 120, name: 'Kiran’s Grand Bazaar Stall', roof: '#be185d', wall: '#500724', style: 'stall', isStall: true },
+                { x: 700, y: 80, w: 240, h: 120, name: 'Brass & Lantern Emporium', roof: '#d97706', wall: '#451a03', style: 'stall', isStall: true },
+                { x: 60, y: 470, w: 220, h: 120, name: 'Saffron & Spice Tent', roof: '#b91c1c', wall: '#450a0a', style: 'stall', isStall: true },
+                { x: 720, y: 470, w: 220, h: 120, name: 'Caravan Rest Pavilion', roof: '#7e22ce', wall: '#2e1065', style: 'stall', isStall: true }
+            ],
+            portals: [
+                { x: 460, y: 680, w: 80, h: 36, toArea: 0, spawnX: 500, spawnY: 75, label: '▼ To Lantern Village' },
+                { x: 460, y: 8, w: 80, h: 36, toArea: 2, spawnX: 500, spawnY: 645, label: '▲ To Royal Gardens' }
+            ]
+        },
+        {
+            id: 2,
+            key: 'gardens',
+            name: 'Royal Gardens',
+            subtitle: 'Moonlit Charbagh of Mirrors & Lotuses',
+            reqDiyas: 6,
+            skyColor: '#071722',
+            floorColor: '#0f292a',
+            pathColor: '#1f4247',
+            accentColor: '#14b8a6',
+            description: 'Symmetrical waterways, marble lotus fountains, and ancient mirror-beam pavilions.',
+            buildings: [
+                { x: 80, y: 75, w: 210, h: 120, name: 'West Marble Baradari', roof: '#0f766e', wall: '#134e4a', style: 'pavilion' },
+                { x: 710, y: 75, w: 210, h: 120, name: 'East Marble Baradari', roof: '#0f766e', wall: '#134e4a', style: 'pavilion' },
+                { x: 420, y: 280, w: 160, h: 130, name: 'Royal Lotus Fountain', roof: '#0284c7', wall: '#0c4a6e', style: 'fountain', isFountain: true }
+            ],
+            portals: [
+                { x: 460, y: 680, w: 80, h: 36, toArea: 1, spawnX: 500, spawnY: 75, label: '▼ To Forgotten Bazaar' },
+                { x: 460, y: 8, w: 80, h: 36, toArea: 3, spawnX: 500, spawnY: 645, label: '▲ To Ancient Shrine' }
+            ]
+        },
+        {
+            id: 3,
+            key: 'shrine',
+            name: 'Ancient Shrine',
+            subtitle: 'Sanctum of the Eternal Flame',
+            reqDiyas: 10,
+            skyColor: '#160b18',
+            floorColor: '#231426',
+            pathColor: '#4a253b',
+            accentColor: '#facc15',
+            description: 'Carved sandstone pillars, Vedic symbol altars, and the Great Mahadiya waiting to crown the festival.',
+            buildings: [
+                { x: 340, y: 65, w: 320, h: 145, name: 'Sanctum of Eternal Light', roof: '#b45309', wall: '#451a03', style: 'temple' },
+                { x: 80, y: 240, w: 150, h: 190, name: 'Pillar of Dawn', roof: '#92400e', wall: '#291509', style: 'temple' },
+                { x: 770, y: 240, w: 150, h: 190, name: 'Pillar of Dusk', roof: '#92400e', wall: '#291509', style: 'temple' }
+            ],
+            portals: [
+                { x: 460, y: 680, w: 80, h: 36, toArea: 2, spawnX: 500, spawnY: 75, label: '▼ To Royal Gardens' }
+            ]
+        }
+    ];
+
+    // RICH ENVIRONMENTAL TREES, BOTANICAL PROPS, URLIS & FAIRY LIGHT CATENARY STRINGS
+    const AREA_SCENERY = {
+        0: {
+            trees: [
+                { x: 68, y: 120, type: 'banyan', scale: 1.15 },
+                { x: 925, y: 115, type: 'neem', scale: 1.05 },
+                { x: 72, y: 635, type: 'ashoka', scale: 1.1 },
+                { x: 928, y: 645, type: 'banyan', scale: 1.1 },
+                { x: 355, y: 140, type: 'ashoka', scale: 0.95 },
+                { x: 640, y: 625, type: 'neem', scale: 0.95 }
+            ],
+            bushes: [
+                { x: 330, y: 280, flower: '#f43f5e' },
+                { x: 665, y: 295, flower: '#fbbf24' },
+                { x: 335, y: 475, flower: '#f97316' },
+                { x: 660, y: 465, flower: '#ec4899' },
+                { x: 185, y: 315, flower: '#fde047' },
+                { x: 825, y: 315, flower: '#f43f5e' }
+            ],
+            urlis: [
+                { x: 430, y: 345 }, { x: 570, y: 345 },
+                { x: 430, y: 430 }, { x: 570, y: 430 }
+            ],
+            lightStrings: [
+                { x1: 310, y1: 195, x2: 690, y2: 185, bulbs: 9 },
+                { x1: 310, y1: 485, x2: 690, y2: 475, bulbs: 9 }
+            ]
+        },
+        1: {
+            trees: [
+                { x: 75, y: 110, type: 'ashoka', scale: 1.0 },
+                { x: 925, y: 110, type: 'ashoka', scale: 1.0 },
+                { x: 75, y: 645, type: 'neem', scale: 1.05 },
+                { x: 925, y: 645, type: 'neem', scale: 1.05 }
+            ],
+            bushes: [
+                { x: 360, y: 215, flower: '#fbbf24' },
+                { x: 640, y: 215, flower: '#ec4899' },
+                { x: 360, y: 535, flower: '#f97316' },
+                { x: 640, y: 535, flower: '#fde047' }
+            ],
+            urlis: [
+                { x: 425, y: 340 }, { x: 575, y: 340 },
+                { x: 425, y: 435 }, { x: 575, y: 435 }
+            ],
+            lightStrings: [
+                { x1: 330, y1: 200, x2: 670, y2: 200, bulbs: 10 },
+                { x1: 330, y1: 440, x2: 670, y2: 455, bulbs: 10 },
+                { x1: 160, y1: 285, x2: 160, y2: 430, bulbs: 6 },
+                { x1: 840, y1: 285, x2: 840, y2: 450, bulbs: 6 }
+            ]
+        },
+        2: {
+            trees: [
+                { x: 85, y: 115, type: 'banyan', scale: 1.15 },
+                { x: 915, y: 115, type: 'banyan', scale: 1.15 },
+                { x: 80, y: 310, type: 'ashoka', scale: 1.05 },
+                { x: 920, y: 310, type: 'ashoka', scale: 1.05 },
+                { x: 85, y: 640, type: 'neem', scale: 1.1 },
+                { x: 915, y: 640, type: 'neem', scale: 1.1 },
+                { x: 365, y: 165, type: 'ashoka', scale: 1.0 },
+                { x: 635, y: 165, type: 'ashoka', scale: 1.0 }
+            ],
+            bushes: [
+                { x: 350, y: 295, flower: '#f472b6' },
+                { x: 650, y: 295, flower: '#38bdf8' },
+                { x: 350, y: 475, flower: '#f472b6' },
+                { x: 650, y: 475, flower: '#fde047' },
+                { x: 240, y: 315, flower: '#a78bfa' },
+                { x: 760, y: 315, flower: '#f472b6' },
+                { x: 240, y: 585, flower: '#34d399' },
+                { x: 760, y: 585, flower: '#fbbf24' }
+            ],
+            urlis: [
+                { x: 420, y: 335 }, { x: 580, y: 335 },
+                { x: 420, y: 435 }, { x: 580, y: 435 }
+            ],
+            lightStrings: [
+                { x1: 320, y1: 185, x2: 430, y2: 205, bulbs: 5 },
+                { x1: 570, y1: 205, x2: 680, y2: 185, bulbs: 5 },
+                { x1: 320, y1: 455, x2: 680, y2: 455, bulbs: 9 }
+            ]
+        },
+        3: {
+            trees: [
+                { x: 82, y: 120, type: 'banyan', scale: 1.2 },
+                { x: 918, y: 120, type: 'banyan', scale: 1.2 },
+                { x: 82, y: 640, type: 'banyan', scale: 1.15 },
+                { x: 918, y: 640, type: 'banyan', scale: 1.15 }
+            ],
+            bushes: [
+                { x: 350, y: 235, flower: '#fbbf24' },
+                { x: 650, y: 235, flower: '#fbbf24' },
+                { x: 350, y: 485, flower: '#f97316' },
+                { x: 650, y: 485, flower: '#f97316' }
+            ],
+            urlis: [
+                { x: 410, y: 340 }, { x: 590, y: 340 },
+                { x: 410, y: 465 }, { x: 590, y: 465 }
+            ],
+            lightStrings: [
+                { x1: 305, y1: 195, x2: 695, y2: 195, bulbs: 11 },
+                { x1: 305, y1: 440, x2: 695, y2: 440, bulbs: 11 }
+            ]
+        }
+    };
+
+    // BESPOKE PIXEL-ART ICON PAINTER FOR SHOP, INVENTORY & ACHIEVEMENTS
+    const PixelIcons = {
+        cache: {},
+        getDataURL(key) {
+            if (this.cache[key]) return this.cache[key];
+            const c = document.createElement('canvas');
+            c.width = 24;
+            c.height = 24;
+            const ctx = c.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+            ctx.beginPath();
+            ctx.arc(12, 12, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (key === 'diya_brass' || key === 'ach_first_light' || key === 'ach_lightkeeper') {
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(10, 4, 4, 5);
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(11, 5, 2, 4);
+                ctx.fillStyle = '#eab308';
+                ctx.fillRect(5, 11, 14, 5);
+                ctx.fillStyle = '#a16207';
+                ctx.fillRect(7, 16, 10, 4);
+            } else if (key === 'diya_lotus') {
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(11, 4, 2, 4);
+                ctx.fillStyle = '#f472b6';
+                ctx.fillRect(5, 10, 14, 5);
+                ctx.fillStyle = '#db2777';
+                ctx.fillRect(7, 15, 10, 3);
+                ctx.fillStyle = '#10b981';
+                ctx.fillRect(6, 18, 12, 2);
+            } else if (key === 'decor_lanterns' || key === 'ach_bazaar_buyer') {
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(11, 2, 2, 3);
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(7, 5, 10, 11);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(9, 7, 6, 7);
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(8, 16, 2, 5);
+                ctx.fillRect(14, 16, 2, 5);
+            } else if (key === 'decor_rangoli') {
+                ctx.fillStyle = '#ec4899';
+                ctx.fillRect(6, 6, 12, 12);
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(8, 8, 8, 8);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(10, 10, 4, 4);
+            } else if (key.startsWith('outfit_') || key === 'rare_star_cloak') {
+                const col = key === 'outfit_saffron' ? '#f97316' : key === 'outfit_indigo' ? '#4f46e5' : '#9333ea';
+                ctx.fillStyle = col;
+                ctx.fillRect(7, 5, 10, 15);
+                ctx.fillRect(4, 6, 3, 7);
+                ctx.fillRect(17, 6, 3, 7);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(11, 5, 2, 15);
+                ctx.fillRect(7, 18, 10, 2);
+            } else if (key === 'hat_pagri') {
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(5, 9, 14, 8);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(7, 7, 10, 4);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(11, 4, 3, 5);
+            } else if (key === 'hat_gajra') {
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(5, 9, 14, 6);
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(7, 10, 3, 4);
+                ctx.fillRect(14, 10, 3, 4);
+            } else if (key === 'back_jhola') {
+                ctx.fillStyle = '#d97706';
+                ctx.fillRect(7, 8, 10, 11);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(9, 4, 6, 4);
+                ctx.fillRect(10, 12, 4, 4);
+            } else if (key === 'tool_compass') {
+                ctx.fillStyle = '#eab308';
+                ctx.fillRect(5, 5, 14, 14);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(7, 7, 10, 10);
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(11, 8, 2, 4);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(11, 12, 2, 4);
+            } else if (key === 'tool_boots') {
+                ctx.fillStyle = '#ea580c';
+                ctx.fillRect(6, 7, 6, 11);
+                ctx.fillRect(6, 14, 13, 4);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(17, 12, 3, 3);
+            } else if (key === 'tool_hint_scroll') {
+                ctx.fillStyle = '#fde68a';
+                ctx.fillRect(7, 5, 10, 14);
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(5, 4, 14, 2);
+                ctx.fillRect(5, 18, 14, 2);
+                ctx.fillStyle = '#d97706';
+                ctx.fillRect(9, 9, 6, 2);
+                ctx.fillRect(9, 13, 6, 2);
+            } else if (key === 'tool_passkey') {
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(6, 7, 6, 6);
+                ctx.fillRect(12, 9, 7, 2);
+                ctx.fillRect(15, 11, 2, 4);
+                ctx.fillRect(18, 11, 2, 4);
+            } else if (key === 'rare_peacock_lamp' || key === 'ach_wandering') {
+                ctx.fillStyle = '#059669';
+                ctx.fillRect(6, 5, 12, 10);
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(9, 7, 6, 6);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(10, 15, 4, 5);
+            } else if (key === 'rare_akhand_jyoti') {
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(8, 4, 8, 10);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(10, 6, 4, 7);
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(6, 14, 12, 5);
+            } else {
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(6, 6, 12, 12);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(9, 9, 6, 6);
+            }
+
+            const url = c.toDataURL();
+            this.cache[key] = url;
+            return url;
+        }
+    };
+
+    // 16 UNLIT DIYAS ACROSS THE 4 AREAS (4 IN EACH REALM)
+    const DIYA_DEFINITIONS = [
+        // Area 0: Lantern Village
+        {
+            id: 'v_diya_1', area: 0, x: 430, y: 310, name: 'Courtyard Welcome Diya',
+            puzzleType: 'instant',
+            clue: 'A gentle ceremonial lamp at the village crossroads. Spark the wick to begin your journey!'
+        },
+        {
+            id: 'v_diya_2', area: 0, x: 250, y: 245, name: 'Haveli Threshold Diya',
+            puzzleType: 'sequence',
+            sequence: [1, 3, 2],
+            clue: 'Inscription on the Haveli steps: "First the Dawn (1), then the Evening Star (3), and finally the Noon Sun (2)."'
+        },
+        {
+            id: 'v_diya_3', area: 0, x: 750, y: 245, name: 'Artisan Rangoli Diya',
+            puzzleType: 'rangoli',
+            pattern: [
+                1, 0, 1,
+                0, 2, 0,
+                1, 0, 1
+            ],
+            clue: 'Meera says: "Place Crimson petals in the four corners and Marigold Gold in the very center."'
+        },
+        {
+            id: 'v_diya_4', area: 0, x: 580, y: 535, name: 'Weaver’s Hidden Ember Diya',
+            puzzleType: 'hidden_flame',
+            reqItem: 'ember_village',
+            clue: 'Its sacred wick requires the Golden Ember hidden near the Silk Weaver House in the southwest corner.'
+        },
+
+        // Area 1: Forgotten Bazaar
+        {
+            id: 'b_diya_1', area: 1, x: 350, y: 245, name: 'Merchant’s Prosperity Diya',
+            puzzleType: 'sequence',
+            sequence: [2, 0, 3, 1],
+            clue: 'Market chime cipher: "South-West (3), North-West (1), South-East (4), North-East (2)."'
+        },
+        {
+            id: 'b_diya_2', area: 1, x: 650, y: 245, name: 'Jeweler’s Rangoli Diya',
+            puzzleType: 'rangoli',
+            pattern: [
+                0, 2, 0,
+                2, 3, 2,
+                0, 2, 0
+            ],
+            clue: 'Create a blooming diamond of Marigold (Gold) around a Peacock Teal heart.'
+        },
+        {
+            id: 'b_diya_3', area: 1, x: 260, y: 435, name: 'Spice Caravan Mirror Diya',
+            puzzleType: 'mirror',
+            // 4x4 grid: S(0,0) -> (0,2)[/] -> (2,2)[\] -> (2,3)[Target]
+            gridSize: 4,
+            source: { r: 0, c: 0, dir: 'right' },
+            target: { r: 2, c: 3 },
+            mirrors: [
+                { r: 0, c: 2, type: 0 },
+                { r: 2, c: 2, type: 0 },
+                { r: 1, c: 1, type: 1 }
+            ],
+            clue: 'Rotate the polished brass mirrors so the sunbeam bends down at column 3 and right across row 3.'
+        },
+        {
+            id: 'b_diya_4', area: 1, x: 740, y: 435, name: 'Vedic Guild Diya',
+            puzzleType: 'symbols',
+            targetSymbols: ['🪷', '🐚', '☀️', '🪔'],
+            clue: 'Ancient Bazaar proverb: "From the Lotus (🪷) sounds the Conch (🐚), greeting the Sun (☀️) before the Lamp (🪔)."'
+        },
+
+        // Area 2: Royal Gardens
+        {
+            id: 'g_diya_1', area: 2, x: 260, y: 255, name: 'West Baradari Mirror Diya',
+            puzzleType: 'mirror',
+            gridSize: 4,
+            source: { r: 0, c: 0, dir: 'down' },
+            target: { r: 3, c: 3 },
+            mirrors: [
+                { r: 2, c: 0, type: 0 },
+                { r: 2, c: 2, type: 0 },
+                { r: 3, c: 2, type: 0 }
+            ],
+            clue: 'Guide the moonbeam down the left waterway, across the center bridge, and down into the corner lotus.'
+        },
+        {
+            id: 'g_diya_2', area: 2, x: 740, y: 255, name: 'East Baradari Mirror Diya',
+            puzzleType: 'mirror',
+            gridSize: 4,
+            source: { r: 3, c: 0, dir: 'right' },
+            target: { r: 0, c: 3 },
+            mirrors: [
+                { r: 3, c: 1, type: 0 },
+                { r: 1, c: 1, type: 0 },
+                { r: 1, c: 3, type: 0 },
+                { r: 0, c: 3, type: 0 } // not needed if target is at 0,3
+            ].slice(0, 3),
+            clue: 'Reflect the fountain ray upward at column 2, across row 2, and straight up to the northeast alcove.'
+        },
+        {
+            id: 'g_diya_3', area: 2, x: 310, y: 540, name: 'Charbagh Lotus Rangoli Diya',
+            puzzleType: 'rangoli',
+            pattern: [
+                3, 1, 3,
+                1, 2, 1,
+                3, 1, 3
+            ],
+            clue: 'Royal Garden tapestry: Peacock Teal corners, Crimson cross-petals, and a Golden sun center.'
+        },
+        {
+            id: 'g_diya_4', area: 2, x: 690, y: 540, name: 'Fountain Spirit Diya',
+            puzzleType: 'hidden_flame',
+            reqItem: 'ember_gardens',
+            clue: 'Seek the Azure Flame concealed behind the West Marble Baradari.'
+        },
+
+        // Area 3: Ancient Shrine
+        {
+            id: 's_diya_1', area: 3, x: 275, y: 290, name: 'Pillar of Dawn Diya',
+            puzzleType: 'sequence',
+            sequence: [0, 4, 1, 3, 2],
+            clue: 'Five-pointed star harmony: Outer Left (1), Outer Right (5), Inner Left (2), Inner Right (4), Crown Center (3).'
+        },
+        {
+            id: 's_diya_2', area: 3, x: 725, y: 290, name: 'Pillar of Dusk Diya',
+            puzzleType: 'symbols',
+            targetSymbols: ['🐘', '🪷', '🦚', '☀️', '🔱'],
+            clue: 'Shrine frieze order: "Gaja the Elephant, Padma the Lotus, Mayura the Peacock, Surya the Sun, and the Sacred Trident."'
+        },
+        {
+            id: 's_diya_3', area: 3, x: 365, y: 520, name: 'Sanctum Prism Diya',
+            puzzleType: 'mirror',
+            gridSize: 4,
+            source: { r: 0, c: 1, dir: 'down' },
+            target: { r: 0, c: 3 },
+            mirrors: [
+                { r: 3, c: 1, type: 0 },
+                { r: 3, c: 3, type: 0 }
+            ],
+            clue: 'Send the sacred beam deep to the bottom of the sanctum and reflect it back up the eastern colonnade.'
+        },
+        {
+            id: 's_diya_4', area: 3, x: 635, y: 520, name: 'Grand Mandala Diya',
+            puzzleType: 'rangoli',
+            pattern: [
+                2, 1, 2,
+                1, 3, 1,
+                2, 1, 2
+            ],
+            clue: 'Crown Mandala: Marigold Gold corners, Crimson bridges, and a Peacock Teal bindu center.'
+        }
+    ];
+
+    // TREASURE CHESTS (+30 Coins each, 10 across the world for the 'Treasure Finder' achievement)
+    const WORLD_CHESTS = [
+        { id: 'chest_1', area: 0, x: 115, y: 235, coins: 30, label: 'Haveli Alcove Chest' },
+        { id: 'chest_2', area: 0, x: 890, y: 235, coins: 30, label: 'Artisan Supply Chest' },
+        { id: 'chest_3', area: 0, x: 895, y: 655, coins: 30, label: 'Sweetmeat Cellar Chest' },
+        { id: 'chest_4', area: 1, x: 110, y: 230, coins: 30, label: 'Silk Merchant Coffer' },
+        { id: 'chest_5', area: 1, x: 890, y: 230, coins: 30, label: 'Brass Guild Coffer' },
+        { id: 'chest_6', area: 1, x: 110, y: 635, coins: 30, label: 'Cardamom Crate Chest' },
+        { id: 'chest_7', area: 2, x: 115, y: 635, coins: 30, label: 'Sunken Lily Chest' },
+        { id: 'chest_8', area: 2, x: 885, y: 635, coins: 30, label: 'Cypress Hedge Chest' },
+        { id: 'chest_9', area: 3, x: 120, y: 120, coins: 30, label: 'Ancient Offering Coffer' },
+        { id: 'chest_10', area: 3, x: 880, y: 120, coins: 30, label: 'Vedic Vault Chest' }
+    ];
+
+    // COLLECTIBLE QUEST & FLAME ITEMS IN THE WORLD
+    const WORLD_COLLECTIBLES = [
+        { id: 'ember_village', area: 0, x: 115, y: 655, icon: '🔥', name: 'Weaver’s Golden Ember', desc: 'Used to ignite the Weaver’s Hidden Ember Diya in Lantern Village.' },
+        { id: 'quest_sketchbook', area: 0, x: 885, y: 455, icon: '📒', name: 'Meera’s Rangoli Sketchbook', desc: 'Lost geometry patterns belonging to Meera the Rangoli Artist.' },
+        { id: 'quest_toran', area: 1, x: 890, y: 635, icon: '🌼', name: 'Sacred Marigold Toran', desc: 'A festive doorway garland Kiran the Merchant misplaced.' },
+        { id: 'ember_gardens', area: 2, x: 125, y: 235, icon: '💠', name: 'Azure Lotus Flame', desc: 'Used to kindle the Fountain Spirit Diya in the Royal Gardens.' },
+        { id: 'quest_brass_key', area: 2, x: 880, y: 235, icon: '🗝️', name: 'Devraj’s Brass Fountain Key', desc: 'An antique water-valve key sought by Devraj the Garden Caretaker.' }
+    ];
+
+    // SECRET DISCOVERY ZONES (+50 Coins when stepped into)
+    const SECRET_ZONES = [
+        { id: 'sec_village', area: 0, x: 65, y: 360, r: 42, name: 'Whispering Banyan Nook' },
+        { id: 'sec_bazaar', area: 1, x: 935, y: 360, r: 42, name: 'Smuggler’s Lantern Alley' },
+        { id: 'sec_gardens', area: 2, x: 500, y: 245, r: 42, name: 'Moonlit Lotus Arch' },
+        { id: 'sec_shrine', area: 3, x: 500, y: 225, r: 45, name: 'Altar of the First Spark' }
+    ];
+
+    // NPCS & SIDE QUEST GIVERS
+    const NPCS = [
+        {
+            id: 'npc_aarav', area: 0, x: 500, y: 265, name: 'Aarav', role: 'The Lantern Keeper', icon: '🧓',
+            palette: { robe: '#d97706', turban: '#fef08a', skin: '#d69e72' },
+            getDialogue() {
+                const lit = Game.state.litDiyas.length;
+                if (lit === 0) {
+                    return "Namaste, young light-bearer! A sudden twilight hush has extinguished our village diyas before Diwali night. Approach the Courtyard Welcome Diya nearby and press [E] to rekindle our first flame!";
+                }
+                if (lit < 4) {
+                    return `You have restored ${lit} diya(s)! Restore at least 2 diyas here in Lantern Village to unlock the northern gate to the Forgotten Bazaar.`;
+                }
+                if (lit < 16) {
+                    return `The village glows warmly thanks to you (${lit}/16 Diyas restored). Keep exploring north toward the Royal Gardens and the Ancient Shrine!`;
+                }
+                return "Miraculous! Every single diya across all four realms shines once more! Step up to the Grand Altar in the Ancient Shrine—or celebrate right here with us!";
+            }
+        },
+        {
+            id: 'npc_meera', area: 0, x: 660, y: 370, name: 'Meera', role: 'The Rangoli Artist', icon: '👩‍🎨',
+            palette: { robe: '#db2777', turban: '#fbcfe8', skin: '#e0a96d' },
+            questId: 'q_rangoli',
+            reqItem: 'quest_sketchbook',
+            getDialogue() {
+                const q = Game.state.quests.q_rangoli;
+                if (q === 'unstarted') {
+                    Game.state.quests.q_rangoli = 'active';
+                    Game.saveGame();
+                    UI.toast('📜 New Side Quest: Meera’s Lost Sketchbook', 'amber');
+                    return "Oh dear! While preparing colors for the Artisan Rangoli Diya, I dropped my Rangoli Sketchbook near the Sweetmeat Pavilion in the southeast. Could you find it for me?";
+                }
+                if (q === 'active') {
+                    if (Game.state.collectibles.includes('quest_sketchbook')) {
+                        Game.completeQuest('q_rangoli', 40, 'Meera’s Lost Sketchbook');
+                        return "You found my Rangoli Sketchbook! Thank you so much! Here are 40 Festival Coins—and remember: my courtyard rangoli uses Crimson corners around a Golden center!";
+                    }
+                    return "My Rangoli Sketchbook is somewhere in the southeast corner of Lantern Village near the Sweetmeat Pavilion.";
+                }
+                return "Your rangoli patterns bring auspicious blessings to the entire village! Visit the Bazaar to buy new Rangoli templates.";
+            }
+        },
+        {
+            id: 'npc_kiran', area: 1, x: 240, y: 240, name: 'Kiran', role: 'The Bazaar Merchant', icon: '👳‍♂️',
+            palette: { robe: '#0284c7', turban: '#facc15', skin: '#c68642' },
+            questId: 'q_toran',
+            reqItem: 'quest_toran',
+            opensBazaar: true,
+            getDialogue() {
+                const q = Game.state.quests.q_toran;
+                if (q === 'unstarted') {
+                    Game.state.quests.q_toran = 'active';
+                    Game.saveGame();
+                    UI.toast('📜 New Side Quest: The Missing Marigold Toran', 'amber');
+                    return "Welcome to the Forgotten Bazaar! Before we trade, a gust of wind blew my Sacred Marigold Toran to the southeast caravan corner. Bring it back for 40 Festival Coins, or browse the Bazaar right now!";
+                }
+                if (q === 'active' && Game.state.collectibles.includes('quest_toran')) {
+                    Game.completeQuest('q_toran', 40, 'The Missing Marigold Toran');
+                    return "My Sacred Marigold Toran! You have a keen eye, traveler. Take these 40 Festival Coins and peruse my finest festival wares!";
+                }
+                return "Step right up! From lotus diyas and festive sherwanis to puzzle hint scrolls, the Festival Bazaar has everything a light-bearer needs!";
+            }
+        },
+        {
+            id: 'npc_devraj', area: 2, x: 500, y: 465, name: 'Devraj', role: 'The Garden Caretaker', icon: '🧔🏽',
+            palette: { robe: '#059669', turban: '#a7f3d0', skin: '#b97a56' },
+            questId: 'q_key',
+            reqItem: 'quest_brass_key',
+            getDialogue() {
+                const q = Game.state.quests.q_key;
+                if (q === 'unstarted') {
+                    Game.state.quests.q_key = 'active';
+                    Game.saveGame();
+                    UI.toast('📜 New Side Quest: The Caretaker’s Fountain Key', 'amber');
+                    return "Peace be with you in the Royal Gardens. I left my Brass Fountain Key near the East Marble Baradari. If you retrieve it, I’ll reward you richly and share the secret of the mirror beams!";
+                }
+                if (q === 'active' && Game.state.collectibles.includes('quest_brass_key')) {
+                    Game.completeQuest('q_key', 40, 'The Caretaker’s Fountain Key');
+                    return "Splendid! My antique Brass Fountain Key! Take these 40 Festival Coins. Tip: In mirror puzzles, click any mirror tile to flip its angle between '/' and '\\'!";
+                }
+                return "Listen to the lotus fountain! The mirrors in these gardens bend moonlight toward the unlit diyas.";
+            }
+        },
+        {
+            id: 'npc_priya', area: 3, x: 500, y: 265, name: 'High Priestess Priya', role: 'Keeper of the Shrine', icon: '🧘‍♀️',
+            palette: { robe: '#9333ea', turban: '#fde047', skin: '#d69e72' },
+            getDialogue() {
+                const lit = Game.state.litDiyas.length;
+                if (lit < 16) {
+                    return `Welcome to the Ancient Shrine. You have rekindled ${lit} of the 16 sacred diyas. When all 16 burn bright, interact with the Grand Mahadiya Altar in the center of this sanctum!`;
+                }
+                return "All 16 sacred diyas are alight! Step up to the Grand Mahadiya Altar at the center of the Shrine to usher in the Grand Festival Finale!";
+            }
+        },
+        // Zafar the Wandering Merchant (Deterministically appears once 3+ diyas are lit; rotates between Bazaar, Gardens, and Village)
+        {
+            id: 'npc_zafar', area: 1, x: 500, y: 365, name: 'Zafar', role: 'The Wandering Merchant', icon: '🐪',
+            palette: { robe: '#7e22ce', turban: '#38bdf8', skin: '#c68642' },
+            wandering: true,
+            opensBazaar: true,
+            getDialogue() {
+                return "Ah, a seeker of rare wonders! My caravan follows the glow of restored diyas. I carry exclusive celestial relics and astral garments you won't find in ordinary stalls!";
+            }
+        }
+    ];
+
+    // FESTIVAL BAZAAR ITEMS (4 CATEGORIES, REAL FUNCTIONAL EFFECTS & COSMETICS)
+    const SHOP_ITEMS = [
+        // Category 1: Diyas & Decorations
+        {
+            id: 'diya_brass', category: 'decor', name: 'Royal Peacocks Brass Diya', price: 30, icon: '🪔',
+            desc: 'Upgrades all restored diyas in the world with an ornate double-rimmed golden brass vessel.',
+            equippable: true, slot: 'diyaStyle'
+        },
+        {
+            id: 'diya_lotus', category: 'decor', name: 'Crystal Lotus Diya', price: 50, icon: '🪷',
+            desc: 'Transforms world diyas into blooming pink crystal lotus lamps with rose-gold sparks.',
+            equippable: true, slot: 'diyaStyle'
+        },
+        {
+            id: 'decor_lanterns', category: 'decor', name: 'Sky Lantern Festoon', price: 45, icon: '🏮',
+            desc: 'Hangs glowing paper Akash Kandil lanterns along village rooftops and pathways.',
+            equippable: true, slot: 'worldDecor'
+        },
+        {
+            id: 'decor_rangoli', category: 'decor', name: 'Grand Courtyard Mandala', price: 40, icon: '🌸',
+            desc: 'Inscribes a radiant 12-petal festival rangoli at the center of every realm.',
+            equippable: true, slot: 'courtyardDecor'
+        },
+
+        // Category 2: Character Cosmetics
+        {
+            id: 'outfit_saffron', category: 'cosmetics', name: 'Saffron Silk Sherwani', price: 35, icon: '👘',
+            desc: 'Festive marigold-and-crimson embroidered silk attire.',
+            equippable: true, slot: 'outfit', color: '#ea580c'
+        },
+        {
+            id: 'outfit_indigo', category: 'cosmetics', name: 'Royal Indigo Kurta', price: 45, icon: '🧥',
+            desc: 'Midnight-blue velvet tunic woven with silver zari thread.',
+            equippable: true, slot: 'outfit', color: '#4f46e5'
+        },
+        {
+            id: 'hat_pagri', category: 'cosmetics', name: 'Jeweled Festival Pagri', price: 30, icon: '👑',
+            desc: 'Traditional ceremonial turban pinned with a ruby kalgi plume.',
+            equippable: true, slot: 'hat', color: '#f43f5e'
+        },
+        {
+            id: 'hat_gajra', category: 'cosmetics', name: 'Jasmine Gajra Crown', price: 25, icon: '🌼',
+            desc: 'Fragrant woven garland of fresh mogra blossoms.',
+            equippable: true, slot: 'hat', color: '#fef08a'
+        },
+        {
+            id: 'back_jhola', category: 'cosmetics', name: 'Embroidered Mirror Jhola', price: 30, icon: '🎒',
+            desc: 'Artisanal Kutch-embroidered shoulder bag that glints as you walk.',
+            equippable: true, slot: 'backpack'
+        },
+
+        // Category 3: Puzzle & Exploration Items
+        {
+            id: 'tool_compass', category: 'tools', name: 'Seeker’s Astral Compass', price: 40, icon: '🧭',
+            desc: 'Draws a soft golden directional arrow around your character pointing toward the nearest unlit diya or hidden item.',
+            passive: true
+        },
+        {
+            id: 'tool_boots', category: 'tools', name: 'Swift Mojari Sandals', price: 50, icon: '👞',
+            desc: 'Handcrafted curled leather mojari shoes that permanently boost walking speed by 30%.',
+            passive: true
+        },
+        {
+            id: 'tool_hint_scroll', category: 'tools', name: 'Scroll of Illumination', price: 20, icon: '📜',
+            desc: 'Consumable wisdom scroll: reveals the next step or auto-aligns a tricky puzzle (+1 Scroll per purchase).',
+            consumable: true
+        },
+        {
+            id: 'tool_passkey', category: 'tools', name: 'Sanctum Master Seal', price: 70, icon: '🔑',
+            desc: 'Allows instant travel to any of the 4 realms regardless of current diya requirement.',
+            passive: true
+        },
+
+        // Category 4: Rare Collectibles (Sold by Zafar the Wandering Merchant or Rare Stall)
+        {
+            id: 'rare_peacock_lamp', category: 'rare', name: 'Celestial Peacock Lamp', price: 80, icon: '🦚',
+            desc: 'Wandering Merchant Exclusive: Doubles your personal aura radius and scatters emerald stardust.',
+            wanderingOnly: true, passive: true
+        },
+        {
+            id: 'rare_star_cloak', category: 'rare', name: 'Astral Navaratna Cloak', price: 90, icon: '🌌',
+            desc: 'Wandering Merchant Exclusive: Shimmering amethyst cloak that leaves a trail of golden fireflies.',
+            wanderingOnly: true, equippable: true, slot: 'outfit', color: '#9333ea'
+        },
+        {
+            id: 'rare_akhand_jyoti', category: 'rare', name: 'Relic of Akhand Jyoti', price: 100, icon: '🏆',
+            desc: 'Wandering Merchant Exclusive: Ancient eternal chalice that grants +5 bonus coins whenever you light a diya.',
+            wanderingOnly: true, passive: true
+        }
+    ];
+
+    // QUEST DEFINITIONS
+    const QUEST_LIST = [
+        {
+            id: 'q_courtyard',
+            title: 'Light of the Village',
+            giver: 'Aarav — The Lantern Keeper',
+            desc: 'Restore all 4 Diyas in Lantern Village to lift the twilight shadow over the homes.',
+            rewardCoins: 40
+        },
+        {
+            id: 'q_rangoli',
+            title: 'Meera’s Lost Sketchbook',
+            giver: 'Meera — The Rangoli Artist',
+            desc: 'Find Meera’s Rangoli Sketchbook near the Sweetmeat Pavilion in Lantern Village and return it to her.',
+            rewardCoins: 40
+        },
+        {
+            id: 'q_toran',
+            title: 'The Missing Marigold Toran',
+            giver: 'Kiran — The Bazaar Merchant',
+            desc: 'Retrieve the Sacred Marigold Toran from the southeast corner of the Forgotten Bazaar.',
+            rewardCoins: 40
+        },
+        {
+            id: 'q_key',
+            title: 'The Caretaker’s Fountain Key',
+            giver: 'Devraj — The Garden Caretaker',
+            desc: 'Locate the Brass Fountain Key near the East Marble Baradari in the Royal Gardens.',
+            rewardCoins: 40
+        },
+        {
+            id: 'q_finale',
+            title: 'Guardian of the Grand Diwali',
+            giver: 'High Priestess Priya',
+            desc: 'Restore all 16 sacred Diyas across the four realms and ignite the Grand Mahadiya in the Ancient Shrine.',
+            rewardCoins: 100
+        }
+    ];
+
+    // ACHIEVEMENTS
+    const ACHIEVEMENTS = [
+        { id: 'ach_first_light', title: 'First Light', desc: 'Restore your very first sacred diya.', icon: '🪔' },
+        { id: 'ach_village_clear', title: 'Village Awakened', desc: 'Restore all 4 diyas in Lantern Village.', icon: '🏘️' },
+        { id: 'ach_bazaar_buyer', title: 'Bazaar Explorer', desc: 'Purchase your first festival item from the Bazaar.', icon: '🛍️' },
+        { id: 'ach_treasure_hunter', title: 'Treasure Finder', desc: 'Discover and open all 10 hidden treasure chests.', icon: '🧰' },
+        { id: 'ach_quest_helper', title: 'Beloved Neighbor', desc: 'Complete 3 NPC side quests.', icon: '🤝' },
+        { id: 'ach_secret', title: 'Seeker of Whispers', desc: 'Discover a hidden secret sanctuary.', icon: '✨' },
+        { id: 'ach_wandering', title: 'Caravan Patron', desc: 'Acquire a rare relic from Zafar the Wandering Merchant.', icon: '🐪' },
+        { id: 'ach_lightkeeper', title: 'Festival Guardian', desc: 'Restore all 16 Diyas and complete the Grand Festival Finale.', icon: '👑' }
+    ];
+
+    /********************************************************************
+     * 3. CORE GAME ENGINE & STATE MANAGEMENT
+     ********************************************************************/
+    const Game = {
+        canvas: null,
+        ctx: null,
+        lightCanvas: null,
+        lightCtx: null,
+        running: false,
+        lastTime: 0,
+        worldW: 1000,
+        worldH: 720,
+        camera: { x: 0, y: 0, scale: 1 },
+        keys: {},
+        particles: [],
+        ambientMotes: [],
+        shockwaves: [],
+        floatingTexts: [],
+        fireworks: [],
+        nearestInteractable: null,
+        animTick: 0,
+        playerVel: { vx: 0, vy: 0 },
+        interactAnimTimer: 0,
+
+        state: null,
+
+        getDefaultState() {
+            const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            return {
+                area: 0,
+                player: { x: 500, y: 465, dir: 'down', moving: false, stepFrame: 0 },
+                coins: 20,
+                litDiyas: [],
+                openedChests: [],
+                collectibles: [],
+                discoveredSecrets: [],
+                inventory: [],
+                hintScrolls: 1,
+                equipped: {
+                    diyaStyle: null,
+                    worldDecor: null,
+                    courtyardDecor: null,
+                    outfit: null,
+                    hat: null,
+                    backpack: null
+                },
+                quests: {
+                    q_courtyard: 'active',
+                    q_rangoli: 'unstarted',
+                    q_toran: 'unstarted',
+                    q_key: 'unstarted',
+                    q_finale: 'active'
+                },
+                achievements: [],
+                finaleTriggered: false,
+                reducedMotion: prefersReduced,
+                touchEnabled: ('ontouchstart' in window) || navigator.maxTouchPoints > 0
+            };
+        },
+
+        init() {
+            this.canvas = document.getElementById('gameCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.lightCanvas = document.createElement('canvas');
+            this.lightCtx = this.lightCanvas.getContext('2d');
+
+            window.addEventListener('resize', () => this.resize());
+            this.resize();
+
+            this.setupInput();
+            this.checkExistingSave();
+
+            this.state = this.getDefaultState();
+            this.initAmbientMotes();
+            requestAnimationFrame((t) => this.loop(t));
+        },
+
+        initAmbientMotes() {
+            this.ambientMotes = [];
+            for (let i = 0; i < 34; i++) {
+                this.ambientMotes.push({
+                    x: 60 + Math.random() * (this.worldW - 120),
+                    y: 60 + Math.random() * (this.worldH - 120),
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: -6 - Math.random() * 12,
+                    phase: Math.random() * Math.PI * 2,
+                    size: 1.5 + Math.random() * 2,
+                    type: i % 3 === 0 ? 'petal' : 'firefly'
+                });
+            }
+        },
+
+        resize() {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+            this.lightCanvas.width = this.worldW;
+            this.lightCanvas.height = this.worldH;
+        },
+
+        checkExistingSave() {
+            try {
+                const raw = localStorage.getItem('nexora_festival_of_lights_save_v1');
+                const btn = document.getElementById('btnContinueGame');
+                if (raw) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+            } catch (e) {}
+        },
+
+        saveGame() {
+            if (!this.state) return;
+            try {
+                localStorage.setItem('nexora_festival_of_lights_save_v1', JSON.stringify(this.state));
+            } catch (e) {}
+        },
+
+        startNewGame() {
+            Sound.init();
+            Sound.sfxDiyaLight();
+            this.state = this.getDefaultState();
+            this.saveGame();
+            this.launchIntoWorld();
+            UI.toast('🪔 Welcome to Lantern Village! Approach Aarav or the Courtyard Diya.', 'amber');
+        },
+
+        continueGame() {
+            Sound.init();
+            Sound.sfxClick();
+            try {
+                const raw = localStorage.getItem('nexora_festival_of_lights_save_v1');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    this.state = Object.assign(this.getDefaultState(), parsed);
+                    this.state.equipped = Object.assign(this.getDefaultState().equipped, parsed.equipped || {});
+                    this.state.quests = Object.assign(this.getDefaultState().quests, parsed.quests || {});
+                } else {
+                    this.state = this.getDefaultState();
+                }
+            } catch (e) {
+                this.state = this.getDefaultState();
+            }
+            this.launchIntoWorld();
+            UI.toast('✨ Journey Resumed!', 'amber');
+        },
+
+        launchIntoWorld() {
+            document.getElementById('mainMenuOverlay').classList.add('hidden');
+            document.getElementById('hudBar').classList.remove('hidden');
+            this.updateTouchVisibility();
+            this.running = true;
+            this.updateHUD();
+            Sound.startAmbientMusic();
+        },
+
+        updateTouchVisibility() {
+            const tc = document.getElementById('touchControls');
+            if (this.state && this.state.touchEnabled) {
+                tc.classList.remove('hidden');
+            } else {
+                tc.classList.add('hidden');
+            }
+        },
+
+        setupInput() {
+            window.addEventListener('keydown', (e) => {
+                const k = e.key.toLowerCase();
+                this.keys[k] = true;
+
+                if (!this.running) return;
+
+                if (e.key === 'Escape') {
+                    if (!document.getElementById('modalBackdrop').classList.contains('hidden')) {
+                        UI.closeModal();
+                    } else if (!document.getElementById('dialogueOverlay').classList.contains('hidden')) {
+                        UI.closeDialogue();
+                    } else {
+                        UI.openModal('pause');
+                    }
+                    return;
+                }
+
+                const modalOpen = !document.getElementById('modalBackdrop').classList.contains('hidden');
+                const dialogueOpen = !document.getElementById('dialogueOverlay').classList.contains('hidden');
+
+                if (dialogueOpen && (k === 'e' || k === ' ' || k === 'enter')) {
+                    e.preventDefault();
+                    UI.closeDialogue();
+                    return;
+                }
+
+                if (!modalOpen && !dialogueOpen) {
+                    if (k === 'e' || k === ' ') {
+                        e.preventDefault();
+                        this.triggerInteract();
+                    } else if (k === 'b') {
+                        UI.openModal('bazaar');
+                    } else if (k === 'i') {
+                        UI.openModal('inventory');
+                    } else if (k === 'm') {
+                        UI.openModal('map');
+                    } else if (k === 'j') {
+                        UI.openModal('quests');
+                    }
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                this.keys[e.key.toLowerCase()] = false;
+            });
+
+            // Mobile Touch D-Pad
+            document.querySelectorAll('.touch-dpad').forEach(btn => {
+                const dir = btn.getAttribute('data-dir');
+                const mapKey = { up: 'w', down: 's', left: 'a', right: 'd' }[dir];
+                const start = (ev) => { ev.preventDefault(); this.keys[mapKey] = true; };
+                const end = (ev) => { ev.preventDefault(); this.keys[mapKey] = false; };
+                btn.addEventListener('touchstart', start, { passive: false });
+                btn.addEventListener('touchend', end, { passive: false });
+                btn.addEventListener('mousedown', start);
+                btn.addEventListener('mouseup', end);
+                btn.addEventListener('mouseleave', end);
+            });
+        },
+
+        updateHUD() {
+            if (!this.state) return;
+            const areaObj = AREAS[this.state.area];
+            document.getElementById('hudAreaName').textContent = areaObj.name;
+            document.getElementById('hudDiyaCount').textContent = `${this.state.litDiyas.length} / ${DIYA_DEFINITIONS.length}`;
+            document.getElementById('hudCoinCount').textContent = this.state.coins;
+
+            // Wandering merchant deterministic appearance once 3+ diyas are restored
+            const zafarActive = this.state.litDiyas.length >= 3;
+            const zafarArea = (this.state.litDiyas.length % 2 === 1) ? 1 : 2;
+            const zafarNpc = NPCS.find(n => n.id === 'npc_zafar');
+            if (zafarNpc) zafarNpc.area = zafarArea;
+
+            const banner = document.getElementById('wanderingMerchantBanner');
+            if (zafarActive) {
+                banner.classList.remove('hidden');
+                document.getElementById('wanderingBannerText').textContent = `🐪 Zafar’s Caravan is visiting ${AREAS[zafarArea].name}!`;
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            // Quest badge
+            const hasActive = Object.values(this.state.quests).includes('active');
+            document.getElementById('questBadge').classList.toggle('hidden', !hasActive);
+        },
+
+        addCoins(amount, reason = '', worldX = null, worldY = null) {
+            this.state.coins += amount;
+            Sound.sfxCoin();
+            const px = worldX !== null ? worldX : this.state.player.x;
+            const py = worldY !== null ? worldY : this.state.player.y - 25;
+            this.floatingTexts.push({
+                x: px,
+                y: py,
+                text: `+${amount} 🪙 ${reason}`,
+                color: '#fde047',
+                life: 1.5
+            });
+            this.updateHUD();
+            this.saveGame();
+        },
+
+        unlockAchievement(achId) {
+            if (this.state.achievements.includes(achId)) return;
+            this.state.achievements.push(achId);
+            const ach = ACHIEVEMENTS.find(a => a.id === achId);
+            if (ach) {
+                UI.toast(`🏆 Achievement Unlocked: ${ach.title}!`, 'gold');
+                Sound.sfxQuestComplete();
+            }
+            this.saveGame();
+        },
+
+        completeQuest(questId, coins, title) {
+            if (this.state.quests[questId] === 'completed') return;
+            this.state.quests[questId] = 'completed';
+            this.addCoins(coins, 'Quest Complete');
+            Sound.sfxQuestComplete();
+            UI.toast(`✨ Quest Completed: ${title} (+${coins} Coins)`, 'gold');
+
+            const doneCount = Object.values(this.state.quests).filter(v => v === 'completed').length;
+            if (doneCount >= 3) {
+                this.unlockAchievement('ach_quest_helper');
+            }
+            this.saveGame();
+        },
+
+        completeDiyaRestoration(diya) {
+            if (!diya || this.state.litDiyas.includes(diya.id)) return;
+            this.state.litDiyas.push(diya.id);
+            this.interactAnimTimer = 0.75;
+            Sound.sfxDiyaLight();
+
+            const puzzleBonus = diya.puzzleType === 'instant' ? 0 : 20;
+            const jyotiBonus = this.state.inventory.includes('rare_akhand_jyoti') ? 5 : 0;
+            const totalGain = 10 + puzzleBonus + jyotiBonus;
+
+            // Golden illumination shockwave rings
+            this.shockwaves.push({
+                x: diya.x,
+                y: diya.y,
+                r: 8,
+                maxR: 210,
+                alpha: 0.95,
+                color: '#fde047'
+            });
+            this.shockwaves.push({
+                x: diya.x,
+                y: diya.y,
+                r: 4,
+                maxR: 135,
+                alpha: 0.85,
+                color: '#fb923c'
+            });
+
+            // Burst of golden sparks and marigold petals
+            const count = this.state.reducedMotion ? 14 : 42;
+            for (let i = 0; i < count; i++) {
+                const ang = (Math.PI * 2 * i) / count;
+                const spd = 30 + Math.random() * 95;
+                this.particles.push({
+                    x: diya.x,
+                    y: diya.y - 8,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd - 28,
+                    size: 2.5 + Math.random() * 3.5,
+                    color: i % 3 === 0 ? '#fef08a' : i % 3 === 1 ? '#f97316' : '#f43f5e',
+                    life: 0.75 + Math.random() * 0.55
+                });
+            }
+
+            this.addCoins(totalGain, diya.name, diya.x, diya.y - 20);
+            UI.toast(`🪔 Restored ${diya.name}! (+${totalGain} Festival Coins)`, 'amber');
+
+            AREAS.forEach(a => {
+                if (a.reqDiyas > 0 && this.state.litDiyas.length === a.reqDiyas) {
+                    UI.toast(`🔓 New Realm Unlocked: ${a.name}!`, 'gold');
+                }
+            });
+
+            if (this.state.litDiyas.length === 3) {
+                UI.toast(`🐪 Zafar the Wandering Merchant has arrived in Forgotten Bazaar!`, 'gold');
+            }
+
+            this.checkProgressionAchievements();
+            this.updateHUD();
+            this.saveGame();
+        },
+
+        checkProgressionAchievements() {
+            const lit = this.state.litDiyas;
+            if (lit.length >= 1) this.unlockAchievement('ach_first_light');
+
+            const villageLit = DIYA_DEFINITIONS.filter(d => d.area === 0 && lit.includes(d.id)).length;
+            if (villageLit === 4) {
+                this.unlockAchievement('ach_village_clear');
+                if (this.state.quests.q_courtyard !== 'completed') {
+                    this.completeQuest('q_courtyard', 40, 'Light of the Village');
+                }
+            }
+
+            if (lit.length === DIYA_DEFINITIONS.length) {
+                this.unlockAchievement('ach_lightkeeper');
+                if (this.state.quests.q_finale !== 'completed') {
+                    this.completeQuest('q_finale', 100, 'Guardian of the Grand Diwali');
+                }
+            }
+        },
+
+        canEnterArea(areaId) {
+            if (this.state.inventory.includes('tool_passkey')) return true;
+            const target = AREAS[areaId];
+            return this.state.litDiyas.length >= target.reqDiyas;
+        },
+
+        transitionToArea(areaId, spawnX = 500, spawnY = 380) {
+            if (!this.canEnterArea(areaId)) {
+                const req = AREAS[areaId].reqDiyas;
+                Sound.sfxError();
+                UI.toast(`🔒 Restore ${req} Diyas (or own Sanctum Master Seal) to enter ${AREAS[areaId].name}!`, 'red');
+                return false;
+            }
+            Sound.sfxClick();
+            this.state.area = areaId;
+            this.state.player.x = spawnX;
+            this.state.player.y = spawnY;
+            this.playerVel.vx = 0;
+            this.playerVel.vy = 0;
+            this.particles = [];
+            this.shockwaves = [];
+            this.updateHUD();
+            this.saveGame();
+            UI.toast(`✨ Entered ${AREAS[areaId].name}`, 'amber');
+            return true;
+        },
+
+        findNearestInteractable() {
+            if (!this.state) return null;
+            const px = this.state.player.x;
+            const py = this.state.player.y;
+            const curArea = this.state.area;
+            let best = null;
+            let bestDist = 66;
+
+            // 1. Diyas in current area
+            for (const d of DIYA_DEFINITIONS) {
+                if (d.area !== curArea) continue;
+                const dist = Math.hypot(px - d.x, py - d.y);
+                if (dist < bestDist) {
+                    const isLit = this.state.litDiyas.includes(d.id);
+                    bestDist = dist;
+                    best = {
+                        type: 'diya',
+                        obj: d,
+                        x: d.x,
+                        y: d.y,
+                        prompt: isLit ? `[E] Inspect ${d.name} (Lit)` : `[E] Restore ${d.name}`
+                    };
+                }
+            }
+
+            // 2. NPCs in current area
+            for (const npc of NPCS) {
+                if (npc.area !== curArea) continue;
+                if (npc.wandering && this.state.litDiyas.length < 3) continue;
+                const dist = Math.hypot(px - npc.x, py - npc.y);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = {
+                        type: 'npc',
+                        obj: npc,
+                        x: npc.x,
+                        y: npc.y,
+                        prompt: `[E] Speak with ${npc.name}`
+                    };
+                }
+            }
+
+            // 3. Treasure Chests
+            for (const c of WORLD_CHESTS) {
+                if (c.area !== curArea) continue;
+                if (this.state.openedChests.includes(c.id)) continue;
+                const dist = Math.hypot(px - c.x, py - c.y);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = {
+                        type: 'chest',
+                        obj: c,
+                        x: c.x,
+                        y: c.y,
+                        prompt: `[E] Open ${c.label}`
+                    };
+                }
+            }
+
+            // 4. Collectible Quest / Ember Items
+            for (const item of WORLD_COLLECTIBLES) {
+                if (item.area !== curArea) continue;
+                if (this.state.collectibles.includes(item.id)) continue;
+                const dist = Math.hypot(px - item.x, py - item.y);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = {
+                        type: 'collectible',
+                        obj: item,
+                        x: item.x,
+                        y: item.y,
+                        prompt: `[E] Collect ${item.name}`
+                    };
+                }
+            }
+
+            // 5. Area Portals
+            const areaObj = AREAS[curArea];
+            for (const portal of areaObj.portals) {
+                const cx = portal.x + portal.w / 2;
+                const cy = portal.y + portal.h / 2;
+                const dist = Math.hypot(px - cx, py - cy);
+                if (dist < 62) {
+                    bestDist = dist;
+                    best = {
+                        type: 'portal',
+                        obj: portal,
+                        x: cx,
+                        y: cy,
+                        prompt: `[E] ${portal.label}`
+                    };
+                }
+            }
+
+            // 6. Grand Mahadiya Altar in Ancient Shrine (Area 3)
+            if (curArea === 3) {
+                const dist = Math.hypot(px - 500, py - 415);
+                if (dist < 75) {
+                    best = {
+                        type: 'grand_altar',
+                        x: 500,
+                        y: 415,
+                        prompt: `[E] Grand Mahadiya Altar (${this.state.litDiyas.length}/16 Diyas)`
+                    };
+                }
+            }
+
+            return best;
+        },
+
+        triggerInteract() {
+            const target = this.nearestInteractable;
+            if (!target) return;
+
+            this.interactAnimTimer = 0.45;
+            Sound.sfxClick();
+
+            if (target.type === 'diya') {
+                const d = target.obj;
+                if (this.state.litDiyas.includes(d.id)) {
+                    UI.toast(`🪔 ${d.name} is shining brightly!`, 'amber');
+                } else {
+                    Puzzles.openForDiya(d);
+                }
+            } else if (target.type === 'npc') {
+                UI.openDialogue(target.obj);
+            } else if (target.type === 'chest') {
+                const c = target.obj;
+                this.state.openedChests.push(c.id);
+                this.addCoins(c.coins, c.label, c.x, c.y);
+                UI.toast(`🧰 Opened ${c.label}! Found ${c.coins} Festival Coins!`, 'gold');
+                if (this.state.openedChests.length >= WORLD_CHESTS.length) {
+                    this.unlockAchievement('ach_treasure_hunter');
+                }
+                this.saveGame();
+            } else if (target.type === 'collectible') {
+                const item = target.obj;
+                this.state.collectibles.push(item.id);
+                Sound.sfxQuestComplete();
+                this.floatingTexts.push({
+                    x: item.x,
+                    y: item.y - 16,
+                    text: `+ ${item.icon} ${item.name}`,
+                    color: '#38bdf8',
+                    life: 1.6
+                });
+                UI.toast(`✨ Found ${item.name}!`, 'gold');
+                this.saveGame();
+            } else if (target.type === 'portal') {
+                const p = target.obj;
+                this.transitionToArea(p.toArea, p.spawnX, p.spawnY);
+            } else if (target.type === 'grand_altar') {
+                if (this.state.litDiyas.length < DIYA_DEFINITIONS.length) {
+                    UI.toast(`🪔 Restore all 16 Diyas (${this.state.litDiyas.length}/16 lit) to awaken the Grand Festival Finale!`, 'amber');
+                } else {
+                    this.state.finaleTriggered = true;
+                    this.saveGame();
+                    this.spawnFireworkBurst();
+                    UI.openModal('finale');
+                }
+            }
+        },
+
+        collides(nx, ny) {
+            const r = 16;
+            if (nx < 48 || nx > this.worldW - 48 || ny < 48 || ny > this.worldH - 48) return true;
+            const areaObj = AREAS[this.state.area];
+            for (const b of areaObj.buildings) {
+                if (nx + r > b.x && nx - r < b.x + b.w && ny + r > b.y && ny - r < b.y + b.h) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        update(dt) {
+            const motionScale = (this.state && this.state.reducedMotion) ? 0.25 : 1;
+            this.animTick += dt * motionScale;
+            if (this.interactAnimTimer > 0) this.interactAnimTimer = Math.max(0, this.interactAnimTimer - dt);
+            if (!this.running || !this.state) return;
+
+            const modalOpen = !document.getElementById('modalBackdrop').classList.contains('hidden');
+            const dialogueOpen = !document.getElementById('dialogueOverlay').classList.contains('hidden');
+
+            // Player movement with smooth acceleration & deceleration inertia
+            const p = this.state.player;
+            let inputX = 0, inputY = 0;
+            if (!modalOpen && !dialogueOpen) {
+                if (this.keys['w'] || this.keys['arrowup']) inputY -= 1;
+                if (this.keys['s'] || this.keys['arrowdown']) inputY += 1;
+                if (this.keys['a'] || this.keys['arrowleft']) inputX -= 1;
+                if (this.keys['d'] || this.keys['arrowright']) inputX += 1;
+            }
+
+            if (inputX !== 0 || inputY !== 0) {
+                const len = Math.hypot(inputX, inputY);
+                inputX /= len;
+                inputY /= len;
+
+                if (Math.abs(inputX) > Math.abs(inputY)) {
+                    p.dir = inputX > 0 ? 'right' : 'left';
+                } else {
+                    p.dir = inputY > 0 ? 'down' : 'up';
+                }
+            }
+
+            const hasBoots = this.state.inventory.includes('tool_boots');
+            const maxSpeed = hasBoots ? 240 : 185;
+            const accel = 14;
+            this.playerVel.vx += (inputX * maxSpeed - this.playerVel.vx) * Math.min(1, accel * dt);
+            this.playerVel.vy += (inputY * maxSpeed - this.playerVel.vy) * Math.min(1, accel * dt);
+
+            const velMag = Math.hypot(this.playerVel.vx, this.playerVel.vy);
+            if (velMag > 8) {
+                const stepX = this.playerVel.vx * dt;
+                const stepY = this.playerVel.vy * dt;
+                if (!this.collides(p.x + stepX, p.y)) p.x += stepX;
+                if (!this.collides(p.x, p.y + stepY)) p.y += stepY;
+
+                p.moving = inputX !== 0 || inputY !== 0;
+                p.stepFrame += dt * (velMag / 18);
+
+                // Astral cloak stardust trail
+                if (this.state.equipped.outfit === 'rare_star_cloak' && Math.random() < 0.35 * motionScale) {
+                    this.particles.push({
+                        x: p.x + (Math.random() - 0.5) * 12,
+                        y: p.y + 10,
+                        vx: (Math.random() - 0.5) * 15,
+                        vy: -15 - Math.random() * 15,
+                        size: 2.5,
+                        color: '#c084fc',
+                        life: 0.55
+                    });
+                }
+            } else {
+                p.moving = false;
+            }
+
+            // Update Ambient Floating Fireflies, Golden Dust Motes & Drifting Petals
+            if (!this.state.reducedMotion) {
+                for (const m of this.ambientMotes) {
+                    m.phase += dt * 2.2;
+                    m.x += (m.vx + Math.sin(m.phase) * 8) * dt;
+                    m.y += m.vy * dt;
+                    if (m.y < 50) {
+                        m.y = this.worldH - 55;
+                        m.x = 60 + Math.random() * (this.worldW - 120);
+                    }
+                    if (m.x < 55) m.x = this.worldW - 60;
+                    if (m.x > this.worldW - 55) m.x = 60;
+                }
+            }
+
+            // Update Expanding Golden Restoration Shockwaves
+            for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+                const sw = this.shockwaves[i];
+                sw.r += (sw.maxR - sw.r) * 5.5 * dt + 45 * dt;
+                sw.alpha -= dt * 1.15;
+                if (sw.alpha <= 0 || sw.r >= sw.maxR) {
+                    this.shockwaves.splice(i, 1);
+                }
+            }
+
+            // Check Secret Discovery Zones (+50 Coins)
+            for (const sec of SECRET_ZONES) {
+                if (sec.area === this.state.area && !this.state.discoveredSecrets.includes(sec.id)) {
+                    if (Math.hypot(p.x - sec.x, p.y - sec.y) < sec.r) {
+                        this.state.discoveredSecrets.push(sec.id);
+                        this.addCoins(50, sec.name, sec.x, sec.y);
+                        this.unlockAchievement('ach_secret');
+                        UI.toast(`🌟 Secret Discovered: ${sec.name}! (+50 Festival Coins)`, 'gold');
+                    }
+                }
+            }
+
+            // Ambient rising sparks from lit diyas
+            if (!this.state.reducedMotion) {
+                for (const d of DIYA_DEFINITIONS) {
+                    if (d.area === this.state.area && this.state.litDiyas.includes(d.id)) {
+                        if (Math.random() < 0.22) {
+                            this.particles.push({
+                                x: d.x + (Math.random() - 0.5) * 10,
+                                y: d.y - 10,
+                                vx: (Math.random() - 0.5) * 12,
+                                vy: -22 - Math.random() * 25,
+                                size: 2 + Math.random() * 2,
+                                color: Math.random() < 0.6 ? '#fde047' : '#fb923c',
+                                life: 0.6 + Math.random() * 0.4
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Periodic fireworks if Finale unlocked
+            if (this.state.finaleTriggered && !this.state.reducedMotion && Math.random() < 0.015) {
+                this.spawnFirework();
+            }
+
+            // Update particles
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const pt = this.particles[i];
+                pt.x += pt.vx * dt;
+                pt.y += pt.vy * dt;
+                pt.life -= dt;
+                if (pt.life <= 0) this.particles.splice(i, 1);
+            }
+
+            // Update floating texts
+            for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                const ft = this.floatingTexts[i];
+                ft.y -= 28 * dt;
+                ft.life -= dt;
+                if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+            }
+
+            this.nearestInteractable = this.findNearestInteractable();
+        },
+
+        spawnFirework() {
+            const fx = 150 + Math.random() * 700;
+            const fy = 90 + Math.random() * 250;
+            const colors = ['#fde047', '#f43f5e', '#38bdf8', '#a855f7', '#4ade80'];
+            const col = colors[Math.floor(Math.random() * colors.length)];
+            for (let i = 0; i < 24; i++) {
+                const a = (Math.PI * 2 * i) / 24;
+                const spd = 40 + Math.random() * 70;
+                this.particles.push({
+                    x: fx,
+                    y: fy,
+                    vx: Math.cos(a) * spd,
+                    vy: Math.sin(a) * spd,
+                    size: 3.5,
+                    color: col,
+                    life: 0.9
+                });
+            }
+        },
+
+        spawnFireworkBurst() {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => this.spawnFirework(), i * 260);
+            }
+        },
+
+        /****************************************************************
+         * 4. PIXEL-ART WORLD & DYNAMIC LIGHTING RENDERER
+         ****************************************************************/
+        render() {
+            const ctx = this.ctx;
+            const cw = this.canvas.width;
+            const ch = this.canvas.height;
+
+            ctx.fillStyle = '#070810';
+            ctx.fillRect(0, 0, cw, ch);
+
+            if (!this.state) return;
+
+            const scale = Math.min(cw / this.worldW, ch / this.worldH);
+            const offsetX = (cw - this.worldW * scale) / 2;
+            const offsetY = (ch - this.worldH * scale) / 2;
+
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(scale, scale);
+
+            const areaObj = AREAS[this.state.area];
+            const scenery = AREA_SCENERY[this.state.area] || { trees: [], bushes: [], urlis: [], lightStrings: [] };
+            const areaLitCount = DIYA_DEFINITIONS.filter(d => d.area === this.state.area && this.state.litDiyas.includes(d.id)).length;
+
+            // 1. Base Ground & Textured Lawn / Terracotta Carpet Tiles
+            this.drawTexturedGroundAndPaths(ctx, areaObj, areaLitCount);
+
+            // Central Courtyard Mandala / Rangoli
+            this.drawCourtyardMandala(ctx, 500, 385, areaObj);
+
+            // Secret Discovery Shimmer Ring (subtle visual clue)
+            for (const sec of SECRET_ZONES) {
+                if (sec.area === this.state.area) {
+                    const found = this.state.discoveredSecrets.includes(sec.id);
+                    ctx.save();
+                    ctx.strokeStyle = found ? 'rgba(250, 204, 21, 0.4)' : 'rgba(56, 189, 248, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.arc(sec.x, sec.y, 24 + Math.sin(this.animTick * 3) * 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            // 2. Portals / Gates
+            for (const portal of areaObj.portals) {
+                this.drawPortalGate(ctx, portal);
+            }
+
+            // 3. Indian Architecture Buildings, Stalls & Fountains
+            for (const b of areaObj.buildings) {
+                this.drawIndianBuilding(ctx, b, areaLitCount);
+            }
+
+            // 3b. Decorative Bushes, Flowering Shrubs & Brass Urli Floating Candle Bowls
+            for (const bush of scenery.bushes) {
+                this.drawFloweringBush(ctx, bush.x, bush.y, bush.flower);
+            }
+            for (const urli of scenery.urlis) {
+                this.drawBrassUrliBowl(ctx, urli.x, urli.y, areaLitCount >= 1 || this.state.finaleTriggered);
+            }
+
+            // 4. Grand Mahadiya Altar in Area 3
+            if (this.state.area === 3) {
+                this.drawGrandMahadiyaAltar(ctx, 500, 415);
+            }
+
+            // 5. Collectible Chests & Hidden Flames
+            for (const c of WORLD_CHESTS) {
+                if (c.area === this.state.area) {
+                    const opened = this.state.openedChests.includes(c.id);
+                    this.drawTreasureChest(ctx, c.x, c.y, opened);
+                }
+            }
+
+            for (const item of WORLD_COLLECTIBLES) {
+                if (item.area === this.state.area && !this.state.collectibles.includes(item.id)) {
+                    this.drawCollectibleItem(ctx, item);
+                }
+            }
+
+            // 6. Diyas (Unlit & Restored)
+            for (const d of DIYA_DEFINITIONS) {
+                if (d.area === this.state.area) {
+                    const isLit = this.state.litDiyas.includes(d.id);
+                    this.drawDiyaSprite(ctx, d.x, d.y, isLit);
+                }
+            }
+
+            // 7. NPCs & Player depth-sorted by Y coordinate with swaying Trees
+            const renderEntities = [];
+            for (const t of scenery.trees) {
+                renderEntities.push({ y: t.y, draw: () => this.drawSwayingTree(ctx, t.x, t.y, t.type, t.scale) });
+            }
+            for (const npc of NPCS) {
+                if (npc.area !== this.state.area) continue;
+                if (npc.wandering && this.state.litDiyas.length < 3) continue;
+                renderEntities.push({
+                    y: npc.y,
+                    draw: () => this.drawCharacterSprite(ctx, npc.x, npc.y, 'down', false, 0, npc.palette, npc.name, npc.wandering, false)
+                });
+            }
+            renderEntities.push({ y: this.state.player.y, draw: () => this.drawPlayer(ctx) });
+            renderEntities.sort((a, b) => a.y - b.y);
+            for (const ent of renderEntities) ent.draw();
+
+            // 8b. Overhead Catenary Fairy Light & Kandil Lantern Festoons
+            for (const ls of scenery.lightStrings) {
+                this.drawOverheadLightString(ctx, ls, areaLitCount >= 1 || this.state.equipped.worldDecor === 'decor_lanterns' || this.state.finaleTriggered);
+            }
+
+            // 9. Dynamic Darkness & Golden Radial Illumination Layer
+            this.renderDynamicLighting(ctx, areaLitCount, scenery);
+
+            // 9b. Golden Restoration Shockwaves
+            for (const sw of this.shockwaves) {
+                ctx.save();
+                ctx.strokeStyle = sw.color;
+                ctx.globalAlpha = Math.max(0, sw.alpha);
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 9c. Ambient Floating Fireflies, Golden Dust Motes & Blossom Petals
+            this.drawAmbientMotes(ctx);
+
+            // 10. Particles & Floating Text Popups (drawn above darkness so sparks glow!)
+            for (const pt of this.particles) {
+                ctx.fillStyle = pt.color;
+                ctx.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
+            }
+
+            for (const ft of this.floatingTexts) {
+                ctx.font = 'bold 13px "Silkscreen", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#000';
+                ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+                ctx.fillStyle = ft.color;
+                ctx.fillText(ft.text, ft.x, ft.y);
+            }
+
+            // 11. Floating Interaction Prompt
+            if (this.nearestInteractable) {
+                const t = this.nearestInteractable;
+                const py = t.y - 44 + Math.sin(this.animTick * 5) * 3;
+                ctx.font = '11px "Silkscreen", monospace';
+                const w = ctx.measureText(t.prompt).width + 24;
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(t.x - w / 2, py - 14, w, 24, 6);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#fef08a';
+                ctx.textAlign = 'center';
+                ctx.fillText(t.prompt, t.x, py + 2);
+            }
+
+            ctx.restore();
+        },
+
+        drawTexturedGroundAndPaths(ctx, areaObj, areaLitCount) {
+            ctx.fillStyle = areaObj.floorColor;
+            ctx.fillRect(0, 0, this.worldW, this.worldH);
+
+            for (let gx = 60; gx < this.worldW - 60; gx += 64) {
+                for (let gy = 60; gy < this.worldH - 60; gy += 64) {
+                    const hash = ((gx * 31) ^ (gy * 17)) & 255;
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.025)';
+                    if (hash % 3 === 0) {
+                        ctx.fillRect(gx, gy, 28, 28);
+                    }
+                    if (hash % 5 === 0) {
+                        ctx.fillStyle = this.state.area === 2 ? '#065f46' : '#312e59';
+                        ctx.fillRect(gx + 12, gy + 18, 4, 6);
+                        ctx.fillRect(gx + 17, gy + 16, 3, 7);
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#291509';
+            ctx.fillRect(20, 25, this.worldW - 40, 20);
+            ctx.fillRect(20, this.worldH - 45, this.worldW - 40, 20);
+            ctx.fillRect(20, 25, 20, this.worldH - 50);
+            ctx.fillRect(this.worldW - 40, 25, 20, this.worldH - 50);
+
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(30, 35, this.worldW - 60, this.worldH - 70);
+            ctx.strokeStyle = areaObj.accentColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(39, 44, this.worldW - 78, this.worldH - 88);
+
+            for (let wx = 120; wx <= 880; wx += 190) {
+                if (Math.abs(wx - 500) < 70) continue;
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(wx - 6, 33, 12, 8);
+                if (areaLitCount >= 2 || this.state.finaleTriggered) {
+                    ctx.fillStyle = '#fde047';
+                    ctx.fillRect(wx - 2, 34, 4, 5);
+                }
+            }
+
+            ctx.fillStyle = areaObj.pathColor;
+            ctx.fillRect(435, 45, 130, this.worldH - 90);
+            ctx.fillRect(60, 330, this.worldW - 120, 110);
+
+            ctx.strokeStyle = '#92400e';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(435, 45, 130, this.worldH - 90);
+            ctx.strokeRect(60, 330, this.worldW - 120, 110);
+
+            ctx.fillStyle = 'rgba(255, 237, 213, 0.055)';
+            for (let py = 55; py < this.worldH - 55; py += 26) {
+                const shift = (py / 26) % 2 === 0 ? 0 : 18;
+                ctx.fillRect(443 + shift, py, 38, 20);
+                ctx.fillRect(488 + shift, py, 36, 20);
+            }
+            for (let px = 68; px < this.worldW - 75; px += 38) {
+                ctx.fillRect(px, 338, 30, 26);
+                ctx.fillRect(px + 14, 370, 30, 28);
+                ctx.fillRect(px, 404, 30, 28);
+            }
+
+            if (areaLitCount >= 1 || this.state.finaleTriggered) {
+                for (let px = 80; px < this.worldW - 80; px += 32) {
+                    if (px > 425 && px < 575) continue;
+                    ctx.fillStyle = (px / 32) % 2 === 0 ? '#f59e0b' : '#f43f5e';
+                    ctx.fillRect(px, 326, 4, 4);
+                    ctx.fillRect(px, 440, 4, 4);
+                }
+            }
+        },
+
+        drawFloweringBush(ctx, x, y, flowerColor) {
+            const sway = Math.sin(this.animTick * 2.5 + x * 0.1) * 1.5;
+            ctx.save();
+            ctx.translate(x + sway, y);
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath();
+            ctx.ellipse(0, 8, 16, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#064e3b';
+            ctx.beginPath();
+            ctx.arc(-6, 0, 11, 0, Math.PI * 2);
+            ctx.arc(6, 1, 10, 0, Math.PI * 2);
+            ctx.arc(0, -5, 11, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#047857';
+            ctx.beginPath();
+            ctx.arc(-4, -2, 7, 0, Math.PI * 2);
+            ctx.arc(5, -1, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = flowerColor;
+            ctx.fillRect(-7, -6, 4, 4);
+            ctx.fillRect(3, -5, 4, 4);
+            ctx.fillRect(-1, 1, 4, 4);
+            ctx.restore();
+        },
+
+        drawSwayingTree(ctx, x, y, type, scale = 1) {
+            const sway = Math.sin(this.animTick * 1.8 + x * 0.05) * 2.5;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            ctx.beginPath();
+            ctx.ellipse(0, 14, 24, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(-12, 8, 24, 7);
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-12, 8, 24, 7);
+
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(-5, -18, 10, 28);
+            ctx.fillStyle = '#5c2406';
+            ctx.fillRect(-2, -18, 4, 26);
+
+            ctx.translate(sway, 0);
+            if (type === 'ashoka') {
+                ctx.fillStyle = '#064e3b';
+                ctx.beginPath();
+                ctx.moveTo(0, -68);
+                ctx.lineTo(-22, -12);
+                ctx.lineTo(22, -12);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#047857';
+                ctx.beginPath();
+                ctx.moveTo(0, -62);
+                ctx.lineTo(-16, -18);
+                ctx.lineTo(16, -18);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                ctx.fillStyle = '#064e3b';
+                ctx.beginPath();
+                ctx.arc(-14, -26, 18, 0, Math.PI * 2);
+                ctx.arc(14, -26, 18, 0, Math.PI * 2);
+                ctx.arc(0, -40, 22, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#065f46';
+                ctx.beginPath();
+                ctx.arc(-9, -30, 13, 0, Math.PI * 2);
+                ctx.arc(9, -30, 13, 0, Math.PI * 2);
+                ctx.arc(0, -43, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(-13, -12, 3, 6);
+                ctx.fillRect(11, -12, 3, 6);
+            }
+            ctx.restore();
+        },
+
+        drawBrassUrliBowl(ctx, x, y, isLit) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath();
+            ctx.ellipse(0, 5, 11, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fde047';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.arc(0, 0, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f43f5e';
+            ctx.fillRect(-4, -3, 2, 2);
+            ctx.fillRect(2, 2, 2, 2);
+
+            if (isLit) {
+                const flick = Math.sin(this.animTick * 12 + x) * 1.2;
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(0, -1, 2.5 + flick * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        },
+
+        drawOverheadLightString(ctx, ls, isLit) {
+            ctx.save();
+            const sag = 18 + Math.sin(this.animTick * 2 + ls.x1) * 2;
+            const midX = (ls.x1 + ls.x2) / 2;
+            const midY = (ls.y1 + ls.y2) / 2 + sag;
+
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(ls.x1, ls.y1);
+            ctx.quadraticCurveTo(midX, midY, ls.x2, ls.y2);
+            ctx.stroke();
+
+            for (let i = 1; i < ls.bulbs; i++) {
+                const t = i / ls.bulbs;
+                const bx = (1 - t) * (1 - t) * ls.x1 + 2 * (1 - t) * t * midX + t * t * ls.x2;
+                const by = (1 - t) * (1 - t) * ls.y1 + 2 * (1 - t) * t * midY + t * t * ls.y2;
+
+                if (isLit) {
+                    const col = i % 3 === 0 ? '#f43f5e' : i % 2 === 0 ? '#fde047' : '#fb923c';
+                    ctx.fillStyle = col;
+                    ctx.fillRect(bx - 2.5, by, 5, 6);
+                } else {
+                    ctx.fillStyle = '#475569';
+                    ctx.fillRect(bx - 2, by, 4, 4);
+                }
+            }
+            ctx.restore();
+        },
+
+        drawAmbientMotes(ctx) {
+            ctx.save();
+            for (const m of this.ambientMotes) {
+                const alpha = 0.35 + Math.sin(m.phase * 2) * 0.3;
+                ctx.globalAlpha = Math.max(0.08, alpha);
+                if (this.state.area === 2) {
+                    ctx.fillStyle = m.type === 'petal' ? '#f472b6' : '#a7f3d0';
+                } else {
+                    ctx.fillStyle = m.type === 'petal' ? '#fb923c' : '#fde047';
+                }
+                ctx.fillRect(m.x, m.y, m.size, m.size);
+            }
+            ctx.restore();
+        },
+
+        drawCourtyardMandala(ctx, cx, cy, areaObj) {
+            const hasUpgrade = this.state.equipped.courtyardDecor === 'decor_rangoli';
+            const rings = hasUpgrade ? 5 : 3;
+            const colors = ['#9d174d', '#d97706', '#0d9488', '#facc15', '#f43f5e'];
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            for (let r = rings; r >= 1; r--) {
+                ctx.fillStyle = colors[r - 1];
+                ctx.globalAlpha = 0.45;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 14, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (hasUpgrade) {
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 12; i++) {
+                    const a = (Math.PI * 2 * i) / 12 + this.animTick * 0.2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(a) * 72, Math.sin(a) * 72);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+        },
+
+        drawPortalGate(ctx, portal) {
+            const unlocked = this.canEnterArea(portal.toArea);
+            ctx.save();
+            ctx.fillStyle = unlocked ? '#78350f' : '#1e293b';
+            ctx.strokeStyle = unlocked ? '#fbbf24' : '#64748b';
+            ctx.lineWidth = 3;
+            ctx.fillRect(portal.x, portal.y, portal.w, portal.h);
+            ctx.strokeRect(portal.x, portal.y, portal.w, portal.h);
+
+            ctx.font = '10px "Silkscreen", monospace';
+            ctx.fillStyle = unlocked ? '#fde047' : '#94a3b8';
+            ctx.textAlign = 'center';
+            ctx.fillText(portal.label, portal.x + portal.w / 2, portal.y + portal.h / 2 + 4);
+            ctx.restore();
+        },
+
+        drawIndianBuilding(ctx, b, areaLitCount) {
+            ctx.save();
+            if (b.isFountain) {
+                ctx.fillStyle = 'rgba(0,0,0,0.45)';
+                ctx.fillRect(b.x + 5, b.y + 6, b.w, b.h);
+
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(b.x - 4, b.y - 4, b.w + 8, b.h + 8);
+
+                ctx.fillStyle = '#1e3a8a';
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 4;
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(b.x - 3, b.y - 3, 6, 6);
+                ctx.fillRect(b.x + b.w - 3, b.y - 3, 6, 6);
+                ctx.fillRect(b.x - 3, b.y + b.h - 3, 6, 6);
+                ctx.fillRect(b.x + b.w - 3, b.y + b.h - 3, 6, 6);
+
+                const cx = b.x + b.w / 2;
+                const cy = b.y + b.h / 2;
+                for (let ring = 0; ring < 2; ring++) {
+                    const r = 14 + ring * 14 + Math.sin(this.animTick * 3.5 + ring) * 4;
+                    ctx.strokeStyle = ring === 0 ? '#7dd3fc' : 'rgba(125, 211, 252, 0.45)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(b.x + 28, b.y + 24, 6, 0.3, Math.PI * 1.9);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(b.x + b.w - 28, b.y + b.h - 22, 6, 0.3, Math.PI * 1.9);
+                ctx.fill();
+
+                ctx.fillStyle = '#f472b6';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                return;
+            }
+
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(b.x + 8, b.y + 10, b.w, b.h);
+
+            ctx.fillStyle = b.wall;
+            ctx.fillRect(b.x, b.y, b.w, b.h);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.16)';
+            for (let wy = b.y + 38; wy < b.y + b.h - 6; wy += 16) {
+                ctx.fillRect(b.x + 2, wy, b.w - 4, 2);
+            }
+
+            ctx.fillStyle = b.roof;
+            ctx.fillRect(b.x - 5, b.y - 6, b.w + 10, 34);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(b.x - 6, b.y + 26, b.w + 12, 3);
+
+            ctx.fillStyle = b.roof;
+            ctx.beginPath();
+            ctx.arc(b.x + 28, b.y - 6, 14, Math.PI, 0);
+            ctx.arc(b.x + b.w - 28, b.y - 6, 14, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(b.x + 26, b.y - 23, 4, 5);
+            ctx.fillRect(b.x + b.w - 30, b.y - 23, 4, 5);
+
+            const midX = b.x + b.w / 2;
+            if (b.isStall) {
+                for (let sx = b.x; sx < b.x + b.w - 8; sx += 20) {
+                    ctx.fillStyle = ((sx - b.x) / 20) % 2 === 0 ? '#fef08a' : b.roof;
+                    ctx.fillRect(sx, b.y + 26, 10, 8);
+                }
+                ctx.fillStyle = '#451a03';
+                ctx.fillRect(b.x + 14, b.y + b.h - 24, b.w - 28, 16);
+                const goodsColors = ['#f97316', '#eab308', '#ec4899', '#38bdf8', '#a855f7'];
+                for (let gx = b.x + 22; gx < b.x + b.w - 26; gx += 26) {
+                    ctx.fillStyle = goodsColors[Math.floor(gx / 26) % goodsColors.length];
+                    ctx.beginPath();
+                    ctx.arc(gx + 6, b.y + b.h - 24, 7, Math.PI, 0);
+                    ctx.fill();
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(gx, b.y + b.h - 24, 12, 4);
+                }
+            } else {
+                ctx.fillStyle = '#291509';
+                ctx.fillRect(midX - 15, b.y + b.h - 34, 30, 34);
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(midX - 15, b.y + b.h - 34, 30, 34);
+
+                ctx.fillStyle = '#ec4899';
+                ctx.fillRect(midX - 10, b.y + b.h + 2, 20, 5);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(midX - 4, b.y + b.h + 3, 8, 3);
+            }
+
+            const windowsLit = areaLitCount >= 2 || this.state.finaleTriggered;
+            const winColor = windowsLit ? '#fde047' : '#0f172a';
+            for (let wx = b.x + 20; wx < b.x + b.w - 32; wx += 48) {
+                if (!b.isStall && Math.abs(wx + 11 - midX) < 22) continue;
+                ctx.fillStyle = winColor;
+                ctx.fillRect(wx, b.y + 42, 22, 26);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(wx, b.y + 42, 22, 26);
+                ctx.fillStyle = '#92400e';
+                ctx.fillRect(wx + 10, b.y + 42, 2, 26);
+                ctx.fillRect(wx, b.y + 54, 22, 2);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(wx - 3, b.y + 68, 28, 3);
+            }
+
+            if (areaLitCount >= 1 || this.state.equipped.worldDecor === 'decor_lanterns' || this.state.finaleTriggered) {
+                for (let lx = b.x + 8; lx < b.x + b.w - 10; lx += 20) {
+                    ctx.fillStyle = (lx / 20) % 2 === 0 ? '#f97316' : '#facc15';
+                    ctx.fillRect(lx, b.y + 29, 8, 5);
+                    if ((lx / 20) % 3 === 0) {
+                        ctx.fillStyle = '#ec4899';
+                        ctx.fillRect(lx + 2, b.y + 34, 5, 7);
+                        ctx.fillStyle = '#fef08a';
+                        ctx.fillRect(lx + 3, b.y + 36, 3, 3);
+                    }
+                }
+            }
+
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+            ctx.fillRect(midX - 66, b.y + 5, 132, 15);
+            ctx.font = '9px "Silkscreen", monospace';
+            ctx.fillStyle = '#fef3c7';
+            ctx.textAlign = 'center';
+            ctx.fillText(b.name, midX, b.y + 16);
+            ctx.restore();
+        },
+
+        drawGrandMahadiyaAltar(ctx, x, y) {
+            const allLit = this.state.litDiyas.length >= DIYA_DEFINITIONS.length;
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.fillStyle = '#78350f';
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, 36, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = allLit ? '#d97706' : '#475569';
+            ctx.beginPath();
+            ctx.arc(0, 0, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (allLit) {
+                const flick = Math.sin(this.animTick * 12) * 3;
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.arc(0, -8, 12 + flick * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(0, -10, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        },
+
+        drawTreasureChest(ctx, x, y, opened) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(-14, 10, 28, 6);
+
+            ctx.fillStyle = opened ? '#451a03' : '#92400e';
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2;
+            ctx.fillRect(-14, -10, 28, 22);
+            ctx.strokeRect(-14, -10, 28, 22);
+
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(-4, -2, 8, 6);
+            ctx.restore();
+        },
+
+        drawCollectibleItem(ctx, item) {
+            const bob = Math.sin(this.animTick * 4) * 3;
+            ctx.save();
+            ctx.translate(item.x, item.y + bob);
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
+            ctx.beginPath();
+            ctx.arc(0, 0, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(item.icon, 0, 0);
+            ctx.restore();
+        },
+
+        drawDiyaSprite(ctx, x, y, isLit) {
+            const style = this.state.equipped.diyaStyle;
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            ctx.beginPath();
+            ctx.ellipse(0, 9, 18, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(-16, 4, 32, 10);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(-14, 11, 28, 2);
+
+            if (style === 'diya_lotus') {
+                ctx.fillStyle = isLit ? '#ec4899' : '#64748b';
+            } else if (style === 'diya_brass') {
+                ctx.fillStyle = isLit ? '#eab308' : '#78350f';
+            } else {
+                ctx.fillStyle = isLit ? '#c2410c' : '#475569';
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(-15, -2);
+            ctx.lineTo(15, -2);
+            ctx.lineTo(10, 8);
+            ctx.lineTo(-10, 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = isLit ? '#fde047' : '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            if (isLit) {
+                const flick = Math.sin(this.animTick * 14 + x) * 1.8;
+                const sway = Math.cos(this.animTick * 9 + y) * 1.2;
+
+                ctx.fillStyle = 'rgba(249, 115, 22, 0.35)';
+                ctx.beginPath();
+                ctx.arc(sway * 0.4, -10, 13 + flick, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(-6, -2);
+                ctx.quadraticCurveTo(-7, -12, sway, -20 - flick);
+                ctx.quadraticCurveTo(7, -12, 6, -2);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.ellipse(sway * 0.3, -8, 3.2, 5.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+                ctx.beginPath();
+                ctx.arc(0, 0, 18 + Math.sin(this.animTick * 3) * 2, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        },
+
+        drawCharacterSprite(ctx, x, y, dir, moving, stepFrame, palette, label = '', isWandering = false, isPlayer = false) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            const breathe = Math.sin(this.animTick * 3.2 + x * 0.1) * 1.1;
+            const bounce = moving ? Math.abs(Math.sin(stepFrame)) * 3.2 : breathe;
+            const celebrateJump = (isPlayer && this.interactAnimTimer > 0) ? Math.sin(this.interactAnimTimer * Math.PI * 4) * 4 : 0;
+            const totalLift = bounce + Math.max(0, celebrateJump);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.48)';
+            ctx.beginPath();
+            ctx.ellipse(0, 14, 13, 5.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const scarfSway = moving ? Math.sin(stepFrame) * 3.5 : Math.sin(this.animTick * 2.5) * 1.5;
+            ctx.fillStyle = palette.turban || '#fbbf24';
+            ctx.fillRect(dir === 'left' ? 7 : -12, -5 - totalLift, 5, 12 + scarfSway * 0.4);
+
+            const legSwing = moving ? Math.sin(stepFrame) * 4.5 : 0;
+            ctx.fillStyle = '#fef3c7';
+            ctx.fillRect(-6, 6 - legSwing * 0.4, 4, 5);
+            ctx.fillRect(2, 6 + legSwing * 0.4, 4, 5);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(-7, 10 - legSwing * 0.4, 5, 4);
+            ctx.fillRect(2, 10 + legSwing * 0.4, 5, 4);
+
+            if (palette.backpack) {
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(-13, -7 - totalLift, 5, 13);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(-12, -3 - totalLift, 3, 3);
+            }
+
+            ctx.fillStyle = palette.robe;
+            ctx.fillRect(-9, -9 - totalLift, 18, 17);
+
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(-1, -8 - totalLift, 2, 10);
+            ctx.fillRect(-9, 6 - totalLift, 18, 2);
+
+            const armSwing = moving ? Math.cos(stepFrame) * 3.5 : 0;
+            ctx.fillStyle = palette.robe;
+            ctx.fillRect(-12, -7 - totalLift + armSwing * 0.5, 3, 10);
+            ctx.fillRect(9, -7 - totalLift - armSwing * 0.5, 3, 10);
+
+            if (isPlayer) {
+                const lx = dir === 'left' ? -13 : 12;
+                const ly = 1 - totalLift - armSwing * 0.4;
+                ctx.fillStyle = '#d97706';
+                ctx.fillRect(lx - 2, ly, 5, 6);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(lx - 1, ly + 1, 3, 4);
+            }
+
+            ctx.fillStyle = palette.skin || '#e0a96d';
+            ctx.fillRect(-7, -21 - totalLift, 14, 12);
+
+            ctx.fillStyle = '#1e1b18';
+            ctx.fillRect(-7, -22 - totalLift, 14, 3);
+            ctx.fillRect(-8, -20 - totalLift, 2, 6);
+            ctx.fillRect(6, -20 - totalLift, 2, 6);
+
+            const isBlinking = Math.sin(this.animTick * 1.7 + x) > 0.96;
+            ctx.fillStyle = '#0f172a';
+            if (dir !== 'up') {
+                const ex = dir === 'left' ? -5 : dir === 'right' ? 1 : -4;
+                const ey = -16 - totalLift;
+                if (isBlinking) {
+                    ctx.fillRect(ex, ey + 1, 2, 1);
+                    ctx.fillRect(ex + 6, ey + 1, 2, 1);
+                } else {
+                    ctx.fillRect(ex, ey, 2, 3);
+                    ctx.fillRect(ex + 6, ey, 2, 3);
+                }
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(ex + 3, ey - 2, 2, 2);
+            }
+
+            if (palette.turban) {
+                ctx.fillStyle = palette.turban;
+                ctx.fillRect(-8, -25 - totalLift, 16, 6);
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(-2, -25 - totalLift, 4, 4);
+            }
+
+            if (label) {
+                ctx.font = '10px "Silkscreen", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(9, 10, 20, 0.75)';
+                const tw = ctx.measureText(label).width + 8;
+                ctx.fillRect(-tw / 2, -40 - totalLift, tw, 13);
+                ctx.fillStyle = isWandering ? '#e879f9' : '#fde68a';
+                ctx.fillText(label, 0, -30 - totalLift);
+            }
+
+            ctx.restore();
+        },
+
+        drawPlayer(ctx) {
+            const p = this.state.player;
+            const eq = this.state.equipped;
+
+            let robeColor = '#e11d48';
+            if (eq.outfit) {
+                const item = SHOP_ITEMS.find(i => i.id === eq.outfit);
+                if (item && item.color) robeColor = item.color;
+            }
+
+            let turbanColor = null;
+            if (eq.hat === 'hat_pagri') turbanColor = '#f59e0b';
+            if (eq.hat === 'hat_gajra') turbanColor = '#fef08a';
+
+            this.drawCharacterSprite(ctx, p.x, p.y, p.dir, p.moving, p.stepFrame, {
+                robe: robeColor,
+                turban: turbanColor,
+                backpack: eq.backpack === 'back_jhola',
+                skin: '#e0a96d'
+            }, '', false, true);
+
+            // Seeker's Astral Compass Indicator
+            if (this.state.inventory.includes('tool_compass')) {
+                const target = this.findCompassTarget();
+                if (target) {
+                    const ang = Math.atan2(target.y - p.y, target.x - p.x);
+                    const cx = p.x + Math.cos(ang) * 28;
+                    const cy = p.y + Math.sin(ang) * 28;
+                    ctx.save();
+                    ctx.fillStyle = '#fde047';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        },
+
+        findCompassTarget() {
+            const curArea = this.state.area;
+            const p = this.state.player;
+            let best = null;
+            let bestDist = Infinity;
+
+            for (const d of DIYA_DEFINITIONS) {
+                if (d.area === curArea && !this.state.litDiyas.includes(d.id)) {
+                    const dist = Math.hypot(d.x - p.x, d.y - p.y);
+                    if (dist < bestDist) { bestDist = dist; best = d; }
+                }
+            }
+            for (const c of WORLD_CHESTS) {
+                if (c.area === curArea && !this.state.openedChests.includes(c.id)) {
+                    const dist = Math.hypot(c.x - p.x, c.y - p.y);
+                    if (dist < bestDist) { bestDist = dist; best = c; }
+                }
+            }
+            for (const col of WORLD_COLLECTIBLES) {
+                if (col.area === curArea && !this.state.collectibles.includes(col.id)) {
+                    const dist = Math.hypot(col.x - p.x, col.y - p.y);
+                    if (dist < bestDist) { bestDist = dist; best = col; }
+                }
+            }
+            return best;
+        },
+
+        renderDynamicLighting(ctx, areaLitCount, scenery) {
+            const lctx = this.lightCtx;
+            lctx.clearRect(0, 0, this.worldW, this.worldH);
+
+            let darknessAlpha = 0.76 - (areaLitCount * 0.14);
+            if (this.state.finaleTriggered) darknessAlpha = 0.16;
+            darknessAlpha = Math.max(0.16, Math.min(0.78, darknessAlpha));
+
+            lctx.fillStyle = `rgba(6, 8, 22, ${darknessAlpha})`;
+            lctx.fillRect(0, 0, this.worldW, this.worldH);
+
+            lctx.globalCompositeOperation = 'destination-out';
+
+            const punchLight = (lx, ly, radius) => {
+                const grad = lctx.createRadialGradient(lx, ly, 4, lx, ly, radius);
+                grad.addColorStop(0, 'rgba(0,0,0,1)');
+                grad.addColorStop(0.65, 'rgba(0,0,0,0.65)');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                lctx.fillStyle = grad;
+                lctx.beginPath();
+                lctx.arc(lx, ly, radius, 0, Math.PI * 2);
+                lctx.fill();
+            };
+
+            const playerRadius = this.state.inventory.includes('rare_peacock_lamp') ? 168 : 118;
+            punchLight(this.state.player.x, this.state.player.y, playerRadius);
+
+            for (const d of DIYA_DEFINITIONS) {
+                if (d.area === this.state.area && this.state.litDiyas.includes(d.id)) {
+                    punchLight(d.x, d.y, 180 + Math.sin(this.animTick * 4) * 6);
+                }
+            }
+
+            if (areaLitCount >= 1 || this.state.finaleTriggered) {
+                for (const u of (scenery ? scenery.urlis : [])) {
+                    punchLight(u.x, u.y, 52);
+                }
+            }
+
+            for (const npc of NPCS) {
+                if (npc.area === this.state.area) {
+                    if (npc.wandering && this.state.litDiyas.length < 3) continue;
+                    punchLight(npc.x, npc.y, 85);
+                }
+            }
+
+            if (this.state.area === 3 && this.state.finaleTriggered) {
+                punchLight(500, 415, 290);
+            }
+
+            lctx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(this.lightCanvas, 0, 0);
+
+            // Warm golden additive bloom around lit diyas
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            for (const d of DIYA_DEFINITIONS) {
+                if (d.area === this.state.area && this.state.litDiyas.includes(d.id)) {
+                    const g = ctx.createRadialGradient(d.x, d.y, 2, d.x, d.y, 95);
+                    g.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
+                    g.addColorStop(0.5, 'rgba(249, 115, 22, 0.12)');
+                    g.addColorStop(1, 'rgba(245, 158, 11, 0)');
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, 95, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+        },
+
+        loop(timestamp) {
+            const dt = Math.min(0.05, (timestamp - this.lastTime) / 1000 || 0.016);
+            this.lastTime = timestamp;
+
+            this.update(dt);
+            this.render();
+
+            requestAnimationFrame((t) => this.loop(t));
+        }
+    };
+
+    /********************************************************************
+     * 5. INTERACTIVE PUZZLE SYSTEM (5 DISTINCT PUZZLE TYPES + HINTS)
+     ********************************************************************/
+    const Puzzles = {
+        activeDiya: null,
+        state: {},
+
+        openForDiya(diya) {
+            this.activeDiya = diya;
+            this.state = {};
+
+            const backdrop = document.getElementById('modalBackdrop');
+            const icon = document.getElementById('modalIcon');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            backdrop.classList.remove('hidden');
+            icon.textContent = '🪔';
+            title.textContent = diya.name;
+
+            if (diya.puzzleType === 'instant') {
+                this.renderInstantDiya(body, diya);
+            } else if (diya.puzzleType === 'sequence') {
+                this.renderSequencePuzzle(body, diya);
+            } else if (diya.puzzleType === 'rangoli') {
+                this.renderRangoliPuzzle(body, diya);
+            } else if (diya.puzzleType === 'mirror') {
+                this.renderMirrorPuzzle(body, diya);
+            } else if (diya.puzzleType === 'symbols') {
+                this.renderSymbolPuzzle(body, diya);
+            } else if (diya.puzzleType === 'hidden_flame') {
+                this.renderHiddenFlamePuzzle(body, diya);
+            }
+        },
+
+        getHintButtonHTML() {
+            const count = Game.state.hintScrolls || 0;
+            return `
+                <button onclick="Puzzles.useHintScroll()" ${count <= 0 ? 'disabled' : ''}
+                    class="festival-btn-secondary px-3 py-1.5 rounded-lg text-xs font-pixel flex items-center gap-1.5">
+                    <span>📜</span>
+                    <span>Use Scroll of Illumination (${count} left)</span>
+                </button>
+            `;
+        },
+
+        useHintScroll() {
+            if (!this.activeDiya || Game.state.hintScrolls <= 0) return;
+            Game.state.hintScrolls--;
+            Sound.sfxQuestComplete();
+            Game.saveGame();
+            UI.toast('📜 Scroll of Illumination reveals the sacred solution!', 'gold');
+            this.completeActiveDiya();
+        },
+
+        completeActiveDiya() {
+            const diya = this.activeDiya;
+            UI.closeModal();
+            if (diya) {
+                Game.completeDiyaRestoration(diya);
+            }
+        },
+
+        // Puzzle 0: Introductory Ceremonial Diya
+        renderInstantDiya(body, diya) {
+            body.innerHTML = `
+                <div class="text-center space-y-4 py-4">
+                    <div class="text-6xl diya-glow">🪔</div>
+                    <p class="text-sm sm:text-base text-amber-100 max-w-md mx-auto leading-relaxed">${diya.clue}</p>
+                    <button onclick="Puzzles.completeActiveDiya()"
+                        class="festival-btn px-6 py-3 rounded-xl font-pixel text-sm text-amber-950 font-bold">
+                        🔥 SPARK THE SACRED WICK
+                    </button>
+                </div>
+            `;
+        },
+
+        // Puzzle A: Light Sequence
+        renderSequencePuzzle(body, diya) {
+            const totalWicks = diya.sequence.length === 5 ? 5 : 4;
+            this.state.entered = [];
+
+            const updateView = () => {
+                const buttonsHtml = Array.from({ length: totalWicks }, (_, idx) => {
+                    const isLit = this.state.entered.includes(idx);
+                    const orderNum = this.state.entered.indexOf(idx) + 1;
+                    return `
+                        <button onclick="Puzzles.clickSequenceWick(${idx})"
+                            class="w-20 h-24 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${
+                                isLit ? 'bg-amber-500/30 border-yellow-300 scale-105' : 'bg-slate-900/80 border-amber-500/40 hover:border-amber-300'
+                            }">
+                            <span class="text-3xl">${isLit ? '🪔' : '🏺'}</span>
+                            <span class="font-pixel text-xs text-amber-200">Wick #${idx + 1}</span>
+                            ${isLit ? `<span class="text-[10px] font-pixel text-yellow-300">Step ${orderNum}</span>` : ''}
+                        </button>
+                    `;
+                }).join('');
+
+                body.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3.5 text-xs sm:text-sm text-amber-100">
+                            <span class="font-bold text-amber-300">📜 Clue:</span> ${diya.clue}
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center gap-3 py-4">
+                            ${buttonsHtml}
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-amber-500/20">
+                            <button onclick="Puzzles.state.entered=[]; Puzzles.renderSequencePuzzle(document.getElementById('modalBody'), Puzzles.activeDiya);"
+                                class="festival-btn-secondary px-3 py-1.5 rounded-lg text-xs font-pixel">Reset Wicks</button>
+                            ${this.getHintButtonHTML()}
+                        </div>
+                    </div>
+                `;
+            };
+
+            this.clickSequenceWick = (idx) => {
+                if (this.state.entered.includes(idx)) return;
+                Sound.sfxPuzzleStep();
+                this.state.entered.push(idx);
+                const stepIndex = this.state.entered.length - 1;
+
+                if (diya.sequence[stepIndex] !== idx) {
+                    Sound.sfxError();
+                    UI.toast('The flame flickered out—check the clue order!', 'red');
+                    this.state.entered = [];
+                    updateView();
+                    return;
+                }
+
+                updateView();
+                if (this.state.entered.length === diya.sequence.length) {
+                    setTimeout(() => {
+                        UI.closeModal();
+                        Game.completeDiyaRestoration(diya);
+                    }, 220);
+                }
+            };
+
+            updateView();
+        },
+
+        // Puzzle B: Mirror Reflection
+        renderMirrorPuzzle(body, diya) {
+            this.state.mirrors = diya.mirrors.map(m => ({ ...m }));
+
+            const traceBeam = () => {
+                const path = [];
+                let r = diya.source.r;
+                let c = diya.source.c;
+                let dir = diya.source.dir;
+                let hitTarget = false;
+
+                for (let step = 0; step < 24; step++) {
+                    if (r < 0 || r >= diya.gridSize || c < 0 || c >= diya.gridSize) break;
+                    path.push({ r, c });
+
+                    const mir = this.state.mirrors.find(m => m.r === r && m.c === c);
+                    if (mir) {
+                        if (mir.type === 1) { // '/'
+                            dir = { right: 'up', left: 'down', up: 'right', down: 'left' }[dir];
+                        } else if (mir.type === 2) { // '\'
+                            dir = { right: 'down', left: 'up', up: 'left', down: 'right' }[dir];
+                        }
+                    }
+
+                    if (r === diya.target.r && c === diya.target.c) {
+                        hitTarget = true;
+                        break;
+                    }
+
+                    if (dir === 'right') c++;
+                    else if (dir === 'left') c--;
+                    else if (dir === 'down') r++;
+                    else if (dir === 'up') r--;
+                }
+                return { path, hitTarget };
+            };
+
+            const updateView = () => {
+                const { path, hitTarget } = traceBeam();
+
+                let cellsHtml = '';
+                for (let r = 0; r < diya.gridSize; r++) {
+                    for (let c = 0; c < diya.gridSize; c++) {
+                        const isSource = r === diya.source.r && c === diya.source.c;
+                        const isTarget = r === diya.target.r && c === diya.target.c;
+                        const mir = this.state.mirrors.find(m => m.r === r && m.c === c);
+                        const inBeam = path.some(p => p.r === r && p.c === c);
+
+                        let symbol = '';
+                        if (isSource) symbol = '☀️';
+                        else if (isTarget) symbol = hitTarget ? '🪔' : '🏺';
+                        else if (mir) {
+                            symbol = mir.type === 0 ? '▫️' : mir.type === 1 ? '╱' : '╲';
+                        } else if (inBeam) {
+                            symbol = '✨';
+                        }
+
+                        cellsHtml += `
+                            <button onclick="Puzzles.toggleMirror(${r}, ${c})"
+                                class="w-16 h-16 sm:w-18 sm:h-18 rounded-xl border-2 font-pixel text-xl flex items-center justify-center transition-all ${
+                                    inBeam ? 'bg-amber-500/35 border-yellow-300 text-yellow-200 shadow-inner' : 'bg-slate-900/90 border-amber-500/30 text-amber-200'
+                                } ${mir ? 'hover:border-yellow-200 cursor-pointer ring-2 ring-amber-400/30' : 'cursor-default'}">
+                                ${symbol}
+                            </button>
+                        `;
+                    }
+                }
+
+                body.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3 text-xs sm:text-sm text-amber-100">
+                            <span class="font-bold text-amber-300">🪞 Mirror Alignment:</span> ${diya.clue}
+                            <div class="text-[11px] text-amber-300/80 mt-1">Click highlighted mirror tiles to rotate between <b>╱</b> and <b>╲</b> until the sunbeam (☀️) reaches the unlit diya (🏺).</div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2.5 max-w-xs mx-auto py-2">
+                            ${cellsHtml}
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-amber-500/20">
+                            <span class="text-xs font-pixel text-amber-200">${hitTarget ? '✨ Beam Aligned!' : 'Align the beam...'}</span>
+                            ${this.getHintButtonHTML()}
+                        </div>
+                    </div>
+                `;
+
+                if (hitTarget) {
+                    setTimeout(() => {
+                        UI.closeModal();
+                        Game.completeDiyaRestoration(diya);
+                    }, 300);
+                }
+            };
+
+            this.toggleMirror = (r, c) => {
+                const mir = this.state.mirrors.find(m => m.r === r && m.c === c);
+                if (!mir) return;
+                Sound.sfxPuzzleStep();
+                mir.type = (mir.type + 1) % 3;
+                if (mir.type === 0) mir.type = 1;
+                updateView();
+            };
+
+            updateView();
+        },
+
+        // Puzzle C: Rangoli Symmetry
+        renderRangoliPuzzle(body, diya) {
+            this.state.grid = Array(9).fill(0);
+            const paletteNames = ['Empty', 'Crimson Rose', 'Marigold Gold', 'Peacock Teal'];
+            const paletteClasses = [
+                'bg-slate-900 border-slate-700',
+                'bg-rose-600 border-rose-300',
+                'bg-amber-400 border-yellow-100',
+                'bg-teal-500 border-teal-200'
+            ];
+
+            const updateView = () => {
+                const gridHtml = this.state.grid.map((val, idx) => `
+                    <button onclick="Puzzles.cycleRangoliTile(${idx})"
+                        class="w-16 h-16 rounded-xl border-2 transition-transform hover:scale-105 flex items-center justify-center font-pixel text-xs ${paletteClasses[val]}">
+                        ${val === 0 ? '·' : val === 1 ? '🌺' : val === 2 ? '🌼' : '🦚'}
+                    </button>
+                `).join('');
+
+                const refHtml = diya.pattern.map(val => `
+                    <div class="w-9 h-9 rounded-lg border flex items-center justify-center text-xs ${paletteClasses[val]}">
+                        ${val === 0 ? '·' : val === 1 ? '🌺' : val === 2 ? '🌼' : '🦚'}
+                    </div>
+                `).join('');
+
+                body.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3 text-xs sm:text-sm text-amber-100">
+                            <span class="font-bold text-amber-300">🌸 Rangoli Pattern:</span> ${diya.clue}
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
+                            <div class="text-center">
+                                <div class="text-[10px] font-pixel uppercase text-amber-300 mb-2">Target Sacred Mandala</div>
+                                <div class="grid grid-cols-3 gap-1.5 p-2.5 rounded-xl bg-slate-950 border border-amber-500/30">
+                                    ${refHtml}
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-[10px] font-pixel uppercase text-amber-300 mb-2">Your Rangoli Canvas (Click Tiles)</div>
+                                <div class="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-950 border-2 border-amber-500/50">
+                                    ${gridHtml}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-amber-500/20">
+                            <span class="text-xs text-amber-200/75">Click tiles to cycle: Empty → Crimson → Gold → Teal</span>
+                            ${this.getHintButtonHTML()}
+                        </div>
+                    </div>
+                `;
+            };
+
+            this.cycleRangoliTile = (idx) => {
+                Sound.sfxPuzzleStep();
+                this.state.grid[idx] = (this.state.grid[idx] + 1) % 4;
+                updateView();
+
+                const matches = this.state.grid.every((v, i) => v === diya.pattern[i]);
+                if (matches) {
+                    setTimeout(() => {
+                        UI.closeModal();
+                        Game.completeDiyaRestoration(diya);
+                    }, 250);
+                }
+            };
+
+            updateView();
+        },
+
+        // Puzzle D: Ancient Vedic Symbols
+        renderSymbolPuzzle(body, diya) {
+            const pool = ['🪷', '🐚', '☀️', '🪔', '🐘', '🦚', '🔱'];
+            this.state.current = diya.targetSymbols.map((_, i) => pool[(i + 2) % pool.length]);
+
+            const updateView = () => {
+                const dialsHtml = this.state.current.map((sym, idx) => `
+                    <button onclick="Puzzles.cycleSymbolDial(${idx})"
+                        class="w-16 h-20 rounded-2xl bg-slate-900 border-2 border-amber-400 hover:bg-amber-950 flex flex-col items-center justify-center gap-1">
+                        <span class="text-2xl">${sym}</span>
+                        <span class="text-[10px] font-pixel text-amber-300">Dial ${idx + 1}</span>
+                    </button>
+                `).join('');
+
+                body.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3.5 text-xs sm:text-sm text-amber-100">
+                            <span class="font-bold text-amber-300">🕉️ Ancient Inscription:</span> ${diya.clue}
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center gap-3 py-4">
+                            ${dialsHtml}
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-amber-500/20">
+                            <span class="text-xs text-amber-200/75">Click each stone dial to rotate its carved Vedic symbol.</span>
+                            ${this.getHintButtonHTML()}
+                        </div>
+                    </div>
+                `;
+            };
+
+            this.cycleSymbolDial = (idx) => {
+                Sound.sfxPuzzleStep();
+                const curIdx = pool.indexOf(this.state.current[idx]);
+                this.state.current[idx] = pool[(curIdx + 1) % pool.length];
+                updateView();
+
+                const solved = this.state.current.every((s, i) => s === diya.targetSymbols[i]);
+                if (solved) {
+                    setTimeout(() => {
+                        UI.closeModal();
+                        Game.completeDiyaRestoration(diya);
+                    }, 250);
+                }
+            };
+
+            updateView();
+        },
+
+        // Puzzle E: Hidden Flame
+        renderHiddenFlamePuzzle(body, diya) {
+            const hasEmber = Game.state.collectibles.includes(diya.reqItem);
+            const itemObj = WORLD_COLLECTIBLES.find(c => c.id === diya.reqItem);
+
+            body.innerHTML = `
+                <div class="text-center space-y-4 py-3">
+                    <div class="text-5xl">${hasEmber ? '🔥' : '🕯️'}</div>
+                    <p class="text-sm sm:text-base text-amber-100 max-w-md mx-auto">${diya.clue}</p>
+                    <div class="p-3 rounded-xl bg-slate-900/90 border border-amber-500/30 max-w-sm mx-auto">
+                        <div class="text-xs font-pixel text-amber-300 mb-1">Required Sacred Flame:</div>
+                        <div class="text-sm font-bold ${hasEmber ? 'text-emerald-400' : 'text-rose-400'}">
+                            ${itemObj ? itemObj.icon + ' ' + itemObj.name : diya.reqItem} — ${hasEmber ? 'FOUND IN BAG!' : 'NOT YET DISCOVERED'}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center gap-3 pt-2">
+                        ${hasEmber ? `
+                            <button onclick="Puzzles.completeActiveDiya()"
+                                class="festival-btn px-6 py-2.5 rounded-xl font-pixel text-xs text-amber-950 font-bold">
+                                🔥 KINDLE WITH SACRED EMBER
+                            </button>
+                        ` : this.getHintButtonHTML()}
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    /********************************************************************
+     * 6. UI, BAZAAR MARKETPLACE, INVENTORY, QUESTS, MAP & FINALE
+     ********************************************************************/
+    const UI = {
+        activeBazaarTab: 'decor',
+
+        toast(message, tone = 'amber') {
+            const container = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            const borderColors = {
+                amber: 'border-amber-400 bg-slate-900/95 text-amber-100',
+                gold: 'border-yellow-300 bg-amber-950/95 text-yellow-200',
+                red: 'border-rose-500 bg-rose-950/95 text-rose-200'
+            };
+            el.className = `festival-panel rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold border-2 shadow-lg transition-all duration-300 ${borderColors[tone] || borderColors.amber}`;
+            el.textContent = message;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(20px)';
+                setTimeout(() => el.remove(), 300);
+            }, 3100);
+        },
+
+        openDialogue(npc) {
+            const overlay = document.getElementById('dialogueOverlay');
+            document.getElementById('dialoguePortrait').textContent = npc.icon;
+            document.getElementById('dialogueSpeaker').textContent = `${npc.name}`;
+            document.getElementById('dialogueRole').textContent = npc.role;
+            document.getElementById('dialogueText').textContent = npc.getDialogue();
+
+            const actions = document.getElementById('dialogueActions');
+            let btns = '';
+            if (npc.opensBazaar) {
+                const tab = npc.wandering ? 'rare' : 'decor';
+                btns += `
+                    <button onclick="UI.closeDialogue(); UI.activeBazaarTab='${tab}'; UI.openModal('bazaar');"
+                        class="festival-btn px-4 py-2 rounded-xl font-pixel text-xs text-amber-950 font-bold">
+                        🏪 Open ${npc.wandering ? 'Caravan Relics' : 'Festival Bazaar'}
+                    </button>
+                `;
+            }
+            btns += `
+                <button onclick="UI.closeDialogue()" class="festival-btn-secondary px-4 py-2 rounded-xl font-pixel text-xs">
+                    Continue [E]
+                </button>
+            `;
+            actions.innerHTML = btns;
+            overlay.classList.remove('hidden');
+        },
+
+        closeDialogue() {
+            document.getElementById('dialogueOverlay').classList.add('hidden');
+            Game.updateHUD();
+        },
+
+        openHowToPlay() {
+            this.openModal('howto');
+        },
+
+        openModal(type) {
+            Sound.sfxClick();
+            const backdrop = document.getElementById('modalBackdrop');
+            const icon = document.getElementById('modalIcon');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            backdrop.classList.remove('hidden');
+
+            if (type === 'bazaar') {
+                icon.textContent = '🏪';
+                title.textContent = 'The Grand Festival Bazaar';
+                this.renderBazaar(body);
+            } else if (type === 'inventory') {
+                icon.textContent = '🎒';
+                title.textContent = 'Adventurer’s Satchel & Cosmetics';
+                this.renderInventory(body);
+            } else if (type === 'quests') {
+                icon.textContent = '📜';
+                title.textContent = 'Festival Quest Journal';
+                this.renderQuests(body);
+            } else if (type === 'map') {
+                icon.textContent = '🗺️';
+                title.textContent = 'Atlas of the Four Realms';
+                this.renderMap(body);
+            } else if (type === 'achievements') {
+                icon.textContent = '🏆';
+                title.textContent = 'Hall of Illumination & Achievements';
+                this.renderAchievements(body);
+            } else if (type === 'pause') {
+                icon.textContent = '⚙️';
+                title.textContent = 'Pause & Audio Settings';
+                this.renderSettings(body);
+            } else if (type === 'finale') {
+                icon.textContent = '🎆';
+                title.textContent = 'The Festival of Lights Restored!';
+                this.renderFinale(body);
+            } else if (type === 'howto') {
+                icon.textContent = '📖';
+                title.textContent = 'How to Play — The Festival of Lights';
+                this.renderHowTo(body);
+            }
+        },
+
+        closeModal() {
+            Sound.sfxClick();
+            document.getElementById('modalBackdrop').classList.add('hidden');
+            Puzzles.activeDiya = null;
+        },
+
+        // FESTIVAL BAZAAR MARKETPLACE
+        renderBazaar(body) {
+            const zafarPresent = Game.state.litDiyas.length >= 3;
+            const categories = [
+                { id: 'decor', label: '🪔 Diyas & Decor' },
+                { id: 'cosmetics', label: '👘 Cosmetics' },
+                { id: 'tools', label: '🧭 Puzzle & Tools' },
+                { id: 'rare', label: '🐪 Rare Relics' }
+            ];
+
+            const tabsHtml = categories.map(cat => `
+                <button onclick="UI.activeBazaarTab='${cat.id}'; UI.renderBazaar(document.getElementById('modalBody'));"
+                    class="px-3.5 py-2 rounded-xl font-pixel text-xs transition-all ${
+                        this.activeBazaarTab === cat.id ? 'festival-btn text-amber-950 font-bold' : 'festival-btn-secondary text-amber-200'
+                    }">
+                    ${cat.label}
+                </button>
+            `).join('');
+
+            const items = SHOP_ITEMS.filter(i => i.category === this.activeBazaarTab);
+
+            const cardsHtml = items.map(item => {
+                const isOwned = Game.state.inventory.includes(item.id);
+                const isEquipped = item.equippable && Game.state.equipped[item.slot] === item.id;
+                const lockedByZafar = item.wanderingOnly && !zafarPresent;
+                const canAfford = Game.state.coins >= item.price;
+                const iconUrl = PixelIcons.getDataURL(item.id);
+
+                let actionBtn = '';
+                if (lockedByZafar) {
+                    actionBtn = `<button disabled class="festival-btn-secondary w-full py-2 rounded-lg font-pixel text-[11px]">Requires Zafar (3+ Diyas Lit)</button>`;
+                } else if (item.consumable) {
+                    actionBtn = `
+                        <button onclick="UI.buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''}
+                            class="festival-btn w-full py-2 rounded-lg font-pixel text-xs text-amber-950 font-bold">
+                            🪙 Buy (${item.price}) • Owned: ${Game.state.hintScrolls}
+                        </button>
+                    `;
+                } else if (isOwned) {
+                    if (item.equippable) {
+                        actionBtn = `
+                            <button onclick="UI.toggleEquip('${item.id}')"
+                                class="${isEquipped ? 'festival-btn text-amber-950 font-bold' : 'festival-btn-secondary'} w-full py-2 rounded-lg font-pixel text-xs">
+                                ${isEquipped ? '✓ EQUIPPED (Click to Unequip)' : 'Equip Item'}
+                            </button>
+                        `;
+                    } else {
+                        actionBtn = `<button disabled class="festival-btn-secondary w-full py-2 rounded-lg font-pixel text-xs text-emerald-400">✓ OWNED & ACTIVE</button>`;
+                    }
+                } else {
+                    actionBtn = `
+                        <button onclick="UI.buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''}
+                            class="festival-btn w-full py-2 rounded-lg font-pixel text-xs text-amber-950 font-bold">
+                            🪙 Purchase (${item.price} Coins)
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="bg-slate-900/90 border ${isEquipped ? 'border-amber-400' : 'border-amber-500/30'} rounded-2xl p-4 flex flex-col justify-between gap-3 hover:border-amber-400/70 transition-colors">
+                        <div class="flex items-start gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-slate-950 border border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden">
+                                <img src="${iconUrl}" alt="${item.name}" class="w-9 h-9" style="image-rendering: pixelated;" />
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-pixel text-xs sm:text-sm text-amber-300">${item.name}</h4>
+                                    ${item.wanderingOnly ? `<span class="text-[10px] bg-purple-900/60 text-purple-200 px-1.5 py-0.5 rounded border border-purple-400/40">Zafar Exclusive</span>` : ''}
+                                </div>
+                                <p class="text-xs text-amber-100/75 mt-1 leading-relaxed">${item.desc}</p>
+                            </div>
+                        </div>
+                        ${actionBtn}
+                    </div>
+                `;
+            }).join('');
+
+            body.innerHTML = `
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-amber-500/30">
+                    <div class="flex flex-wrap gap-1.5">${tabsHtml}</div>
+                    <div class="px-3.5 py-1.5 rounded-xl bg-amber-950/80 border border-amber-400 font-pixel text-xs text-yellow-300">
+                        Wallet: 🪙 ${Game.state.coins} Coins
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+                    ${cardsHtml}
+                </div>
+            `;
+        },
+
+        buyShopItem(itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+            if (Game.state.coins < item.price) {
+                Sound.sfxError();
+                this.toast('Not enough Festival Coins!', 'red');
+                return;
+            }
+
+            Game.state.coins -= item.price;
+            Sound.sfxCoin();
+
+            if (item.consumable) {
+                Game.state.hintScrolls = (Game.state.hintScrolls || 0) + 1;
+                this.toast(`📜 Purchased ${item.name}! (${Game.state.hintScrolls} in bag)`, 'gold');
+            } else {
+                if (!Game.state.inventory.includes(item.id)) {
+                    Game.state.inventory.push(item.id);
+                }
+                if (item.equippable) {
+                    Game.state.equipped[item.slot] = item.id;
+                }
+                this.toast(`🛍️ Purchased ${item.name}!`, 'gold');
+            }
+
+            Game.unlockAchievement('ach_bazaar_buyer');
+            if (item.wanderingOnly) {
+                Game.unlockAchievement('ach_wandering');
+            }
+
+            Game.updateHUD();
+            Game.saveGame();
+            this.renderBazaar(document.getElementById('modalBody'));
+        },
+
+        toggleEquip(itemId) {
+            const item = SHOP_ITEMS.find(i => i.id === itemId);
+            if (!item || !item.equippable) return;
+            Sound.sfxClick();
+            if (Game.state.equipped[item.slot] === itemId) {
+                Game.state.equipped[item.slot] = null;
+                this.toast(`Unequipped ${item.name}`, 'amber');
+            } else {
+                Game.state.equipped[item.slot] = itemId;
+                this.toast(`✨ Equipped ${item.name}!`, 'gold');
+            }
+            Game.saveGame();
+            const body = document.getElementById('modalBody');
+            if (document.getElementById('modalTitle').textContent.includes('Bazaar')) {
+                this.renderBazaar(body);
+            } else {
+                this.renderInventory(body);
+            }
+        },
+
+        // INVENTORY SCREEN
+        renderInventory(body) {
+            const ownedItems = SHOP_ITEMS.filter(i => Game.state.inventory.includes(i.id));
+            const questCollectibles = WORLD_COLLECTIBLES.filter(c => Game.state.collectibles.includes(c.id));
+
+            const ownedHtml = ownedItems.length === 0
+                ? `<p class="text-xs text-amber-200/60 italic">No Bazaar items purchased yet. Press [B] or visit the Festival Bazaar to trade your Festival Coins!</p>`
+                : ownedItems.map(item => {
+                    const isEquipped = item.equippable && Game.state.equipped[item.slot] === item.id;
+                    const iconUrl = PixelIcons.getDataURL(item.id);
+                    return `
+                        <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5">
+                                <img src="${iconUrl}" alt="${item.name}" class="w-9 h-9 rounded-lg bg-slate-950 p-1 border border-amber-500/30" style="image-rendering: pixelated;" />
+                                <div>
+                                    <div class="font-pixel text-xs text-amber-300">${item.name}</div>
+                                    <div class="text-[11px] text-amber-100/70">${item.desc}</div>
+                                </div>
+                            </div>
+                            ${item.equippable ? `
+                                <button onclick="UI.toggleEquip('${item.id}')"
+                                    class="${isEquipped ? 'festival-btn text-amber-950 font-bold' : 'festival-btn-secondary'} px-3 py-1.5 rounded-lg font-pixel text-xs shrink-0">
+                                    ${isEquipped ? 'Equipped' : 'Equip'}
+                                </button>
+                            ` : `<span class="text-[10px] font-pixel text-emerald-400 shrink-0">PASSIVE</span>`}
+                        </div>
+                    `;
+                }).join('');
+
+            const questItemsHtml = questCollectibles.length === 0
+                ? `<p class="text-xs text-amber-200/60 italic">Explore the realms to find hidden sacred embers and lost festival heirlooms.</p>`
+                : questCollectibles.map(c => `
+                    <div class="bg-slate-900/80 border border-sky-400/30 rounded-xl p-3 flex items-center gap-3">
+                        <span class="text-2xl">${c.icon}</span>
+                        <div>
+                            <div class="font-pixel text-xs text-sky-300">${c.name}</div>
+                            <div class="text-[11px] text-amber-100/75">${c.desc}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+            body.innerHTML = `
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3">
+                        <div class="text-[10px] font-pixel text-amber-300">FESTIVAL COINS</div>
+                        <div class="text-lg font-pixel text-yellow-300 mt-1">🪙 ${Game.state.coins}</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3">
+                        <div class="text-[10px] font-pixel text-amber-300">HINT SCROLLS</div>
+                        <div class="text-lg font-pixel text-amber-200 mt-1">📜 ${Game.state.hintScrolls}</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3">
+                        <div class="text-[10px] font-pixel text-amber-300">CHESTS FOUND</div>
+                        <div class="text-lg font-pixel text-emerald-300 mt-1">🧰 ${Game.state.openedChests.length}/${WORLD_CHESTS.length}</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-pixel text-xs uppercase text-amber-300 mb-2">Owned Bazaar Cosmetics, Decor & Relics</h3>
+                    <div class="space-y-2">${ownedHtml}</div>
+                </div>
+
+                <div>
+                    <h3 class="font-pixel text-xs uppercase text-sky-300 mb-2">Discovered Sacred Embers & Quest Heirlooms</h3>
+                    <div class="space-y-2">${questItemsHtml}</div>
+                </div>
+            `;
+        },
+
+        // QUEST JOURNAL
+        renderQuests(body) {
+            const html = QUEST_LIST.map(q => {
+                const status = Game.state.quests[q.id] || 'unstarted';
+                const badge = status === 'completed'
+                    ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-pixel bg-emerald-900/70 text-emerald-300 border border-emerald-400/40">✓ COMPLETED</span>`
+                    : status === 'active'
+                    ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-pixel bg-amber-900/70 text-amber-200 border border-amber-400/40">ACTIVE</span>`
+                    : `<span class="px-2.5 py-1 rounded-full text-[10px] font-pixel bg-slate-800 text-slate-400">SPEAK TO NPC</span>`;
+
+                return `
+                    <div class="bg-slate-900/90 border ${status === 'completed' ? 'border-emerald-500/40' : 'border-amber-500/30'} rounded-xl p-4 flex items-start justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-pixel text-xs sm:text-sm text-amber-300">${q.title}</h4>
+                                ${badge}
+                            </div>
+                            <div class="text-[11px] text-amber-200/70 mt-0.5">${q.giver}</div>
+                            <p class="text-xs text-amber-100/90 mt-1.5">${q.desc}</p>
+                        </div>
+                        <div class="text-right shrink-0 font-pixel text-xs text-yellow-300">
+                            +${q.rewardCoins} 🪙
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            body.innerHTML = `<div class="space-y-3">${html}</div>`;
+        },
+
+        // WORLD MAP & FAST TRAVEL
+        renderMap(body) {
+            const cards = AREAS.map(a => {
+                const areaDiyas = DIYA_DEFINITIONS.filter(d => d.area === a.id);
+                const litInArea = areaDiyas.filter(d => Game.state.litDiyas.includes(d.id)).length;
+                const unlocked = Game.canEnterArea(a.id);
+                const isCurrent = Game.state.area === a.id;
+
+                return `
+                    <div class="bg-slate-900/90 border-2 ${isCurrent ? 'border-yellow-300' : unlocked ? 'border-amber-500/40' : 'border-slate-700 opacity-75'} rounded-2xl p-4 flex flex-col justify-between gap-3">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-pixel uppercase text-amber-400">Realm ${a.id + 1}</span>
+                                <span class="text-xs font-pixel ${litInArea === 4 ? 'text-emerald-300' : 'text-amber-200'}">🪔 ${litInArea} / ${areaDiyas.length} Lit</span>
+                            </div>
+                            <h4 class="font-festival text-base sm:text-lg font-bold text-amber-200 mt-0.5">${a.name}</h4>
+                            <p class="text-xs text-amber-100/75 mt-1">${a.description}</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-amber-500/20">
+                            <span class="text-[11px] font-pixel text-amber-300/80">
+                                ${unlocked ? '🔓 Unlocked' : `🔒 Requires ${a.reqDiyas} Diyas Lit`}
+                            </span>
+                            <button onclick="if(Game.transitionToArea(${a.id}, 500, 450)) UI.closeModal();"
+                                ${!unlocked || isCurrent ? 'disabled' : ''}
+                                class="festival-btn px-3.5 py-1.5 rounded-lg font-pixel text-xs text-amber-950 font-bold">
+                                ${isCurrent ? 'Current Realm' : 'Fast Travel'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            body.innerHTML = `
+                <p class="text-xs text-amber-200/80">Travel between unlocked festival realms directly or walk through the north/south archway gates.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">${cards}</div>
+            `;
+        },
+
+        // ACHIEVEMENTS
+        renderAchievements(body) {
+            const html = ACHIEVEMENTS.map(ach => {
+                const unlocked = Game.state.achievements.includes(ach.id);
+                return `
+                    <div class="bg-slate-900/90 border ${unlocked ? 'border-yellow-400' : 'border-slate-700 opacity-60'} rounded-xl p-3.5 flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-slate-950 border border-amber-500/40 flex items-center justify-center text-2xl">
+                            ${unlocked ? ach.icon : '🔒'}
+                        </div>
+                        <div>
+                            <div class="font-pixel text-xs text-amber-300">${ach.title}</div>
+                            <div class="text-xs text-amber-100/75">${ach.desc}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            body.innerHTML = `
+                <div class="flex items-center justify-between text-xs font-pixel text-amber-200 pb-2">
+                    <span>Unlocked: ${Game.state.achievements.length} / ${ACHIEVEMENTS.length}</span>
+                    <span>Secrets Found: ${Game.state.discoveredSecrets.length} / ${SECRET_ZONES.length}</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${html}</div>
+            `;
+        },
+
+        // PAUSE & SETTINGS
+        renderSettings(body) {
+            body.innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-4 space-y-3">
+                        <h4 class="font-pixel text-xs text-amber-300">AUDIO SYNTHESIZER</h4>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs">Mute All Audio</span>
+                            <button onclick="Sound.muted = !Sound.muted; UI.renderSettings(document.getElementById('modalBody'))"
+                                class="festival-btn-secondary px-3 py-1.5 rounded-lg font-pixel text-xs">
+                                ${Sound.muted ? '🔇 Muted' : '🔊 Active'}
+                            </button>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs flex justify-between"><span>Festival Raga Music Volume</span><span>${Math.round(Sound.musicVol * 100)}%</span></label>
+                            <input type="range" min="0" max="1" step="0.05" value="${Sound.musicVol}"
+                                onchange="Sound.musicVol=parseFloat(this.value); UI.renderSettings(document.getElementById('modalBody'))"
+                                class="w-full accent-amber-400">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs flex justify-between"><span>Sound Effects Volume</span><span>${Math.round(Sound.sfxVol * 100)}%</span></label>
+                            <input type="range" min="0" max="1" step="0.05" value="${Sound.sfxVol}"
+                                onchange="Sound.sfxVol=parseFloat(this.value); Sound.sfxCoin(); UI.renderSettings(document.getElementById('modalBody'))"
+                                class="w-full accent-amber-400">
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-4 space-y-3">
+                        <h4 class="font-pixel text-xs text-amber-300">ACCESSIBILITY, CONTROLS & INTERFACE</h4>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs">Reduced Motion (Calmer Particles & Animations)</span>
+                            <button onclick="Game.state.reducedMotion = !Game.state.reducedMotion; Game.saveGame(); UI.renderSettings(document.getElementById('modalBody'))"
+                                class="festival-btn-secondary px-3 py-1.5 rounded-lg font-pixel text-xs">
+                                ${Game.state && Game.state.reducedMotion ? '✓ Reduced Motion On' : '✨ Full Visual Effects'}
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs">On-Screen Touch D-Pad & Action Button</span>
+                            <button onclick="Game.state.touchEnabled = !Game.state.touchEnabled; Game.updateTouchVisibility(); UI.renderSettings(document.getElementById('modalBody'))"
+                                class="festival-btn-secondary px-3 py-1.5 rounded-lg font-pixel text-xs">
+                                ${Game.state && Game.state.touchEnabled ? '📱 Shown' : '⌨️ Hidden'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 justify-between pt-2">
+                        <button onclick="Game.saveGame(); UI.toast('💾 Progress saved!', 'amber')" class="festival-btn px-4 py-2 rounded-xl font-pixel text-xs text-amber-950 font-bold">
+                            💾 Save Game Now
+                        </button>
+                        <button onclick="UI.closeModal(); document.getElementById('mainMenuOverlay').classList.remove('hidden'); Game.checkExistingSave();"
+                            class="festival-btn-secondary px-4 py-2 rounded-xl font-pixel text-xs">
+                            🏠 Return to Title Screen
+                        </button>
+                    </div>
+                </div>
+            `;
+        },
+
+        renderHowTo(body) {
+            body.innerHTML = `
+                <div class="space-y-3 text-xs sm:text-sm text-amber-100/90 leading-relaxed">
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3.5">
+                        <h4 class="font-pixel text-xs text-amber-300 mb-1">1. RESTORING THE SACRED DIYAS</h4>
+                        <p>Explore four interconnected realms: <b>Lantern Village</b>, <b>Forgotten Bazaar</b>, <b>Royal Gardens</b>, and the <b>Ancient Shrine</b>. Approach any unlit diya and press <b>[E]</b> or <b>[Space]</b> to inspect its clue and solve its puzzle.</p>
+                    </div>
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3.5">
+                        <h4 class="font-pixel text-xs text-amber-300 mb-1">2. FIVE FESTIVAL PUZZLE TYPES</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li><b>Light Sequence:</b> Ignite the wicks in the exact order hinted by the inscription.</li>
+                            <li><b>Mirror Reflection:</b> Rotate brass mirrors (╱ and ╲) to guide the sunbeam into the diya.</li>
+                            <li><b>Rangoli Symmetry:</b> Paint Crimson, Marigold, and Peacock Teal petals to match the sacred mandala.</li>
+                            <li><b>Ancient Vedic Symbols:</b> Rotate the stone dials to align the story frieze.</li>
+                            <li><b>Hidden Sacred Embers:</b> Discover concealed flames in the environment to kindle special lamps.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3.5">
+                        <h4 class="font-pixel text-xs text-amber-300 mb-1">3. COINS, BAZAAR & THE WANDERING MERCHANT</h4>
+                        <p>Earn <b>Festival Coins</b> from restoring diyas (+10–30), opening treasure chests (+30), completing NPC quests (+40), and finding secret sanctuaries (+50). Spend coins in the <b>Bazaar [B]</b> or with <b>Zafar the Wandering Merchant</b>!</p>
+                    </div>
+                </div>
+            `;
+        },
+
+        // GRAND FESTIVAL FINALE SCREEN
+        renderFinale(body) {
+            body.innerHTML = `
+                <div class="text-center space-y-4 py-3">
+                    <div class="text-6xl animate-bounce">🎆🪔🎆</div>
+                    <div class="text-xs font-pixel uppercase tracking-widest text-yellow-300">Shubh Deepavali • Triumph of Light</div>
+                    <h3 class="font-festival text-2xl sm:text-3xl font-bold text-amber-200">
+                        All Four Realms Shine in Golden Harmony!
+                    </h3>
+                    <p class="text-xs sm:text-sm text-amber-100/90 max-w-lg mx-auto leading-relaxed">
+                        As the Grand Mahadiya roars to life, warm golden light cascades across the Ancient Shrine, Royal Gardens, Forgotten Bazaar, and Lantern Village. Sky lanterns rise into the starry night and fireworks dance above the rooftops!
+                    </p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-xl mx-auto pt-2">
+                        <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
+                            <div class="text-[10px] font-pixel text-amber-300">DIYAS LIT</div>
+                            <div class="text-base font-pixel text-yellow-300 mt-1">${Game.state.litDiyas.length} / 16</div>
+                        </div>
+                        <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
+                            <div class="text-[10px] font-pixel text-amber-300">CHESTS</div>
+                            <div class="text-base font-pixel text-emerald-300 mt-1">${Game.state.openedChests.length} / 10</div>
+                        </div>
+                        <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
+                            <div class="text-[10px] font-pixel text-amber-300">SECRETS</div>
+                            <div class="text-base font-pixel text-sky-300 mt-1">${Game.state.discoveredSecrets.length} / 4</div>
+                        </div>
+                        <div class="bg-slate-900/90 border border-amber-400/50 rounded-xl p-3">
+                            <div class="text-[10px] font-pixel text-amber-300">ACHIEVEMENTS</div>
+                            <div class="text-base font-pixel text-purple-300 mt-1">${Game.state.achievements.length} / ${ACHIEVEMENTS.length}</div>
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                        <button onclick="Game.spawnFireworkBurst(); UI.closeModal();"
+                            class="festival-btn px-6 py-3 rounded-xl font-pixel text-xs sm:text-sm text-amber-950 font-bold">
+                            ✨ CONTINUE EXPLORING THE ILLUMINATED FESTIVAL
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    window.onload = function () {
+        Game.init();
+    };
+    </script>
+</body>
+</html>
