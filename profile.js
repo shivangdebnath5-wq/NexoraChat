@@ -19,19 +19,22 @@
      - Hubs .................... getHubs()
      - Firestore ............... the same users/{uid} + usernames/{name} docs
                                  written by saveNexoraProfile
-   New optional fields on users/{uid}: profileName, bio, updatedAt
+   New optional fields on users/{uid}: profileName, bio, bannerURL, updatedAt
    (interests already existed). Email is never shown to other users.
+   bannerURL points at Firebase Storage (banners/{uid}); see uploadBanner/
+   removeBanner below and the banner editor in index.html's classic script.
    ========================================================================= */
 import { getApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 
 (function nexoraProfile() {
   'use strict';
 
   /* ---------- Firebase (same app instance created by index.html) ---------- */
   let fb = null;
-  try { const app = getApp(); fb = { auth: getAuth(app), db: getFirestore(app) }; }
+  try { const app = getApp(); fb = { auth: getAuth(app), db: getFirestore(app), storage: getStorage(app) }; }
   catch (err) { console.warn('[profile] Firebase unavailable — using local profile data only.', err); }
 
   /* ---------- Fonts: "Creepster" (Google Fonts) for the featured badge title ---------- */
@@ -108,6 +111,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
         uid,
         username: d.username || username,
         photoURL: typeof d.photoURL === 'string' ? d.photoURL : '',
+        bannerURL: typeof d.bannerURL === 'string' ? d.bannerURL : '',
         profileName: typeof d.profileName === 'string' ? d.profileName : '',
         bio: typeof d.bio === 'string' ? d.bio : '',
         interests: Array.isArray(d.interests) ? d.interests.filter((t) => typeof t === 'string') : [],
@@ -145,6 +149,50 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     return { remote, code, clean };
   }
 
+  /* ---------- Profile Banner (Settings → General → "Profile Banner") -------
+     Uploaded to Firebase Storage at banners/{uid} (replacing any previous
+     file there), then the public download URL is written to the signed-in
+     user's own users/{uid}.bannerURL — the same pattern saveOwnProfile uses
+     above — so every device, and everyone viewing this profile, sees the
+     same banner. The crop/reposition/zoom editor (Settings markup + pointer
+     handling) lives in index.html's classic script, right next to the
+     existing avatar uploader (handlePfpChange); it hands this function a
+     single already-cropped data URL to upload. */
+  async function uploadBanner(dataUrl) {
+    const user = fb && fb.auth.currentUser;
+    if (!fb || !user) return { ok: false, message: 'You need to be signed in to upload a banner.' };
+    try {
+      const bannerRef = ref(fb.storage, `banners/${user.uid}`);
+      await uploadString(bannerRef, dataUrl, 'data_url');
+      const url = await getDownloadURL(bannerRef);
+      await updateDoc(doc(fb.db, 'users', user.uid), { bannerURL: url, updatedAt: serverTimestamp() });
+      try { const users = DB.getUsers(); users[currentUser] = users[currentUser] || {}; users[currentUser].banner = url; DB.saveUsers(users); } catch (e) { /* storage may be unavailable */ }
+      cache.delete(String(currentUser).toLowerCase());
+      return { ok: true, url };
+    } catch (err) {
+      console.warn('[profile] Banner upload failed', err);
+      const message = err && err.code === 'storage/unauthorized'
+        ? 'Upload blocked by Storage rules — ask the project owner to allow writes to banners/{uid}.'
+        : 'Could not upload the banner. Please try again.';
+      return { ok: false, message };
+    }
+  }
+
+  async function removeBanner() {
+    const user = fb && fb.auth.currentUser;
+    if (!fb || !user) return { ok: false, message: 'You need to be signed in.' };
+    try {
+      await updateDoc(doc(fb.db, 'users', user.uid), { bannerURL: '', updatedAt: serverTimestamp() });
+      try { await deleteObject(ref(fb.storage, `banners/${user.uid}`)); } catch (e) { /* no file to delete — fine */ }
+      try { const users = DB.getUsers(); if (users[currentUser]) { delete users[currentUser].banner; DB.saveUsers(users); } } catch (e) { /* storage may be unavailable */ }
+      cache.delete(String(currentUser).toLowerCase());
+      return { ok: true };
+    } catch (err) {
+      console.warn('[profile] Banner removal failed', err);
+      return { ok: false, message: 'Could not remove the banner. Please try again.' };
+    }
+  }
+
   /* ---------- Model ---------- */
   function statusFor(username, isMe, privacy) {
     if (isMe) { const b = $('sidebar-status-badge'); return { key: (b && b.dataset.status) || 'online', visible: true }; }
@@ -174,6 +222,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
       username, isMe, loading: !!loading,
       known: !!(remote || localUser(username) || isMe),
       avatar: local.pfp || (remote && remote.photoURL) || defaultAvatar(),
+      banner: local.banner || (remote && remote.bannerURL) || '',
       frame: /^[\w-]*$/.test(frame) ? frame : '',
       profileName: (remote && remote.profileName) || local.profileName || '',
       bio: (remote && remote.bio) || local.bio || '',
@@ -350,7 +399,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
       ? `<div class="profile-status" id="profile-status-row"><span class="profile-status-dot" style="background:var(--status-${STATUS_VAR[m.status.key] || 'offline'})"></span><span id="profile-status-text">${esc(statusLabel(m.status.key))}</span></div>`
       : '<div class="profile-status"><span class="profile-status-dot" style="background:var(--status-offline)"></span><span>Status hidden</span></div>';
     return `<div class="profile-card">
-      <div class="profile-banner" aria-hidden="true"></div>
+      <div class="profile-banner${m.banner ? ' has-custom-banner' : ''}" aria-hidden="true"${m.banner ? ` style="background-image:url('${esc(m.banner)}');background-size:cover;background-position:center;background-repeat:no-repeat;"` : ''}></div>
       <div class="profile-head">
         <div class="profile-avatar-wrap">
           <img class="avatar-large profile-avatar ${esc(m.frame)}" src="${esc(m.avatar)}" alt="${esc(m.username)}'s profile photo">
@@ -401,6 +450,12 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
     if (typeof updateStatusBadgeUI === 'function') updateStatusBadgeUI('profile-status-badge', st.key);
     const t = $('profile-status-text'); if (t) t.textContent = statusLabel(st.key);
     const dot = view.querySelector('.profile-status-dot'); if (dot) dot.style.background = `var(--status-${STATUS_VAR[st.key] || 'offline'})`;
+  }
+
+  // Full re-render of whichever profile is open (e.g. after the Settings
+  // banner uploader saves a new banner for the signed-in user).
+  function refreshOpenProfile() {
+    if (isOpen && viewing && !editing) renderProfile(viewing);
   }
 
   /* ---------- View lifecycle ---------- */
@@ -597,5 +652,5 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://w
   wrap('logout', closeProfile);
   wrap('onPresenceChange', null, refreshStatusOnly);
 
-  window.NexoraProfile = { open: openProfile, close: closeProfile, _userFromElement: userFromElement, _sanitize: sanitizeProfileInput, registerBadge, awardBadge };
+  window.NexoraProfile = { open: openProfile, close: closeProfile, refresh: refreshOpenProfile, uploadBanner, removeBanner, _userFromElement: userFromElement, _sanitize: sanitizeProfileInput, registerBadge, awardBadge };
 })();
