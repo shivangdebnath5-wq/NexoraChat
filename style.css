@@ -671,20 +671,27 @@
 .main-chat:not(.hub-active) #hub-more-menu { display:none !important; }
 #hub-more-menu #hub-invite-btn sup { position:static; margin-left:1px; font-size:9px; }
 
-/* Hollow Night minigame shortcut: large floating pumpkin tucked into the bottom-right
-   corner of the home view. It is a sibling after #chat-header, so it appears exactly
-   while the header carries .is-home (no chat/Hub open) and disappears otherwise. */
-.hollow-night-fab { display:none; position:absolute; right:18px; bottom:18px; width:84px; height:84px; border-radius:50%; align-items:center; justify-content:center; font-size:46px; line-height:1; text-decoration:none; background:radial-gradient(circle at 35% 30%, color-mix(in srgb, #f39a4a 28%, var(--bg-card)), var(--bg-card) 70%); border:2px solid rgba(243,154,74,.65); box-shadow:0 10px 26px var(--shadow), 0 0 22px rgba(243,154,74,.45), inset 0 2px 6px rgba(255,255,255,.12); z-index:40; cursor:pointer; animation:hollowFabFloat 3.2s ease-in-out infinite; transition:transform .18s ease, box-shadow .18s ease; -webkit-tap-highlight-color:transparent; }
-.chat-header.is-home ~ .hollow-night-fab { display:flex; }
-/* Soft rings that curve outward from the edges of the button */
-.hollow-night-fab::before, .hollow-night-fab::after { content:''; position:absolute; inset:-2px; border-radius:50%; border:2px solid rgba(243,154,74,.55); pointer-events:none; animation:hollowFabRipple 2.8s ease-out infinite; }
-.hollow-night-fab::after { animation-delay:1.4s; }
-.hollow-night-fab:hover { transform:scale(1.1) rotate(-6deg); box-shadow:0 12px 30px var(--shadow), 0 0 32px rgba(243,154,74,.7), inset 0 2px 6px rgba(255,255,255,.12); animation-play-state:paused; }
-.hollow-night-fab:active { transform:scale(.95); }
-@keyframes hollowFabFloat { 0%, 100% { translate:0 0; } 50% { translate:0 -10px; } }
-@keyframes hollowFabRipple { 0% { transform:scale(1); opacity:.7; } 100% { transform:scale(1.55); opacity:0; } }
-@media (max-width: 720px) { .hollow-night-fab { right:14px; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); width:72px; height:72px; font-size:40px; } }
-@media (prefers-reduced-motion: reduce) { .hollow-night-fab, .hollow-night-fab::before, .hollow-night-fab::after { animation:none; } }
+/* "The Festival of Lights" shortcut: a glowing diya floating in the bottom-right corner of the home view.
+   Sibling after #chat-header, so it shows exactly while the header carries .is-home and hides in chats/Hubs.
+   Float = a gentle curved drift; glow = soft halo + two thin light arcs that curve out past the diya's edges. */
+.festival-fab { display:none; position:absolute; right:22px; bottom:22px; width:78px; height:78px; z-index:40; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; animation:ffFloat 7s ease-in-out infinite; }
+.chat-header.is-home ~ .festival-fab { display:block; }
+.festival-fab .ff-diya { position:absolute; inset:6px; width:calc(100% - 12px); height:calc(100% - 12px); overflow:visible; filter:drop-shadow(0 4px 10px rgba(255,150,40,.55)); transition:transform .3s cubic-bezier(.2,.9,.25,1.2); }
+.festival-fab .ff-flame { transform-box:fill-box; transform-origin:50% 100%; animation:ffFlicker 1.7s ease-in-out infinite; }
+.festival-fab .ff-glow { position:absolute; left:50%; top:30%; width:155%; height:155%; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none; background:radial-gradient(circle, rgba(255,196,90,.55), rgba(255,140,40,.2) 40%, transparent 68%); animation:ffPulse 3.4s ease-in-out infinite; }
+.festival-fab .ff-arcs i { position:absolute; border-radius:50%; border:2px solid transparent; pointer-events:none; }
+.festival-fab .ff-arcs i:nth-child(1) { inset:-12px; border-top-color:rgba(255,205,110,.85); border-left-color:rgba(255,160,50,.35); filter:blur(.6px); animation:ffSpin 7s linear infinite; }
+.festival-fab .ff-arcs i:nth-child(2) { inset:-18px; border-bottom-color:rgba(255,170,60,.6); border-right-color:rgba(255,205,110,.25); filter:blur(1px); animation:ffSpin 11s linear infinite reverse; }
+.festival-fab:hover .ff-diya { transform:scale(1.1); }
+.festival-fab:hover .ff-glow { filter:brightness(1.25); }
+.festival-fab:active .ff-diya { transform:scale(.95); }
+.festival-fab:focus-visible { outline:2px solid var(--primary); outline-offset:6px; border-radius:50%; }
+@keyframes ffFloat { 0%, 100% { translate:0 0; } 25% { translate:-6px -9px; } 50% { translate:0 -15px; } 75% { translate:6px -8px; } }
+@keyframes ffFlicker { 0%, 100% { transform:scale(1,1) skewX(0); } 25% { transform:scale(.93,1.07) skewX(-3deg); } 50% { transform:scale(1.05,.95) skewX(2deg); } 75% { transform:scale(.97,1.04) skewX(-2deg); } }
+@keyframes ffPulse { 0%, 100% { opacity:.65; } 50% { opacity:1; } }
+@keyframes ffSpin { to { transform:rotate(360deg); } }
+@media (max-width: 720px) { .festival-fab { right:14px; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); width:66px; height:66px; } }
+@media (prefers-reduced-motion: reduce) { .festival-fab, .festival-fab .ff-flame, .festival-fab .ff-glow, .festival-fab .ff-arcs i { animation:none; } }
 
 /* =========================================================================
    MOONLIGHT SPARKLE — enhanced theme (starfield, lunar ambience, interactive
