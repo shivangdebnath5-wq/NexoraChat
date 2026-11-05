@@ -827,9 +827,13 @@
         <span class="diwali-text"><strong id="diwali-main"></strong><span id="diwali-sub" class="diwali-sub"></span></span>
         <button type="button" class="diwali-link" onclick="openShop()">Explore Goodies <span aria-hidden="true">→</span></button>
       </div>
-      <!-- Floating Hollow Night minigame shortcut: only visible on the home view
-           (CSS: .chat-header.is-home ~ #hollow-night-fab), hidden inside chats/Hubs. -->
-      <a id="hollow-night-fab" class="hollow-night-fab" href="hollow_night.html" title="Play Hollow Night" aria-label="Play Hollow Night minigame">🎃</a>
+      <!-- Floating "The Festival of Lights" shortcut (glowing diya): only visible on the home view
+           (CSS: .chat-header.is-home ~ .festival-fab), hidden inside chats/Hubs. -->
+      <a id="festival-fab" class="festival-fab" href="the_festival_of_lights.html" title="Play The Festival of Lights" aria-label="Play The Festival of Lights">
+        <span class="ff-glow" aria-hidden="true"></span>
+        <span class="ff-arcs" aria-hidden="true"><i></i><i></i></span>
+        <svg class="ff-diya" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="ffBowl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC85A"/><stop offset=".55" stop-color="#D9701A"/><stop offset="1" stop-color="#7A3210"/></linearGradient><linearGradient id="ffFlame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF7A18"/><stop offset=".6" stop-color="#FFC83D"/><stop offset="1" stop-color="#FFF3B0"/></linearGradient></defs><g class="ff-flame"><path d="M32 4C39.500 13 42 19 42 25.500A10 10 0 0 1 22 25.500C22 19 24.500 13 32 4Z" fill="url(#ffFlame)"/><path d="M32 15C35.800 20.500 37 23.500 37 27A5 5 0 0 1 27 27C27 23.500 28.200 20.500 32 15Z" fill="#FFF6D0"/></g><rect x="31" y="27" width="2" height="8" rx="1" fill="#5A2A10"/><path d="M5 34H59C59 48 47.500 58 32 58S5 48 5 34Z" fill="url(#ffBowl)"/><path d="M5 34H59" stroke="#FFE08A" stroke-width="2.600" stroke-linecap="round"/><path d="M14 41.500Q32 50 50 41.500" fill="none" stroke="#FFE08A" stroke-width="1.400" stroke-linecap="round" opacity=".85"/><g fill="#FFE08A"><circle cx="32" cy="46.500" r="1.800"/><circle cx="23" cy="45" r="1.300"/><circle cx="41" cy="45" r="1.300"/></g><path d="M23 59.500H41" stroke="#7A3210" stroke-width="3" stroke-linecap="round"/></svg>
+      </a>
       <div id="hub-search-panel" class="hub-search-panel hidden" role="search">
         <span aria-hidden="true">⌕</span>
         <input id="hub-message-search" type="search" placeholder="Search in Hub" oninput="filterHubMessages()" autocomplete="off">
