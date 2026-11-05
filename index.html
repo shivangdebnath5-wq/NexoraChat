@@ -911,6 +911,28 @@
     </div>
   </div>
 
+  <!-- Profile Banner Editor: crop/reposition/zoom a chosen image before it's
+       uploaded (Settings → General → "Profile Banner" → Upload Banner opens
+       this). Drag to reposition, slider to zoom; Save renders the visible
+       crop to a canvas and hands the data URL to
+       window.NexoraProfile.uploadBanner (Firebase Storage + Firestore sync). -->
+  <div id="banner-editor-modal" class="modal hidden">
+    <div class="card" style="max-width:480px; position:relative;">
+      <button type="button" class="modal-close-btn" onclick="closeBannerEditor()" aria-label="Close banner editor">&times;</button>
+      <h2>Reposition Banner</h2>
+      <div id="banner-editor-frame" class="banner-editor-frame" onpointerdown="bannerPointerDown(event)" onpointermove="bannerPointerMove(event)" onpointerup="bannerPointerUp(event)" onpointercancel="bannerPointerUp(event)">
+        <img id="banner-editor-img" alt="" draggable="false">
+      </div>
+      <label style="font-size:13px; display:block; margin:12px 0 4px;">Zoom</label>
+      <input type="range" id="banner-editor-zoom" min="100" max="300" value="100" oninput="bannerZoomInput()">
+      <p id="banner-editor-note" class="auth-local-note"></p>
+      <div class="profile-edit-actions" style="margin-top:10px;">
+        <button type="button" class="profile-btn" id="banner-editor-save-btn" onclick="saveBannerEdit()">Save banner</button>
+        <button type="button" class="profile-btn secondary" onclick="closeBannerEditor()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings Modal -->
   <div id="settings-modal" class="modal hidden">
     <div class="card" style="max-width:640px; max-height: 90vh; overflow-y: auto; position:relative;">
@@ -938,6 +960,20 @@
         <img id="settings-avatar-preview" class="avatar-large" src="" alt="Profile Picture">
         <label style="font-size:14px; display:block; margin-bottom:6px; text-align:center;">Change Profile Picture</label>
         <input type="file" id="pfp-input" accept="image/*" onchange="handlePfpChange(event)" style="font-size:12px;">
+
+        <!-- Profile Banner: upload → crop/reposition/zoom in #banner-editor-modal →
+             uploaded to Firebase Storage + synced via window.NexoraProfile.uploadBanner
+             (see profile.js). Everyone sees the same banner once saved. -->
+        <div class="settings-section">
+          <label style="font-size:14px; display:block; margin-bottom:6px;">Profile Banner</label>
+          <div id="settings-banner-preview" class="settings-banner-preview"></div>
+          <div class="settings-banner-actions">
+            <button type="button" class="secondary" onclick="document.getElementById('banner-input').click()">Upload Banner</button>
+            <button type="button" class="secondary" id="settings-banner-remove-btn" onclick="removeProfileBanner()">Remove</button>
+          </div>
+          <input type="file" id="banner-input" accept="image/*" class="hidden" onchange="onBannerFileChosen(event)">
+          <p id="settings-banner-note" class="auth-local-note"></p>
+        </div>
 
         <div class="settings-section">
           <label style="font-size:14px; display:block; margin-bottom:6px;">Username</label>
@@ -1934,6 +1970,147 @@
       reader.readAsDataURL(file);
     }
 
+    /* Profile Banner — upload, crop/reposition/zoom, upload & sync.
+       Settings → General → "Profile Banner". The actual Firebase Storage
+       upload + Firestore sync lives in profile.js (window.NexoraProfile.
+       uploadBanner/removeBanner); this just runs the local crop editor and
+       hands it a finished data URL. Output is a fixed 1200x400 (3:1) JPEG,
+       matching .profile-banner's aspect ratio. */
+    const BANNER_OUTPUT_W = 1200, BANNER_OUTPUT_H = 400;
+    let bannerEditor = null; // { img, naturalW, naturalH, frameW, frameH, minScale, scale, x, y, dragging, startX, startY, originX, originY }
+
+    function updateSettingsBannerPreview() {
+      const preview = document.getElementById('settings-banner-preview');
+      if (!preview) return;
+      const users = DB.getUsers();
+      const url = (users[currentUser] && users[currentUser].banner) || '';
+      preview.style.backgroundImage = url ? `url('${url}')` : '';
+      const removeBtn = document.getElementById('settings-banner-remove-btn');
+      if (removeBtn) removeBtn.disabled = !url;
+    }
+
+    function onBannerFileChosen(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('Please select an image under 5MB.'); event.target.value = ''; return; }
+      const reader = new FileReader();
+      reader.onload = (e) => openBannerEditor(e.target.result);
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function openBannerEditor(dataUrl) {
+      const modal = document.getElementById('banner-editor-modal');
+      const imgEl = document.getElementById('banner-editor-img');
+      const frame = document.getElementById('banner-editor-frame');
+      const zoom = document.getElementById('banner-editor-zoom');
+      const note = document.getElementById('banner-editor-note');
+      if (!modal || !imgEl || !frame) return;
+      if (note) note.textContent = '';
+      if (zoom) zoom.value = 100;
+      const img = new Image();
+      img.onload = function () {
+        const frameW = frame.clientWidth || 440, frameH = frame.clientHeight || Math.round(frameW / 3);
+        const minScale = Math.max(frameW / img.naturalWidth, frameH / img.naturalHeight);
+        bannerEditor = { img, naturalW: img.naturalWidth, naturalH: img.naturalHeight, frameW, frameH, minScale, scale: minScale, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+        imgEl.src = dataUrl;
+        bannerEditor.x = (frameW - bannerEditor.naturalW * minScale) / 2;
+        bannerEditor.y = (frameH - bannerEditor.naturalH * minScale) / 2;
+        applyBannerTransform();
+        modal.classList.remove('hidden');
+      };
+      img.onerror = function () { alert('That image could not be loaded. Please try a different file.'); };
+      img.src = dataUrl;
+    }
+
+    function closeBannerEditor() {
+      document.getElementById('banner-editor-modal')?.classList.add('hidden');
+      bannerEditor = null;
+    }
+
+    function clampBannerPosition() {
+      if (!bannerEditor) return;
+      const { frameW, frameH, naturalW, naturalH, scale } = bannerEditor;
+      const scaledW = naturalW * scale, scaledH = naturalH * scale;
+      const minX = Math.min(0, frameW - scaledW), minY = Math.min(0, frameH - scaledH);
+      bannerEditor.x = Math.max(minX, Math.min(0, bannerEditor.x));
+      bannerEditor.y = Math.max(minY, Math.min(0, bannerEditor.y));
+    }
+
+    function applyBannerTransform() {
+      if (!bannerEditor) return;
+      const imgEl = document.getElementById('banner-editor-img');
+      if (!imgEl) return;
+      clampBannerPosition();
+      imgEl.style.transform = `translate(${bannerEditor.x}px, ${bannerEditor.y}px) scale(${bannerEditor.scale})`;
+    }
+
+    function bannerZoomInput() {
+      if (!bannerEditor) return;
+      const zoom = document.getElementById('banner-editor-zoom');
+      const pct = Number(zoom.value) / 100;
+      const prevScale = bannerEditor.scale;
+      const newScale = bannerEditor.minScale * pct;
+      // Keep the frame's center point fixed under the image while zooming.
+      const cx = bannerEditor.frameW / 2, cy = bannerEditor.frameH / 2;
+      const imgCx = (cx - bannerEditor.x) / prevScale, imgCy = (cy - bannerEditor.y) / prevScale;
+      bannerEditor.scale = newScale;
+      bannerEditor.x = cx - imgCx * newScale;
+      bannerEditor.y = cy - imgCy * newScale;
+      applyBannerTransform();
+    }
+
+    function bannerPointerDown(event) {
+      if (!bannerEditor) return;
+      event.preventDefault();
+      bannerEditor.dragging = true;
+      bannerEditor.startX = event.clientX; bannerEditor.startY = event.clientY;
+      bannerEditor.originX = bannerEditor.x; bannerEditor.originY = bannerEditor.y;
+      if (event.target.setPointerCapture) { try { event.target.setPointerCapture(event.pointerId); } catch (e) {} }
+    }
+    function bannerPointerMove(event) {
+      if (!bannerEditor || !bannerEditor.dragging) return;
+      bannerEditor.x = bannerEditor.originX + (event.clientX - bannerEditor.startX);
+      bannerEditor.y = bannerEditor.originY + (event.clientY - bannerEditor.startY);
+      applyBannerTransform();
+    }
+    function bannerPointerUp() { if (bannerEditor) bannerEditor.dragging = false; }
+
+    async function saveBannerEdit() {
+      if (!bannerEditor) return;
+      const note = document.getElementById('banner-editor-note');
+      const saveBtn = document.getElementById('banner-editor-save-btn');
+      const canvas = document.createElement('canvas');
+      canvas.width = BANNER_OUTPUT_W; canvas.height = BANNER_OUTPUT_H;
+      const ctx = canvas.getContext('2d');
+      const outScale = BANNER_OUTPUT_W / bannerEditor.frameW;
+      ctx.drawImage(bannerEditor.img,
+        bannerEditor.x * outScale, bannerEditor.y * outScale,
+        bannerEditor.naturalW * bannerEditor.scale * outScale, bannerEditor.naturalH * bannerEditor.scale * outScale);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+      if (!window.NexoraProfile || typeof window.NexoraProfile.uploadBanner !== 'function') {
+        if (note) note.textContent = 'Banner uploads need a signed-in Nexora session.';
+        return;
+      }
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+      const res = await window.NexoraProfile.uploadBanner(dataUrl);
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save banner'; }
+      if (!res.ok) { if (note) note.textContent = res.message || 'Could not save the banner.'; return; }
+      updateSettingsBannerPreview();
+      closeBannerEditor();
+    }
+
+    async function removeProfileBanner() {
+      const users = DB.getUsers();
+      if (!users[currentUser] || !users[currentUser].banner) return;
+      if (!confirm('Remove your profile banner?')) return;
+      if (window.NexoraProfile && typeof window.NexoraProfile.removeBanner === 'function') {
+        const res = await window.NexoraProfile.removeBanner();
+        if (!res.ok) { alert(res.message || 'Could not remove the banner. Please try again.'); return; }
+      }
+      updateSettingsBannerPreview();
+    }
+
     const THEMES = [
       { id: 'light', name: 'Light', colors: ['#f3f4f6', '#ffffff', '#2563eb'] },
       { id: 'dark', name: 'Dark', colors: ['#0f172a', '#1e293b', '#3b82f6'] },
@@ -2065,6 +2242,7 @@
       settingsPreview.src = pfpUrl;
       settingsPreview.className = `avatar-large ${frameClass}`;
       document.getElementById('frame-select').value = frameClass;
+      updateSettingsBannerPreview();
       refreshQuickStatus();
       refreshNotificationsTab();
       refreshGeneralTab();
