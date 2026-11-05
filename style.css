@@ -1266,3 +1266,533 @@ html[data-theme="midnight-diwali"] .diwali-sub { font-family:'Inter', -apple-sys
   .dw-panel, .diwali-wish.diwali-fresh, .diwali-wish.diwali-fresh::after, .dw-wish-spark, .dw-burst { animation:none !important; }
   .diwali-wish.diwali-fresh::after { display:none; }
 }
+/* =========================================================================
+   EXPANDABLE FLOATING DIWALI GREETING STUDIO TAB & WORKSPACE
+   ========================================================================= */
+
+.gs-floating-root {
+  position: fixed;
+  right: 0;
+  top: 52%;
+  transform: translateY(-50%);
+  z-index: 85;
+  display: none;
+  align-items: center;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+/* Visible whenever #app-screen is active (works in Dark, Light, and Midnight Diwali themes) */
+#app-screen:not(.hidden) .gs-floating-root {
+  display: flex;
+}
+
+/* 1. Collapsed Slim Curved Vertical Handle */
+.gs-tab-handle {
+  pointer-events: auto;
+  position: relative;
+  width: 28px;
+  height: 92px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(214, 168, 75, 0.55);
+  border-right: 0;
+  border-radius: 18px 0 0 18px;
+  background: linear-gradient(165deg, rgba(27, 32, 72, 0.94) 0%, rgba(14, 18, 48, 0.96) 100%);
+  color: #F5D98A;
+  box-shadow:
+    -4px 6px 20px rgba(9, 13, 32, 0.55),
+    0 0 16px rgba(214, 168, 75, 0.24),
+    inset 1px 1px 0 rgba(245, 217, 138, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition:
+    width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.gs-tab-handle:hover {
+  width: 34px;
+  background: linear-gradient(165deg, rgba(35, 41, 92, 0.98) 0%, rgba(18, 23, 60, 0.98) 100%);
+  border-color: #F5D98A;
+  box-shadow:
+    -6px 8px 26px rgba(9, 13, 32, 0.7),
+    0 0 22px rgba(245, 217, 138, 0.45),
+    inset 1px 1px 0 rgba(255, 243, 176, 0.45);
+}
+
+.gs-tab-handle:focus-visible {
+  outline: 2px solid #F5D98A;
+  outline-offset: 2px;
+}
+
+.gs-handle-glow {
+  position: absolute;
+  inset: -6px 0 -6px -6px;
+  border-radius: 22px 0 0 22px;
+  background: radial-gradient(circle at 30% 50%, rgba(214, 168, 75, 0.28), rgba(124, 58, 237, 0.14) 60%, transparent 75%);
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+
+.gs-tab-handle:hover .gs-handle-glow {
+  opacity: 1;
+}
+
+.gs-handle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gs-tab-handle:hover .gs-handle-icon {
+  transform: scale(1.15) rotate(-8deg);
+}
+
+.gs-handle-pill-bar {
+  width: 3px;
+  height: 22px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #F5D98A 0%, #D6A84B 100%);
+  opacity: 0.75;
+}
+
+/* Hide handle cleanly while expanded */
+.gs-floating-root.is-expanded .gs-tab-handle {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(18px) scale(0.92);
+}
+
+/* 2. Expanded Frosted-Glass Floating Panel */
+.gs-floating-panel {
+  pointer-events: none;
+  position: absolute;
+  right: 12px;
+  width: 308px;
+  padding: 18px 18px 16px;
+  border-radius: 20px;
+  background:
+    radial-gradient(130% 90% at 100% 0%, rgba(214, 168, 75, 0.18), transparent 60%),
+    radial-gradient(100% 80% at 0% 100%, rgba(124, 58, 237, 0.2), transparent 65%),
+    linear-gradient(160deg, rgba(24, 19, 54, 0.92) 0%, rgba(12, 14, 36, 0.95) 100%);
+  border: 1px solid rgba(214, 168, 75, 0.52);
+  box-shadow:
+    0 20px 48px rgba(4, 6, 20, 0.72),
+    0 0 28px rgba(214, 168, 75, 0.18),
+    inset 0 1px 0 rgba(245, 217, 138, 0.28);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  color: #EEEAF7;
+  opacity: 0;
+  transform: translateX(36px) scale(0.94);
+  transform-origin: right center;
+  transition:
+    opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s ease;
+  overflow: hidden;
+}
+
+.gs-floating-root.is-expanded .gs-floating-panel {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.gs-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.gs-panel-badge {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.gs-panel-card-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(214, 168, 75, 0.22), rgba(124, 58, 237, 0.18));
+  border: 1px solid rgba(245, 217, 138, 0.42);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px rgba(214, 168, 75, 0.18);
+}
+
+.gs-panel-title {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #F5D98A;
+  line-height: 1.25;
+}
+
+.gs-panel-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #D8D2EC;
+  line-height: 1.3;
+}
+
+.gs-floating-panel .gs-panel-close {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(238, 234, 247, 0.08);
+  color: #EEEAF7;
+  border: 1px solid rgba(214, 168, 75, 0.3);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gs-floating-panel .gs-panel-close:hover {
+  background: rgba(214, 168, 75, 0.22);
+  border-color: #F5D98A;
+  color: #fff;
+}
+
+.gs-panel-desc {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.48;
+  color: #B3AFCB;
+}
+
+.gs-panel-actions {
+  display: flex;
+}
+
+.gs-floating-panel .gs-create-btn {
+  width: 100%;
+  margin: 0;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1px solid #F5D98A;
+  background: linear-gradient(110deg, #F5D98A 0%, #D6A84B 55%, #B8862F 100%);
+  color: #090D20 !important;
+  font-weight: 700;
+  font-size: 13.5px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 18px rgba(214, 168, 75, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.gs-floating-panel .gs-create-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 10px 24px rgba(214, 168, 75, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.gs-create-btn-sparkle {
+  font-size: 14px;
+}
+
+/* 3. Greeting Studio Workspace Modal */
+.gs-studio-workspace {
+  width: min(1040px, calc(100vw - 28px));
+  max-width: 1040px;
+  max-height: 92vh;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: linear-gradient(165deg, #151836 0%, #0B0E24 100%);
+  color: #EEEAF7;
+  border: 1px solid rgba(214, 168, 75, 0.45);
+  box-shadow: 0 24px 64px rgba(2, 4, 14, 0.8);
+  overflow: hidden;
+}
+
+.gs-workspace-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(214, 168, 75, 0.22);
+}
+
+.gs-workspace-brand h2 {
+  margin: 2px 0 0;
+  text-align: left;
+  color: #F5D98A;
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+}
+
+.gs-workspace-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #D6A84B;
+}
+
+.gs-workspace-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gs-studio-workspace .gs-top-btn {
+  width: auto;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  border-radius: 10px;
+}
+
+.gs-studio-workspace .gs-export-btn {
+  background: linear-gradient(110deg, #F5D98A 0%, #D6A84B 55%, #B8862F 100%);
+  color: #090D20 !important;
+  font-weight: 700;
+}
+
+.gs-studio-workspace .gs-workspace-close {
+  position: static;
+  color: #EEEAF7;
+  border-color: rgba(214, 168, 75, 0.35);
+}
+
+.gs-workspace-body {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 20px;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.gs-controls-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.gs-control-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px;
+  border-radius: 11px;
+  border: 1px solid rgba(214, 168, 75, 0.2);
+}
+
+.gs-studio-workspace .gs-ctrl-tab {
+  margin: 0;
+  padding: 7px 4px;
+  font-size: 11.5px;
+  border-radius: 8px;
+  background: transparent;
+  color: #B3AFCB;
+}
+
+.gs-studio-workspace .gs-ctrl-tab.active {
+  background: linear-gradient(110deg, #F5D98A 0%, #D6A84B 100%);
+  color: #090D20 !important;
+  font-weight: 700;
+}
+
+.gs-field-label {
+  display: block;
+  margin: 10px 0 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #D8D2EC;
+  letter-spacing: 0.03em;
+}
+
+.gs-ctrl-panel input[type="text"],
+.gs-ctrl-panel select,
+.gs-ctrl-panel textarea {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: rgba(30, 35, 71, 0.85);
+  color: #EEEAF7;
+  border: 1px solid rgba(214, 168, 75, 0.3);
+  font-size: 13px;
+}
+
+.gs-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gs-row-2col input[type="color"] {
+  height: 38px;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.gs-template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.gs-studio-workspace .gs-template-card {
+  margin: 0;
+  padding: 10px;
+  height: 68px;
+  border-radius: 11px;
+  border: 1px solid rgba(214, 168, 75, 0.3);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.gs-studio-workspace .gs-template-card.active {
+  border: 2px solid #F5D98A;
+  box-shadow: 0 0 0 3px rgba(245, 217, 138, 0.25);
+}
+
+.gs-sticker-palette {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.gs-studio-workspace .gs-sticker-btn {
+  margin: 0;
+  padding: 9px;
+  background: rgba(30, 35, 71, 0.8);
+  color: #EEEAF7;
+  border: 1px solid rgba(214, 168, 75, 0.28);
+  font-size: 12.5px;
+}
+
+.gs-studio-workspace .gs-sticker-btn:hover {
+  border-color: #F5D98A;
+  background: rgba(214, 168, 75, 0.18);
+}
+
+.gs-layers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.gs-layer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(30, 35, 71, 0.65);
+  border: 1px solid rgba(214, 168, 75, 0.22);
+  font-size: 12.5px;
+}
+
+.gs-studio-workspace .gs-layer-del {
+  width: auto;
+  margin: 0;
+  padding: 3px 8px;
+  font-size: 11px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.gs-preview-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(27, 32, 72, 0.65), rgba(9, 12, 28, 0.9));
+  border: 1px solid rgba(214, 168, 75, 0.22);
+  border-radius: 16px;
+  padding: 16px;
+  min-height: 0;
+}
+
+.gs-card-canvas-wrap {
+  position: relative;
+  max-height: 62vh;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.65), 0 0 24px rgba(214, 168, 75, 0.2);
+}
+
+#gs-card-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+#gs-card-canvas:active {
+  cursor: grabbing;
+}
+
+.gs-stage-hint {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: #B3AFCB;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 720px) {
+  .gs-floating-root {
+    top: 48%;
+  }
+  .gs-tab-handle {
+    width: 24px;
+    height: 78px;
+    border-radius: 14px 0 0 14px;
+  }
+  .gs-floating-panel {
+    right: 8px;
+    width: min(296px, calc(100vw - 20px));
+    padding: 15px;
+  }
+  .gs-workspace-body {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  .gs-preview-stage {
+    order: -1;
+    padding: 10px;
+  }
+  .gs-card-canvas-wrap {
+    max-height: 38vh;
+  }
+}
