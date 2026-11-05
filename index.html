@@ -880,7 +880,7 @@
           </div>
 
           <p class="gs-panel-desc">
-            Craft bespoke festive cards with curated templates, Google Fonts typography, ambient filters, and golden stickers.
+            Craft festive cards with a live preview, then send them to friends and Hubs in one tap.
           </p>
 
           <div class="gs-panel-actions">
@@ -892,138 +892,7 @@
         </div>
       </aside>
 
-      <!-- Nexora Diwali Greeting Studio Workspace Modal -->
-      <div id="greeting-studio-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="gs-workspace-title">
-        <div class="card gs-studio-workspace">
-          <div class="gs-workspace-topbar">
-            <div class="gs-workspace-brand">
-              <span class="gs-workspace-badge">✦ DIWALI EDITION</span>
-              <h2 id="gs-workspace-title">Nexora Greeting Studio</h2>
-            </div>
-            <div class="gs-workspace-top-actions">
-              <button type="button" class="secondary gs-top-btn" onclick="resetGreetingStudio()">Reset</button>
-              <button type="button" class="gs-top-btn gs-export-btn" onclick="exportGreetingCardPNG()">⬇ Download PNG</button>
-              <button type="button" id="gs-send-chat-btn" class="gs-top-btn gs-send-chat-btn hidden" onclick="sendGreetingCardToActiveChat()">Send to Chat</button>
-              <button type="button" class="modal-close-btn gs-workspace-close" onclick="closeDiwaliGreetingStudio()" aria-label="Close Greeting Studio">&times;</button>
-            </div>
-          </div>
-
-          <div class="gs-workspace-body">
-            <!-- Left Controls Sidebar -->
-            <div class="gs-controls-pane">
-              <div class="gs-control-tabs" role="tablist">
-                <button type="button" class="gs-ctrl-tab active" data-gs-tab="templates" onclick="switchGreetingStudioTab('templates')">Templates</button>
-                <button type="button" class="gs-ctrl-tab" data-gs-tab="typography" onclick="switchGreetingStudioTab('typography')">Typography</button>
-                <button type="button" class="gs-ctrl-tab" data-gs-tab="adjust" onclick="switchGreetingStudioTab('adjust')">Filters</button>
-                <button type="button" class="gs-ctrl-tab" data-gs-tab="decor" onclick="switchGreetingStudioTab('decor')">Stickers</button>
-              </div>
-
-              <!-- 1. Templates & Backgrounds -->
-              <div class="gs-ctrl-panel" data-gs-panel="templates">
-                <label class="gs-field-label">Template Gallery</label>
-                <div id="gs-template-grid" class="gs-template-grid"></div>
-
-                <label class="gs-field-label">Card Frame Style</label>
-                <select id="gs-frame-style" onchange="updateGreetingStudioState()">
-                  <option value="royal-gold">Royal Gold Filigree</option>
-                  <option value="minimal-glow">Minimal Golden Border</option>
-                  <option value="arch-mandala">Palace Arch Frame</option>
-                  <option value="none">Borderless Modern</option>
-                </select>
-
-                <label class="gs-field-label">Custom Background Image URL (optional)</label>
-                <input type="text" id="gs-custom-bg" placeholder="https://..." oninput="updateGreetingStudioState()">
-              </div>
-
-              <!-- 2. Typography (Google Fonts) -->
-              <div class="gs-ctrl-panel hidden" data-gs-panel="typography">
-                <label class="gs-field-label">Heading Text</label>
-                <input type="text" id="gs-heading-input" value="Shubh Deepavali" oninput="updateGreetingStudioState()">
-
-                <label class="gs-field-label">Subheading / Message</label>
-                <textarea id="gs-subheading-input" rows="3" oninput="updateGreetingStudioState()">May the divine light of Diwali bring peace, prosperity, and endless joy to your home.</textarea>
-
-                <label class="gs-field-label">Footer / From Line</label>
-                <input type="text" id="gs-footer-input" value="Warm wishes from Nexora" oninput="updateGreetingStudioState()">
-
-                <label class="gs-field-label">Heading Google Font</label>
-                <select id="gs-heading-font" onchange="updateGreetingStudioState()">
-                  <option value="'Cinzel Decorative', serif">Cinzel Decorative (Royal)</option>
-                  <option value="'Great Vibes', cursive">Great Vibes (Calligraphy)</option>
-                  <option value="'Dr Sugiyama', cursive">Dr Sugiyama (Festive Script)</option>
-                  <option value="'Playfair Display', serif">Playfair Display (Editorial)</option>
-                  <option value="'Rozha One', serif">Rozha One (Classic Heritage)</option>
-                  <option value="'Dancing Script', cursive">Dancing Script (Warm)</option>
-                  <option value="'Cormorant Garamond', serif">Cormorant Garamond (Luxe)</option>
-                  <option value="'Montserrat', sans-serif">Montserrat (Modern Geometric)</option>
-                  <option value="'Poppins', sans-serif">Poppins (Clean Contemporary)</option>
-                </select>
-
-                <label class="gs-field-label">Body Google Font</label>
-                <select id="gs-body-font" onchange="updateGreetingStudioState()">
-                  <option value="'Poppins', sans-serif">Poppins</option>
-                  <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
-                  <option value="'Playfair Display', serif">Playfair Display</option>
-                  <option value="'Montserrat', sans-serif">Montserrat</option>
-                  <option value="'Inter', sans-serif">Inter</option>
-                </select>
-
-                <div class="gs-row-2col">
-                  <div>
-                    <label class="gs-field-label">Heading Colour</label>
-                    <input type="color" id="gs-heading-color" value="#F5D98A" oninput="updateGreetingStudioState()">
-                  </div>
-                  <div>
-                    <label class="gs-field-label">Body Colour</label>
-                    <input type="color" id="gs-body-color" value="#EEEAF7" oninput="updateGreetingStudioState()">
-                  </div>
-                </div>
-
-                <label class="gs-field-label">Text Vertical Position</label>
-                <input type="range" id="gs-text-y" min="-60" max="60" value="0" oninput="updateGreetingStudioState()">
-              </div>
-
-              <!-- 3. Filters & Adjustments -->
-              <div class="gs-ctrl-panel hidden" data-gs-panel="adjust">
-                <label class="gs-field-label">Brightness (<span id="gs-val-bright">100</span>%)</label>
-                <input type="range" id="gs-filter-bright" min="60" max="140" value="100" oninput="updateGreetingStudioState()">
-
-                <label class="gs-field-label">Contrast (<span id="gs-val-contrast">100</span>%)</label>
-                <input type="range" id="gs-filter-contrast" min="70" max="140" value="100" oninput="updateGreetingStudioState()">
-
-                <label class="gs-field-label">Saturation (<span id="gs-val-sat">110</span>%)</label>
-                <input type="range" id="gs-filter-sat" min="50" max="180" value="110" oninput="updateGreetingStudioState()">
-
-                <label class="gs-field-label">Warmth / Temperature (<span id="gs-val-temp">15</span>%)</label>
-                <input type="range" id="gs-filter-temp" min="0" max="60" value="15" oninput="updateGreetingStudioState()">
-              </div>
-
-              <!-- 4. Decorative Elements & Stickers -->
-              <div class="gs-ctrl-panel hidden" data-gs-panel="decor">
-                <label class="gs-field-label">Add Festive Stickers</label>
-                <div class="gs-sticker-palette">
-                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🪔')">🪔 Diya</button>
-                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('✨')">✨ Sparkles</button>
-                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🎆')">🎆 Fireworks</button>
-                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🪷')">🪷 Lotus</button>
-                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🏮')">🏮 Lantern</button>
-                  <button type="button" class="gs-sticker-btn" onclick="addGreetingSticker('🕉️')">🕉️ Om</button>
-                </div>
-                <label class="gs-field-label">Active Sticker Layers (Click on preview to drag)</label>
-                <div id="gs-layers-list" class="gs-layers-list"></div>
-              </div>
-            </div>
-
-            <!-- Right Live Preview Stage -->
-            <div class="gs-preview-stage">
-              <div id="gs-card-canvas-wrap" class="gs-card-canvas-wrap">
-                <canvas id="gs-card-canvas" width="720" height="900"></canvas>
-              </div>
-              <p class="gs-stage-hint">Live Preview · Drag stickers directly on the card to reposition them.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Greeting Card Studio workspace is built by wishing.js on first open -->
       <div id="hub-search-panel" class="hub-search-panel hidden" role="search">
         <span aria-hidden="true">⌕</span>
         <input id="hub-message-search" type="search" placeholder="Search in Hub" oninput="filterHubMessages()" autocomplete="off">
@@ -4680,6 +4549,8 @@
   <script src="script.js"></script>
   <!-- Diwali Wishes: composer shortcut + festive greeting picker (see diwali-wishes.js) -->
   <script src="diwali-wishes.js"></script>
+  <!-- Greeting Wisher / Greeting Card Studio (templates, live preview, sharing) -->
+  <script src="wishing.js"></script>
   <!-- User Profile feature (self-contained module; see profile.js) -->
   <script type="module" src="profile.js"></script>
 </body>
