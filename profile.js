@@ -399,7 +399,7 @@ import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "htt
       ? `<div class="profile-status" id="profile-status-row"><span class="profile-status-dot" style="background:var(--status-${STATUS_VAR[m.status.key] || 'offline'})"></span><span id="profile-status-text">${esc(statusLabel(m.status.key))}</span></div>`
       : '<div class="profile-status"><span class="profile-status-dot" style="background:var(--status-offline)"></span><span>Status hidden</span></div>';
     return `<div class="profile-card">
-      <div class="profile-banner${m.banner ? ' has-custom-banner' : ''}" aria-hidden="true"${m.banner ? ` style="background-image:url('${esc(m.banner)}');background-size:cover;background-position:center;background-repeat:no-repeat;"` : ''}></div>
+      <div class="profile-banner${m.banner ? ' has-custom-banner' : ''}"${m.banner ? ` style="background-image:url('${esc(m.banner)}');background-size:cover;background-position:center;background-repeat:no-repeat;"` : ''}>${m.isMe && !m.loading ? '<button type="button" class="profile-banner-edit" id="profile-banner-edit-btn" title="Change banner" aria-label="Change profile banner">✎</button>' : ''}</div>
       <div class="profile-head">
         <div class="profile-avatar-wrap">
           <img class="avatar-large profile-avatar ${esc(m.frame)}" src="${esc(m.avatar)}" alt="${esc(m.username)}'s profile photo">
@@ -526,6 +526,7 @@ import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "htt
       case 'profile-message-btn': if (typeof selectFriend === 'function') selectFriend(viewing); break;   // wrapper below closes the panel
       case 'profile-add-btn': addFriend(t); break;
       case 'profile-photo-btn': photoInput.click(); break;
+      case 'profile-banner-edit-btn': { const bannerInput = document.getElementById('banner-input'); if (bannerInput) bannerInput.click(); break; }
       case 'profile-badges-toggle': openBadgesDialog(); break;
       default: break;
     }
