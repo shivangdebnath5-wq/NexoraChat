@@ -1727,3 +1727,7 @@ html[data-theme="midnight-diwali"] .diwali-sub { font-family:'Inter', -apple-sys
 .message img.attachment-img.sticker-img { width:auto; height:auto; max-width:150px; max-height:150px; object-fit:contain; border-radius:0; box-shadow:none; background:none; cursor:default; filter:drop-shadow(0 3px 6px rgba(0,0,0,.28)); }
 .message.sticker-only { background:transparent !important; box-shadow:none !important; border:0 !important; padding:2px 4px !important; }
 @media (max-width:720px) { .message img.attachment-img.sticker-img { max-width:128px; max-height:128px; } }
+
+.sticker-retry { width:auto; margin:8px 0 0; padding:5px 14px; font-size:12px; font-weight:600; border-radius:99px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); cursor:pointer; }
+.sticker-retry:hover { background:var(--input-bg); border-color:var(--primary); color:var(--primary); }
+.sticker-grid .gif-picker-status small { display:block; margin-top:4px; font-size:11px; opacity:.8; word-break:break-all; }
