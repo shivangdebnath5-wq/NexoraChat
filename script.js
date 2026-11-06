@@ -1607,10 +1607,14 @@ const stickerPackCache = {};
 function isStickerAttachment(a) {
   return !!(a && a.type === 'image' && (a.sticker === true || a.name === 'Sticker'));
 }
-function stickerStatus(msg) {
+function stickerStatus(msg, retry) {
   const grid = document.getElementById('sticker-grid');
-  if (grid) grid.innerHTML = `<div class="gif-picker-status">${msg}</div>`;
+  if (!grid) return;
+  grid.innerHTML = `<div class="gif-picker-status">${msg}${retry ? '<br><button type="button" class="sticker-retry">Try again</button>' : ''}</div>`;
+  const btn = grid.querySelector('.sticker-retry');
+  if (btn) btn.onclick = retry;
 }
+const stickerEsc = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 async function fetchStickerJSON(path) {
   const res = await fetch(STICKER_ROOT + path, { cache: 'no-cache' });   // revalidate so new stickers appear after a deploy
   if (!res.ok) throw new Error(`${res.status} ${res.statusText} (${STICKER_ROOT + path})`);
@@ -1628,7 +1632,7 @@ async function loadStickerPacks() {
   } catch (error) {
     console.error('Sticker packs failed to load:', error);
     stickerPacks = null;
-    stickerStatus('Could not load stickers. Try again.');
+    stickerStatus(`Could not load stickers.<br><small>${stickerEsc(error.message || error)}</small>`, loadStickerPacks);
   }
 }
 function renderStickerPackTabs() {
@@ -1653,7 +1657,7 @@ async function selectStickerPack(id) {
   } catch (error) {
     console.error('Sticker pack failed to load:', error);
     delete stickerPackCache[id];
-    stickerStatus('Could not load this pack. Try again.');
+    stickerStatus(`Could not load this pack.<br><small>${stickerEsc(error.message || error)}</small>`, () => selectStickerPack(id));
   }
 }
 function renderStickerGrid(packId, manifest) {
