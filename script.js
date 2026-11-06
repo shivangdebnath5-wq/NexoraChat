@@ -1462,11 +1462,23 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 /* ===== Midnight Diwali theme FX (limited-time Special theme) =====
    Same lifecycle as Moonlight Sparkle: the #diwali-fx layer exists only while data-theme="midnight-diwali".
    ~26 tiny gold particles (2-4px, 8-18s loops) float up and shimmer/fade, plus a few diya sparks and two
-   breathing gold glows. Pure CSS animation (transform/opacity) - no per-frame JS. Skipped for reduced motion. */
+   breathing gold glows. Pure CSS animation (transform/opacity) - no per-frame JS. Skipped for reduced motion.
+
+   Dynamic Ambient — Light & Glow (still the same theme, no new theme/option added):
+   - A `data-diwali-ambient` attribute ("day" | "night") is set on <html> only while this theme is active,
+     based on local wall-clock time (06:00-18:00 = day). style.css keys the cream/marigold day palette and
+     the indigo/violet night palette + bottom-of-chat gold glow off that attribute. Rechecked every minute
+     (cheap: one Date() read + one attribute write) plus on visibility/focus, same pattern as the Diwali
+     countdown refresh above.
+   - Ember particles stay exactly as built below; a single capturing `scroll` listener on #messages-list
+     (passive, feature-detected once) toggles a `.dw-scroll-boost` class on #diwali-fx that only nudges
+     opacity/brightness via CSS transitions - no per-frame JS, nothing added/removed from the DOM on scroll. */
 (function initMidnightDiwaliFx() {
   const THEME = 'midnight-diwali';
   const reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
   let fx = null;
+  let ambientTimer = null;
+  let scrollBoostTimer = null;
   const rnd = (a, b) => a + Math.random() * (b - a);
 
   function loadFonts() {
@@ -1491,14 +1503,51 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     }
     return h;
   }
+
+  // Day = 06:00-18:00 local time, Night/Puja = the rest. Re-applied, never re-created.
+  function isDayNow() { const h = new Date().getHours(); return h >= 6 && h < 18; }
+  function applyAmbientMode() {
+    if (document.documentElement.getAttribute('data-theme') !== THEME) return;
+    document.documentElement.setAttribute('data-diwali-ambient', isDayNow() ? 'day' : 'night');
+  }
+  function startAmbientClock() {
+    applyAmbientMode();
+    if (ambientTimer) return;
+    ambientTimer = setInterval(applyAmbientMode, 60000);
+    document.addEventListener('visibilitychange', onAmbientWake);
+    window.addEventListener('focus', onAmbientWake);
+  }
+  function stopAmbientClock() {
+    if (ambientTimer) { clearInterval(ambientTimer); ambientTimer = null; }
+    document.removeEventListener('visibilitychange', onAmbientWake);
+    window.removeEventListener('focus', onAmbientWake);
+    document.documentElement.removeAttribute('data-diwali-ambient');
+  }
+  function onAmbientWake() { if (!document.hidden) applyAmbientMode(); }
+
+  // Ember particles "subtly respond to message scrolling": one capturing, passive listener (scroll doesn't
+  // reliably bubble), checked against the live chat's id so it keeps working across chat/Hub switches.
+  function onAnyScroll(e) {
+    if (reduceMq.matches || !fx || !e.target || e.target.id !== 'messages-list') return;
+    fx.classList.add('dw-scroll-boost');
+    clearTimeout(scrollBoostTimer);
+    scrollBoostTimer = setTimeout(() => { if (fx) fx.classList.remove('dw-scroll-boost'); }, 900);
+  }
+  document.addEventListener('scroll', onAnyScroll, { capture: true, passive: true });
+
   function activate() {
     if (fx || !document.body) return;
     loadFonts();
     fx = document.createElement('div'); fx.id = 'diwali-fx'; fx.setAttribute('aria-hidden', 'true');
     fx.innerHTML = reduceMq.matches ? '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>' : build();
     document.body.insertBefore(fx, document.body.firstChild);
+    startAmbientClock();
   }
-  function deactivate() { if (fx) { fx.remove(); fx = null; } }
+  function deactivate() {
+    if (fx) { fx.remove(); fx = null; }
+    stopAmbientClock();
+    clearTimeout(scrollBoostTimer);
+  }
   function sync() { (document.documentElement.getAttribute('data-theme') === THEME) ? activate() : deactivate(); }
 
   new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
