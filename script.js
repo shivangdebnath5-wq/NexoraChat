@@ -384,7 +384,7 @@ function renderHubMessages(scroll) {
     }
     const newMsgDivider = typeof newMessagesDividerFor === 'function' ? newMessagesDividerFor(message.id) : null;
     if (newMsgDivider) list.appendChild(newMsgDivider);
-    const sent = message.sender === currentUser; const row = document.createElement('div'); row.className = `message-wrapper ${sent ? 'sent' : 'received'}${scroll ? ' message-arrive' : ''}`; row.dataset.messageId = message.id; row.classList.toggle('message-pinned', !!message.pinned); const structuredContent = (message.extension && typeof extensionHTML === 'function') ? extensionHTML(message) : ''; const locationCard = (typeof locationCardHTML === 'function') ? locationCardHTML(message.text) : null; const pinterestCard = (typeof pinterestCardSlotHTML === 'function') ? pinterestCardSlotHTML(message.text, message.id) : ''; row.innerHTML = `<div class="message-body-row"><img class="avatar" src="${(DB.getUsers()[message.sender]?.pfp) || DEFAULT_AVATAR}" style="width:26px;height:26px;"><div class="message ${sent ? 'sent' : 'received'}"><div class="hub-message-name">@${safeHubText(message.sender)}</div>${typeof replyChipHTML === 'function' ? replyChipHTML(message) : ''}${message.attachment?.type === 'image' ? `<img src="${message.attachment.data}" class="attachment-img">` : ''}${structuredContent}${locationCard || (message.text ? `<div>${parseTextLinks(message.text)}</div>` : '')}${pinterestCard}<div style="font-size:10px;opacity:.7;text-align:right;">${message.timestamp}</div></div></div>`;
+    const sent = message.sender === currentUser; const row = document.createElement('div'); row.className = `message-wrapper ${sent ? 'sent' : 'received'}${scroll ? ' message-arrive' : ''}`; row.dataset.messageId = message.id; row.classList.toggle('message-pinned', !!message.pinned); const structuredContent = (message.extension && typeof extensionHTML === 'function') ? extensionHTML(message) : ''; const locationCard = (typeof locationCardHTML === 'function') ? locationCardHTML(message.text) : null; const pinterestCard = (typeof pinterestCardSlotHTML === 'function') ? pinterestCardSlotHTML(message.text, message.id) : ''; row.innerHTML = `<div class="message-body-row"><img class="avatar" src="${(DB.getUsers()[message.sender]?.pfp) || DEFAULT_AVATAR}" style="width:26px;height:26px;"><div class="message ${sent ? 'sent' : 'received'}${isStickerAttachment(message.attachment) && !message.text ? ' sticker-only' : ''}"><div class="hub-message-name">@${safeHubText(message.sender)}</div>${typeof replyChipHTML === 'function' ? replyChipHTML(message) : ''}${message.attachment?.type === 'image' ? `<img src="${message.attachment.data}" class="attachment-img${isStickerAttachment(message.attachment) ? ' sticker-img' : ''}">` : ''}${structuredContent}${locationCard || (message.text ? `<div>${parseTextLinks(message.text)}</div>` : '')}${pinterestCard}<div style="font-size:10px;opacity:.7;text-align:right;">${message.timestamp}</div></div></div>`;
 
     // Reactions + pin: same popover UI/behaviour as Direct Chat
     // (buildMsgPopoverElement / buildReactionBadgeElement in index.html —
@@ -1591,3 +1591,92 @@ openSettings = function() { grantRangoliDiwali(); openSettingsWithRangoli.apply(
 })();
 
 /* Greeting Studio (Greeting Wisher) now lives in wishing.js */
+
+/* ===== Sticker packs (picker "Stickers" tab) =====
+   Packs are plain folders in the repo, so the app can load them straight from GitHub Pages:
+     stickers/packs.json                 -> list of packs (id, name, icon)
+     stickers/<pack-id>/manifest.json    -> { "name": "...", "stickers": [ { "file": "x.png", "name": "X" } ] }
+     stickers/<pack-id>/x.png            -> the sticker images
+   Add a sticker = drop the image in the pack folder + add one line to its manifest.json.
+   Sending reuses the GIF path: the sticker becomes an image attachment on a normal message, so DMs and
+   Hubs, syncing and notifications all work unchanged (only a small path string is stored, not image data). */
+const STICKER_ROOT = 'stickers/';
+let stickerPacks = null, activeStickerPackId = null;
+const stickerPackCache = {};
+
+function isStickerAttachment(a) {
+  return !!(a && a.type === 'image' && (a.sticker === true || a.name === 'Sticker'));
+}
+function stickerStatus(msg) {
+  const grid = document.getElementById('sticker-grid');
+  if (grid) grid.innerHTML = `<div class="gif-picker-status">${msg}</div>`;
+}
+async function fetchStickerJSON(path) {
+  const res = await fetch(STICKER_ROOT + path, { cache: 'no-cache' });   // revalidate so new stickers appear after a deploy
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText} (${STICKER_ROOT + path})`);
+  return res.json();
+}
+async function loadStickerPacks() {
+  if (stickerPacks) return;                                              // already loaded this session
+  stickerStatus('Loading stickers…');
+  try {
+    const data = await fetchStickerJSON('packs.json');
+    stickerPacks = (data.packs || []).filter(p => p && p.id && p.name);
+    if (!stickerPacks.length) return stickerStatus('No sticker packs yet.');
+    renderStickerPackTabs();
+    selectStickerPack(activeStickerPackId || stickerPacks[0].id);
+  } catch (error) {
+    console.error('Sticker packs failed to load:', error);
+    stickerPacks = null;
+    stickerStatus('Could not load stickers. Try again.');
+  }
+}
+function renderStickerPackTabs() {
+  const bar = document.getElementById('sticker-packs'); if (!bar) return;
+  bar.innerHTML = '';
+  stickerPacks.forEach(pack => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'sticker-pack-tab'; b.dataset.packId = pack.id; b.setAttribute('role', 'tab');
+    b.textContent = `${pack.icon ? pack.icon + ' ' : ''}${pack.name}`;
+    b.onclick = () => selectStickerPack(pack.id);
+    bar.appendChild(b);
+  });
+}
+async function selectStickerPack(id) {
+  activeStickerPackId = id;
+  document.querySelectorAll('.sticker-pack-tab').forEach(b => { const on = b.dataset.packId === id; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
+  stickerStatus('Loading stickers…');
+  try {
+    if (!stickerPackCache[id]) stickerPackCache[id] = await fetchStickerJSON(`${id}/manifest.json`);
+    if (activeStickerPackId !== id) return;                              // user switched packs while loading
+    renderStickerGrid(id, stickerPackCache[id]);
+  } catch (error) {
+    console.error('Sticker pack failed to load:', error);
+    delete stickerPackCache[id];
+    stickerStatus('Could not load this pack. Try again.');
+  }
+}
+function renderStickerGrid(packId, manifest) {
+  const grid = document.getElementById('sticker-grid'); if (!grid) return;
+  const items = (manifest.stickers || []).filter(s => s && s.file);
+  if (!items.length) return stickerStatus('This pack has no stickers yet.');
+  grid.innerHTML = '';
+  items.forEach(sticker => {
+    const path = `${STICKER_ROOT}${packId}/${sticker.file}`;
+    const label = sticker.name || sticker.file.replace(/\.[^.]+$/, '');
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'sticker-item'; btn.title = label; btn.setAttribute('aria-label', `Send sticker: ${label}`);
+    const img = document.createElement('img');
+    img.src = path; img.alt = label; img.loading = 'lazy'; img.decoding = 'async'; img.draggable = false;
+    img.onerror = () => { btn.classList.add('is-broken'); btn.disabled = true; btn.title = `${label} (could not load)`; console.warn('Sticker failed to load:', path); };
+    btn.appendChild(img);
+    btn.onclick = () => sendSticker(path, label);
+    grid.appendChild(btn);
+  });
+}
+function sendSticker(path, label) {
+  if (!path || !(activeFriend || activeHub)) return;
+  closeGifPicker();                                                      // same shell close as GIFs
+  currentAttachment = { name: 'Sticker', type: 'image', sticker: true, data: path, alt: label || 'Sticker' };
+  sendMessage();
+}
