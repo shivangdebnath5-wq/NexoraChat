@@ -927,9 +927,10 @@
             <div id="gif-picker-grid" class="gif-picker-grid"><div class="gif-picker-status">Search for GIFs above</div></div>
           </div>
 
-          <!-- Stickers: placeholder tab, no functionality yet -->
-          <div id="stickers-pane" class="picker-pane hidden">
-            <div class="gif-picker-status">Stickers coming soon!</div>
+          <!-- Stickers: packs are folders under /stickers (see stickers/packs.json); logic lives in script.js -->
+          <div id="stickers-pane" class="picker-pane sticker-pane hidden">
+            <div id="sticker-packs" class="sticker-packs" role="tablist" aria-label="Sticker packs"></div>
+            <div id="sticker-grid" class="sticker-grid"><div class="gif-picker-status">Loading stickers…</div></div>
           </div>
         </div>
 
@@ -3081,6 +3082,7 @@
       document.getElementById('emoji-pane').classList.toggle('hidden', tab !== 'emoji');
       document.getElementById('gif-picker').classList.toggle('hidden', tab !== 'gif');
       document.getElementById('stickers-pane').classList.toggle('hidden', tab !== 'stickers');
+      if (tab === 'stickers' && typeof loadStickerPacks === 'function') loadStickerPacks();
       if (tab === 'gif') {
         document.getElementById('gif-search-input')?.focus();
         // Load a default feed on open (only if nothing is showing yet, so
@@ -3826,14 +3828,17 @@
         let attachmentHTML = '';
         if (m.attachment) {
           if (m.attachment.type === 'image') {
-            attachmentHTML = `<img src="${m.attachment.data}" class="attachment-img" onclick="window.open('${m.attachment.data}')">`;
+            const isSticker = typeof isStickerAttachment === 'function' && isStickerAttachment(m.attachment);
+            attachmentHTML = isSticker
+              ? `<img src="${m.attachment.data}" class="attachment-img sticker-img" alt="Sticker">`
+              : `<img src="${m.attachment.data}" class="attachment-img" onclick="window.open('${m.attachment.data}')">`;
           } else {
             attachmentHTML = `<a href="${m.attachment.data}" download="${m.attachment.name}" class="file-attachment">📄 ${m.attachment.name}</a>`;
           }
         }
 
         const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+        msgDiv.className = `message ${isSent ? 'sent' : 'received'}${(typeof isStickerAttachment === 'function' && isStickerAttachment(m.attachment) && !m.text) ? ' sticker-only' : ''}`;
         msgDiv.onclick = (e) => toggleMsgPopover(e, m.id);
 
         const locationCard = locationCardHTML(m.text);
