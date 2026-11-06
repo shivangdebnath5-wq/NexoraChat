@@ -1702,3 +1702,28 @@ html[data-theme="midnight-diwali"] .diwali-sub { font-family:'Inter', -apple-sys
 }
 @media (max-width: 380px) { .gs-card-canvas-wrap { width:min(100%, 27vh); } .gs-sticker-palette { grid-template-columns:repeat(4, minmax(0,1fr)); } }
 @media (prefers-reduced-motion: reduce) { .gs-modal, .gs-modal *, .gs-share-panel, .gs-live i { animation:none !important; transition:none !important; } }
+
+
+/* =========================================================================
+   STICKERS — picker tab (packs + grid) and how stickers show in chat
+   ========================================================================= */
+.sticker-pane { display:flex; flex-direction:column; gap:8px; }
+.sticker-packs { display:flex; gap:6px; flex-shrink:0; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+.sticker-packs::-webkit-scrollbar { display:none; }
+.sticker-pack-tab { width:auto; flex:0 0 auto; margin:0; padding:5px 11px; font-size:12px; font-weight:600; white-space:nowrap; border-radius:99px; background:var(--input-bg); color:var(--text-muted); border:1px solid var(--border); cursor:pointer; transition:background .18s ease, color .18s ease, border-color .18s ease; }
+.sticker-pack-tab:hover { color:var(--text-main); }
+.sticker-pack-tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.sticker-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; align-content:start; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:2px; }
+.sticker-item { position:relative; width:auto; min-height:0; margin:0; padding:6px; aspect-ratio:1 / 1; display:grid; place-items:center; border-radius:12px; background:var(--input-bg); border:1px solid transparent; cursor:pointer; transition:transform .18s cubic-bezier(.2,.9,.25,1.2), border-color .18s ease, background .18s ease; }
+.sticker-item img { display:block; max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.28)); }
+.sticker-item:hover, .sticker-item:focus-visible { transform:translateY(-2px) scale(1.05); background:var(--input-bg); border-color:var(--primary); outline:none; box-shadow:0 6px 14px var(--shadow); }
+.sticker-item:active { transform:scale(.95); background:var(--input-bg); }
+.sticker-pack-tab:not(.active):hover { background:var(--input-bg); color:var(--text-main); }
+.sticker-pack-tab.active:hover { background:var(--primary); }
+.sticker-item.is-broken { opacity:.4; cursor:not-allowed; }
+.sticker-item.is-broken::after { content:'⚠'; position:absolute; font-size:16px; }
+
+/* in chat: sticker = the image alone, uncropped, no coloured bubble */
+.message img.attachment-img.sticker-img { width:auto; height:auto; max-width:150px; max-height:150px; object-fit:contain; border-radius:0; box-shadow:none; background:none; cursor:default; filter:drop-shadow(0 3px 6px rgba(0,0,0,.28)); }
+.message.sticker-only { background:transparent !important; box-shadow:none !important; border:0 !important; padding:2px 4px !important; }
+@media (max-width:720px) { .message img.attachment-img.sticker-img { max-width:128px; max-height:128px; } }
