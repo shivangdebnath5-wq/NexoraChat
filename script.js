@@ -1543,8 +1543,6 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 <linearGradient id="dwGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6C667"/><stop offset="1" stop-color="#C9972E"/></linearGradient>
 <linearGradient id="dwClay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6A84B"/><stop offset="1" stop-color="#7A4A17"/></linearGradient>
 <radialGradient id="dwFlameG" cx=".5" cy=".2" r=".9"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".55" stop-color="#FFA726"/><stop offset="1" stop-color="#E8572A"/></radialGradient>
-<linearGradient id="dwPeaTail" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1E3A8A"/><stop offset=".6" stop-color="#10B981"/><stop offset="1" stop-color="#34D399"/></linearGradient>
-<radialGradient id="dwPeaEye" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#047857"/><stop offset="1" stop-color="#F5D98A"/></radialGradient>
 <symbol id="dwDiya" viewBox="0 0 60 50">
 <path d="M4 28c7 4 17 6 26 6s19-2 26-6c-3 10-14 17-26 17S7 38 4 28z" fill="url(#dwClay)"/>
 <ellipse cx="30" cy="27" rx="25" ry="5.5" fill="url(#dwGold)" opacity=".85"/>
@@ -1568,25 +1566,6 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 <g fill="#E2A33D"><circle cx="60" cy="24" r="6"/><circle cx="180" cy="24" r="6"/><circle cx="300" cy="24" r="6"/><circle cx="420" cy="24" r="6"/><circle cx="540" cy="24" r="6"/><circle cx="660" cy="24" r="6"/><circle cx="780" cy="24" r="6"/><circle cx="900" cy="24" r="6"/><circle cx="1020" cy="24" r="6"/><circle cx="1140" cy="24" r="6"/></g>
 <g fill="#C97F1F"><circle cx="60" cy="24" r="2.4"/><circle cx="180" cy="24" r="2.4"/><circle cx="300" cy="24" r="2.4"/><circle cx="420" cy="24" r="2.4"/><circle cx="540" cy="24" r="2.4"/><circle cx="660" cy="24" r="2.4"/><circle cx="780" cy="24" r="2.4"/><circle cx="900" cy="24" r="2.4"/><circle cx="1020" cy="24" r="2.4"/><circle cx="1140" cy="24" r="2.4"/></g>
 </symbol>
-<g id="dwFeather">
-<path d="M0 0C-7 -14 -7 -34 0 -46C7 -34 7 -14 0 0Z" fill="url(#dwPeaTail)"/>
-<ellipse cx="0" cy="-37" rx="4.2" ry="6" fill="url(#dwPeaEye)"/><ellipse cx="0" cy="-37" rx="1.6" ry="2.4" fill="#0B3B2E"/>
-</g>
-<g id="dwPeacock">
-<g transform="translate(6 8) scale(1.45)"><use href="#dwFeather" transform="rotate(-60)"/><use href="#dwFeather" transform="rotate(-48)"/><use href="#dwFeather" transform="rotate(-36)"/><use href="#dwFeather" transform="rotate(-24)"/><use href="#dwFeather" transform="rotate(-12)"/><use href="#dwFeather" transform="rotate(0)"/><use href="#dwFeather" transform="rotate(12)"/><use href="#dwFeather" transform="rotate(24)"/><use href="#dwFeather" transform="rotate(36)"/><use href="#dwFeather" transform="rotate(48)"/><use href="#dwFeather" transform="rotate(60)"/></g>
-<g class="dw-peacock-body">
-<ellipse cx="6" cy="18" rx="16" ry="22" fill="url(#dwGold)" stroke="#8A5A12" stroke-width="1"/>
-<path d="M6 -2C0 -14 -4 -26 2 -34C8 -28 10 -16 6 -2Z" fill="url(#dwGold)" stroke="#8A5A12" stroke-width="1"/>
-<circle cx="4" cy="-30" r="6" fill="url(#dwGold)" stroke="#8A5A12" stroke-width="1"/>
-<path d="M4 -36l-2 -6M4 -36l0 -7M4 -36l2 -6" stroke="#C9972E" stroke-width="1.6" stroke-linecap="round"/>
-<g fill="none" stroke="#7A4A17" stroke-width="0.9" stroke-linecap="round" opacity=".85">
-<path d="M-6 8q6 5 12 0q6 5 12 0M-8 16q7 5 14 0q7 5 14 0M-7 24q7 5 14 0q7 5 14 0M-4 32q6 5 12 0q6 5 10 0"/>
-<path d="M6 0C-2 8 -4 22 6 36C16 22 14 8 6 0Z"/><path d="M2 -14C0 -20 1 -26 3 -30M5 -10C6 -18 7 -24 6 -28"/>
-</g>
-<g fill="none" stroke="#FFE9A8" stroke-width="0.6" opacity=".7"><path d="M-5 7q6 5 12 0q6 5 12 0M-7 15q7 5 14 0q7 5 14 0"/></g>
-<circle cx="3" cy="-31" r="1.3" fill="#4A2E0A"/><path d="M-3 -29l-5 2l5 1.2z" fill="#C9972E" stroke="#7A4A17" stroke-width=".5"/>
-</g>
-</g>
 </defs></svg>
 <div class="dw-decor">
 <div class="dw-garland-wrap"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><use href="#dwGarland"/></svg></div>
@@ -1604,8 +1583,24 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   // frosted/blurred panels, which smeared them and blocked clicks.
   let fxTop = null;
   function topMarkup() {
-    return `<svg class="dw-peacock" viewBox="-66 -66 144 124" aria-hidden="true"><use href="#dwPeacock"/></svg><div class="dw-firework-trigger" aria-hidden="true"></div>`;
+    return `<img class="dw-peacock" src="diwali-peacock.png" alt="" aria-hidden="true" draggable="false"><div class="dw-firework-trigger" aria-hidden="true"></div>`;
   }
+  // Faint glow while the pointer is over the peacock (Day mode only). The artwork ignores pointer events so the
+  // UI underneath stays clickable; hover is detected against its bounding box instead.
+  let peacockRaf = 0;
+  function onPeacockMove(e) {
+    if (!fxTop || peacockRaf) return;
+    const x = e.clientX, y = e.clientY;
+    peacockRaf = requestAnimationFrame(() => {
+      peacockRaf = 0;
+      const img = fxTop && fxTop.querySelector('.dw-peacock');
+      if (!img) return;
+      const day = document.documentElement.getAttribute('data-diwali-ambient') === 'day';
+      const r = img.getBoundingClientRect();
+      img.classList.toggle('dw-peacock-glow', day && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+    });
+  }
+  document.addEventListener('mousemove', onPeacockMove, { passive: true });
   function spawnFirework(anchor) {
     if (reduceMq.matches || !fx) return;
     const r = anchor.getBoundingClientRect();
