@@ -1505,7 +1505,33 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   }
 
   // Day = 06:00-18:00 local time, Night/Puja = the rest. Re-applied, never re-created.
-  function isDayNow() { const h = new Date().getHours(); return h >= 6 && h < 18; }
+  // Console override so the theme can be tested without waiting for real day/night (in-memory only: a reload
+  // goes back to the real clock). null = real local time, 'day' | 'night' = forced.
+  let ambientOverride = null;
+  function isDayNow() {
+    if (ambientOverride) return ambientOverride === 'day';
+    const h = new Date().getHours(); return h >= 6 && h < 18;
+  }
+  // changeTime() toggles | changeTime('day') | changeTime('night') | changeTime(14) or changeTime('14:30') (hour of day)
+  // | changeTime('auto') returns to the real clock. Aliases: timeChange(), timechange(), changetime().
+  function changeTime(arg) {
+    let next;
+    if (arg === undefined) next = isDayNow() ? 'night' : 'day';
+    else if (arg === null || /^(auto|real|reset|now)$/i.test(String(arg).trim())) next = null;
+    else if (/^(day|night)$/i.test(String(arg).trim())) next = String(arg).trim().toLowerCase();
+    else {
+      const m = /^(\d{1,2})(?::\d{2})?$/.exec(String(arg).trim());
+      const h = m ? parseInt(m[1], 10) : NaN;
+      if (!(h >= 0 && h <= 23)) { console.warn("changeTime(): use 'day', 'night', an hour 0-23 (e.g. 14), 'auto', or no argument to toggle."); return; }
+      next = (h >= 6 && h < 18) ? 'day' : 'night';
+    }
+    ambientOverride = next;
+    applyAmbientMode();
+    const active = document.documentElement.getAttribute('data-theme') === THEME;
+    console.log(next ? ('Theme time forced to ' + next.toUpperCase() + '.') : 'Theme time back to real local time (' + (isDayNow() ? 'day' : 'night') + ').', active ? '' : '(applies once the Midnight Diwali theme is active)');
+    return next || 'auto';
+  }
+  window.changeTime = window.timeChange = window.timechange = window.changetime = changeTime;
   function applyAmbientMode() {
     if (document.documentElement.getAttribute('data-theme') !== THEME) return;
     document.documentElement.setAttribute('data-diwali-ambient', isDayNow() ? 'day' : 'night');
