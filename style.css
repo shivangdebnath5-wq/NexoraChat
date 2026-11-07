@@ -1096,6 +1096,54 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 @keyframes dwBreathe { 0%,100% { opacity:.55; } 50% { opacity:1; } }
 @media (prefers-reduced-motion: reduce) { .dw-p, .dw-p i, .dw-spark, #diwali-fx .dw-glow { animation:none; transition:none; } .dw-p, .dw-spark { display:none; } }
 
+/* ---- Festive decorations: carved diyas, rangoli, marigold garland + bells, floral carvings, a
+   firework hotspot, and (day mode only) an ornamental gold peacock. Behind messages like everything
+   else in #diwali-fx (pointer-events:none on the layer); only the clickable pieces opt back in. ---- */
+.dw-defs { position:absolute; width:0; height:0; overflow:hidden; }
+.dw-decor { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.dw-garland-wrap { position:absolute; top:0; left:0; right:0; height:34px; opacity:.85; }
+.dw-garland-wrap svg { width:100%; height:100%; display:block; }
+.dw-bell { position:absolute; top:22px; width:22px; height:26px; transform-origin:50% 0; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35)); animation:dwSwing 4.5s ease-in-out infinite; }
+.dw-bell-1 { left:14%; } .dw-bell-2 { left:50%; margin-left:-11px; animation-delay:-1.5s; } .dw-bell-3 { left:84%; animation-delay:-3s; }
+@keyframes dwSwing { 0%, 100% { transform:rotate(-4deg); } 50% { transform:rotate(4deg); } }
+.dw-floral { position:absolute; width:48px; height:48px; opacity:.5; }
+.dw-floral-tl { left:8px; top:40px; } .dw-floral-br { right:8px; bottom:68px; }
+.dw-diya { position:absolute; bottom:14px; width:48px; height:40px; pointer-events:auto; cursor:pointer;
+  filter:drop-shadow(0 0 10px rgba(246,198,103,.35)); transition:filter .3s ease, transform .3s ease; }
+.dw-diya-1 { left:14px; } .dw-diya-2 { right:14px; }
+.dw-diya:hover { filter:drop-shadow(0 0 18px rgba(246,198,103,.65)); transform:translateY(-2px) scale(1.05); }
+.dw-diya.dw-lit { filter:drop-shadow(0 0 26px rgba(255,197,92,.9)); }
+.dw-diya.dw-lit .dw-flame { animation-duration:.5s; }
+.dw-flame { transform-origin:50% 100%; animation:dwFlicker 2.1s ease-in-out infinite; }
+@keyframes dwFlicker { 0%, 100% { transform:scale(1,1); } 25% { transform:scale(1.05,.95) translateX(-1px); } 50% { transform:scale(.92,1.08); } 75% { transform:scale(.97,1.03) translateX(1px); } }
+.dw-rangoli { position:absolute; left:50%; bottom:4px; width:118px; height:118px; margin-left:-59px; opacity:.55; pointer-events:auto; cursor:pointer; }
+.dw-rangoli svg { width:100%; height:100%; display:block; transition:filter .3s ease; }
+.dw-rangoli:hover svg { filter:drop-shadow(0 0 14px rgba(226,163,61,.5)); }
+.dw-rangoli.dw-spin svg { animation:dwSpin 1.3s cubic-bezier(.2,.8,.2,1) 1; }
+@keyframes dwSpin { from { transform:rotate(0); } to { transform:rotate(360deg); } }
+.dw-firework-trigger { position:absolute; top:46px; left:4%; width:20px; height:20px; border-radius:50%; pointer-events:auto; cursor:pointer;
+  background:radial-gradient(circle, #FFE9A8 0%, #F2B84E 45%, transparent 72%); box-shadow:0 0 10px 2px rgba(246,198,103,.5);
+  animation:dwPulse 2.4s ease-in-out infinite; }
+.dw-firework-trigger:hover { box-shadow:0 0 18px 4px rgba(246,198,103,.8); }
+@keyframes dwPulse { 0%, 100% { transform:scale(1); opacity:.75; } 50% { transform:scale(1.25); opacity:1; } }
+.dw-burst { position:fixed; width:0; height:0; pointer-events:none; z-index:5; }
+.dw-burst i { position:absolute; left:0; top:0; width:4px; height:4px; border-radius:50%; background:var(--c,#F6C667);
+  box-shadow:0 0 6px 1px var(--c,#F6C667); transform:rotate(var(--a)) translateY(0); animation:dwBurst .8s ease-out forwards; }
+@keyframes dwBurst { from { transform:rotate(var(--a)) translateY(0); opacity:1; } to { transform:rotate(var(--a)) translateY(-54px); opacity:0; } }
+.dw-peacock { display:none; position:absolute; top:46px; right:3%; width:140px; height:88px; opacity:.92; filter:drop-shadow(0 6px 14px rgba(0,0,0,.25)); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-peacock { display:block; }
+@media (max-width: 720px) {
+  .dw-peacock { width:92px; height:58px; top:40px; }
+  .dw-rangoli { width:88px; height:88px; margin-left:-44px; }
+  .dw-diya { width:38px; height:32px; }
+  .dw-floral { width:34px; height:34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dw-bell, .dw-flame, .dw-firework-trigger { animation:none !important; }
+  .dw-rangoli.dw-spin svg { animation:none !important; }
+  .dw-burst { display:none; }
+}
+
 /* ---- Ember particles "subtly respond to message scrolling" (script.js toggles .dw-scroll-boost on
    #diwali-fx while #messages-list is scrolling). Opacity/brightness only - no animation-timing changes,
    so it stays smooth and cheap. ---- */
