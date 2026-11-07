@@ -1132,10 +1132,12 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 @keyframes dwBurst { from { transform:rotate(var(--a)) translateY(0); opacity:1; } to { transform:rotate(var(--a)) translateY(-54px); opacity:0; } }
 /* Top layer (above the app panels): holds only the peacock + firework hotspot. */
 #diwali-fx-top { position:fixed; inset:0; z-index:50; overflow:hidden; pointer-events:none; }
-#diwali-fx-top .dw-peacock { display:none; position:absolute; top:44px; right:10px; width:132px; height:114px; pointer-events:none; filter:drop-shadow(0 6px 10px rgba(0,0,0,.28)); }
+#diwali-fx-top .dw-peacock { display:none; position:absolute; top:44px; right:8px; width:150px; height:auto; pointer-events:none; user-select:none; filter:drop-shadow(0 4px 8px rgba(120,80,10,.22)); transition:filter .35s ease; }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx-top .dw-peacock { display:block; }
+#diwali-fx-top .dw-peacock.dw-peacock-glow { filter:drop-shadow(0 0 7px rgba(255,200,90,.55)) drop-shadow(0 0 18px rgba(255,170,40,.28)); }
+@media (prefers-reduced-motion: reduce) { #diwali-fx-top .dw-peacock { transition:none; } }
 @media (max-width: 720px) {
-  #diwali-fx-top .dw-peacock { width:92px; height:80px; top:40px; right:6px; }
+  #diwali-fx-top .dw-peacock { width:104px; top:40px; right:6px; }
   .dw-rangoli { width:88px; height:88px; margin-left:-44px; }
   .dw-diya { width:38px; height:32px; }
   .dw-floral { width:34px; height:34px; }
