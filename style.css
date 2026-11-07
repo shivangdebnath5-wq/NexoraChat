@@ -1835,3 +1835,98 @@ html[data-theme="midnight-diwali"][data-diwali-ambient="day"] input, html[data-t
 .sticker-retry { width:auto; margin:8px 0 0; padding:5px 14px; font-size:12px; font-weight:600; border-radius:99px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border); cursor:pointer; }
 .sticker-retry:hover { background:var(--input-bg); border-color:var(--primary); color:var(--primary); }
 .sticker-grid .gif-picker-status small { display:block; margin-top:4px; font-size:11px; opacity:.8; word-break:break-all; }
+
+/* =========================================================================
+   STICKER PICKER POLISH — layout fix + navy & gold refinement.
+   Same component and markup as before (.sticker-pane / .sticker-packs /
+   .sticker-grid / .sticker-item); this block only refines how it is laid out
+   and styled. Sending, packs, manifests and artwork are untouched.
+   Why stickers piled up: tiles were sized with `aspect-ratio` + `min-height:0`,
+   which lets each grid row collapse to ~half a tile. Tiles are now sized from
+   their column width (percentage padding), so every row is exactly one tile tall.
+   ========================================================================= */
+.sticker-pane {
+  --st-accent:var(--primary); --st-accent-hi:var(--primary-hover, var(--primary)); --st-on-accent:#fff;
+  gap:10px; padding:0 0 4px; overscroll-behavior:contain; scrollbar-gutter:stable;
+}
+/* navy & gold: Midnight Diwali theme, or whenever the Diwali pack is showing */
+html[data-theme="midnight-diwali"] .sticker-pane, .sticker-pane[data-pack="diwali-2026"] { --st-accent:#D6A84B; --st-accent-hi:#F5D98A; --st-on-accent:#090D20; }
+
+/* the picker is a little roomier on the Stickers tab (the other tabs keep their size) */
+#emoji-picker:has(#stickers-pane:not(.hidden)) { width:min(332px, calc(100vw - 32px)); }
+
+/* one scroll area (the pane) with a slim gold scrollbar; the pack tabs stay pinned while you scroll */
+.sticker-pane .sticker-grid { overflow:visible; flex:0 0 auto; padding:6px 6px 10px; gap:10px; align-content:start;
+  grid-template-columns:repeat(auto-fill, minmax(78px, 1fr)); }
+.sticker-pane .sticker-packs { position:sticky; top:0; z-index:3; padding:2px 6px 8px; background:linear-gradient(var(--bg-card) 72%, transparent); }
+.sticker-pane .sticker-pack-tab { padding:6px 14px; font-size:12.5px; letter-spacing:.01em; }
+.sticker-pane .sticker-pack-tab:not(.active):hover { border-color:var(--st-accent); color:var(--text-main); }
+.sticker-pane .sticker-pack-tab.active { background:linear-gradient(110deg, var(--st-accent-hi) 0%, var(--st-accent) 58%, color-mix(in srgb, var(--st-accent) 72%, #000) 100%); color:var(--st-on-accent); border-color:var(--st-accent-hi);
+  box-shadow:0 4px 14px color-mix(in srgb, var(--st-accent) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.35); }
+.sticker-pane .sticker-pack-tab.active:hover { background:linear-gradient(110deg, var(--st-accent-hi) 0%, var(--st-accent) 58%, color-mix(in srgb, var(--st-accent) 72%, #000) 100%); }
+
+/* ---- the tile: always an exact square, artwork centred and contained ---- */
+.sticker-pane .sticker-grid .sticker-item {
+  position:relative; display:block; box-sizing:border-box; width:100%; height:0; min-height:0; margin:0; padding:0 0 100% 0; overflow:hidden; scroll-margin-top:46px;
+  border-radius:16px; border:1px solid color-mix(in srgb, var(--st-accent) 24%, var(--border)); cursor:pointer; -webkit-tap-highlight-color:transparent;
+  background:radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--st-accent) 16%, transparent), transparent 62%), var(--input-bg);
+  transition:transform .28s cubic-bezier(.2,.9,.25,1.2), box-shadow .28s ease, border-color .2s ease;
+  animation:stickerIn .38s cubic-bezier(.2,.9,.25,1.1) both; animation-delay:calc(var(--i, 0) * 26ms);
+}
+.sticker-pane .sticker-grid .sticker-item img {
+  position:absolute; inset:9%; width:82%; height:82%; max-width:none; max-height:none; object-fit:contain; pointer-events:none; user-select:none; -webkit-user-drag:none;
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.32)); transition:transform .3s cubic-bezier(.2,.9,.25,1.2), filter .3s ease;
+}
+/* golden glint that sweeps across on hover */
+.sticker-pane .sticker-grid .sticker-item::after {
+  content:''; position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:linear-gradient(115deg, transparent 36%, color-mix(in srgb, var(--st-accent-hi) 38%, transparent) 50%, transparent 64%); transform:translateX(-120%);
+}
+.sticker-pane .sticker-grid .sticker-item:hover, .sticker-pane .sticker-grid .sticker-item:focus-visible {
+  transform:translateY(-3px) scale(1.05); border-color:var(--st-accent-hi); outline:none;
+  box-shadow:0 10px 22px rgba(0,0,0,.38), 0 0 0 1px color-mix(in srgb, var(--st-accent-hi) 55%, transparent), 0 0 20px color-mix(in srgb, var(--st-accent) 38%, transparent);
+}
+.sticker-pane .sticker-grid .sticker-item:hover img, .sticker-pane .sticker-grid .sticker-item:focus-visible img {
+  transform:translateY(-2px) scale(1.08); filter:drop-shadow(0 5px 9px rgba(0,0,0,.42)) drop-shadow(0 0 9px color-mix(in srgb, var(--st-accent) 45%, transparent));
+}
+.sticker-pane .sticker-grid .sticker-item:hover::after, .sticker-pane .sticker-grid .sticker-item:focus-visible::after { opacity:1; transform:translateX(120%); transition:transform .75s ease, opacity .2s ease; }
+.sticker-pane .sticker-grid .sticker-item:focus-visible { outline:2px solid var(--st-accent-hi); outline-offset:2px; }
+/* pressed = a quick squish with a gold flash, so a tap always feels registered */
+.sticker-pane .sticker-grid .sticker-item:active { transform:scale(.93); transition-duration:.08s;
+  box-shadow:0 0 0 2px var(--st-accent-hi), 0 0 24px color-mix(in srgb, var(--st-accent-hi) 55%, transparent); }
+.sticker-pane .sticker-grid .sticker-item:active img { transform:scale(.96); }
+.sticker-pane .sticker-grid .sticker-item.is-broken { opacity:.4; cursor:not-allowed; animation:none; }
+.sticker-pane .sticker-grid .sticker-item.is-broken::after { content:'⚠'; inset:auto; left:50%; top:50%; opacity:1; transform:translate(-50%,-50%); background:none; font-size:16px; }
+.sticker-pane .sticker-grid .gif-picker-status { grid-column:1 / -1; }
+@keyframes stickerIn { from { opacity:0; transform:translateY(8px) scale(.9); } to { opacity:1; transform:none; } }
+
+/* slim gold scrollbar (Chrome/Edge/Safari get a gold gradient; Firefox gets a thin gold bar) */
+.sticker-pane::-webkit-scrollbar { width:8px; }
+.sticker-pane::-webkit-scrollbar-track { background:color-mix(in srgb, var(--st-accent) 8%, transparent); border-radius:8px; margin:6px 0; }
+.sticker-pane::-webkit-scrollbar-thumb { background:linear-gradient(180deg, var(--st-accent-hi), var(--st-accent) 60%, color-mix(in srgb, var(--st-accent) 70%, #000)); border-radius:8px; border:2px solid transparent; background-clip:padding-box; }
+.sticker-pane::-webkit-scrollbar-thumb:hover { background:linear-gradient(180deg, #FFE9A8, var(--st-accent-hi) 55%, var(--st-accent)); background-clip:padding-box; }
+@supports not selector(::-webkit-scrollbar) { .sticker-pane { scrollbar-width:thin; scrollbar-color:var(--st-accent) transparent; } }
+
+/* ---- tooltip: one shared, theme-matched label that stays inside the screen (script.js positions it) ---- */
+.sticker-tip { position:fixed; left:0; top:0; z-index:1300; max-width:min(220px, calc(100vw - 16px)); padding:6px 11px; border-radius:10px; pointer-events:none;
+  background:linear-gradient(160deg, #1B2048, #0E1230); color:#F5D98A; border:1px solid rgba(214,168,75,.6); box-shadow:0 8px 22px rgba(3,5,16,.6), 0 0 14px rgba(214,168,75,.2);
+  font:600 12px/1.25 'Inter', system-ui, sans-serif; text-align:center; opacity:0; transform:translateY(4px); transition:opacity .14s ease, transform .14s ease; }
+.sticker-tip.show { opacity:1; transform:none; }
+.sticker-tip::after { content:''; position:absolute; left:var(--tip-ax, 50%); bottom:-5px; width:8px; height:8px; margin-left:-4px; background:#0E1230;
+  border-right:1px solid rgba(214,168,75,.6); border-bottom:1px solid rgba(214,168,75,.6); transform:rotate(45deg); }
+.sticker-tip.below::after { bottom:auto; top:-5px; transform:rotate(225deg); }
+
+/* a sticker landing in a Hub chat pops in (new Hub messages carry .message-arrive) */
+.message-arrive .message.sticker-only .sticker-img { animation:stickerPop .5s cubic-bezier(.2,.9,.25,1.3) both; }
+@keyframes stickerPop { 0% { opacity:0; transform:scale(.55) rotate(-6deg); } 70% { transform:scale(1.07) rotate(1deg); } 100% { opacity:1; transform:none; } }
+
+/* ---- phones: roomier sheet, 4 comfortable columns, tighter gaps ---- */
+@media (max-width: 720px) {
+  #emoji-picker:has(#stickers-pane:not(.hidden)) { width:auto; max-height:min(58dvh, 440px); }
+  .sticker-pane .sticker-grid { gap:8px; padding:6px 4px 10px; }
+  .sticker-pane .sticker-packs { padding:2px 4px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sticker-pane .sticker-grid .sticker-item, .sticker-pane .sticker-grid .sticker-item img, .sticker-tip, .message-arrive .message.sticker-only .sticker-img { animation:none !important; transition:none !important; }
+  .sticker-pane .sticker-grid .sticker-item::after { display:none; }
+}
