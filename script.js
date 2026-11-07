@@ -1697,6 +1697,7 @@ function renderStickerPackTabs() {
 }
 async function selectStickerPack(id) {
   activeStickerPackId = id;
+  const stPane = document.getElementById('stickers-pane'); if (stPane) stPane.dataset.pack = id;
   document.querySelectorAll('.sticker-pack-tab').forEach(b => { const on = b.dataset.packId === id; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
   stickerStatus('Loading stickers…');
   try {
@@ -1713,12 +1714,12 @@ function renderStickerGrid(packId, manifest) {
   const grid = document.getElementById('sticker-grid'); if (!grid) return;
   const items = (manifest.stickers || []).filter(s => s && s.file);
   if (!items.length) return stickerStatus('This pack has no stickers yet.');
-  grid.innerHTML = '';
-  items.forEach(sticker => {
+  grid.innerHTML = ''; grid.dataset.pack = packId;
+  items.forEach((sticker, index) => {
     const path = `${STICKER_ROOT}${packId}/${sticker.file}`;
     const label = sticker.name || sticker.file.replace(/\.[^.]+$/, '');
     const btn = document.createElement('button');
-    btn.type = 'button'; btn.className = 'sticker-item'; btn.title = label; btn.setAttribute('aria-label', `Send sticker: ${label}`);
+    btn.type = 'button'; btn.className = 'sticker-item'; btn.dataset.label = label; btn.style.setProperty('--i', Math.min(index, 14)); btn.setAttribute('aria-label', `Send sticker: ${label}`);
     const img = document.createElement('img');
     img.src = path; img.alt = label; img.loading = 'lazy'; img.decoding = 'async'; img.draggable = false;
     img.onerror = () => { btn.classList.add('is-broken'); btn.disabled = true; btn.title = `${label} (could not load)`; console.warn('Sticker failed to load:', path); };
@@ -1733,3 +1734,59 @@ function sendSticker(path, label) {
   currentAttachment = { name: 'Sticker', type: 'image', sticker: true, data: path, alt: label || 'Sticker' };
   sendMessage();
 }
+
+
+/* ===== Sticker picker polish: shared tooltip + arrow-key navigation =====
+   Purely presentational. It never touches sending (sendSticker / sendMessage are unchanged):
+   the tooltip replaces the browser's native one (which landed on top of neighbouring stickers), and
+   the arrow keys just move focus between tiles. */
+(function stickerPickerPolish() {
+  const pane = document.getElementById('stickers-pane'), grid = document.getElementById('sticker-grid');
+  if (!pane || !grid) return;
+  let tip = null;
+  const getTip = () => {
+    if (tip) return tip;
+    tip = document.createElement('div');
+    tip.className = 'sticker-tip'; tip.id = 'sticker-tip'; tip.setAttribute('role', 'tooltip');
+    document.body.appendChild(tip);
+    return tip;
+  };
+  const hideTip = () => { if (tip) tip.classList.remove('show'); };
+  function showTip(btn) {
+    const label = btn && btn.dataset ? btn.dataset.label : '';
+    if (!label) { hideTip(); return; }
+    const t = getTip();
+    t.textContent = label; t.classList.remove('below'); t.style.left = '0px'; t.style.top = '0px';
+    const r = btn.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight, cx = r.left + r.width / 2;
+    const left = Math.max(8, Math.min(cx - w / 2, window.innerWidth - w - 8));
+    let top = r.top - h - 10;
+    if (top < 8) { top = r.bottom + 10; t.classList.add('below'); }      // no room above → show underneath
+    t.style.left = left + 'px'; t.style.top = top + 'px';
+    t.style.setProperty('--tip-ax', Math.max(12, Math.min(cx - left, w - 12)) + 'px');   // arrow keeps pointing at the tile
+    t.classList.add('show');
+  }
+  grid.addEventListener('pointerover', (e) => {
+    if (e.pointerType === 'touch') return;
+    const b = e.target.closest && e.target.closest('.sticker-item');
+    if (b && !b.disabled) showTip(b); else hideTip();
+  });
+  grid.addEventListener('pointerleave', hideTip);
+  grid.addEventListener('focusin', (e) => { const b = e.target.closest && e.target.closest('.sticker-item'); if (b && e.target.matches(':focus-visible')) showTip(b); });
+  grid.addEventListener('focusout', hideTip);
+  grid.addEventListener('click', hideTip);
+  pane.addEventListener('scroll', hideTip, { passive: true });
+  window.addEventListener('resize', hideTip);
+  document.addEventListener('pointerdown', (e) => { if (!(e.target.closest && e.target.closest('.sticker-item'))) hideTip(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTip(); });
+
+  grid.addEventListener('keydown', (e) => {
+    const keys = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
+    if (!keys.includes(e.key)) return;
+    const items = Array.from(grid.querySelectorAll('.sticker-item:not(:disabled)'));
+    const i = items.indexOf(document.activeElement); if (i < 0) return;
+    const cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').length);
+    const next = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'ArrowDown' ? i + cols : e.key === 'ArrowUp' ? i - cols : e.key === 'Home' ? 0 : items.length - 1;
+    if (next < 0 || next >= items.length) return;
+    e.preventDefault(); items[next].focus();
+  });
+})();
