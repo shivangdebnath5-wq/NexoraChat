@@ -674,7 +674,7 @@
 /* "The Festival of Lights" shortcut: a glowing diya floating in the bottom-right corner of the home view.
    Sibling after #chat-header, so it shows exactly while the header carries .is-home and hides in chats/Hubs.
    Float = a gentle curved drift; glow = soft halo + two thin light arcs that curve out past the diya's edges. */
-.festival-fab { display:none; position:absolute; right:22px; bottom:22px; width:78px; height:78px; z-index:40; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; animation:ffFloat 7s ease-in-out infinite; }
+.festival-fab { display:none; position:absolute; left:calc(50% - 39px); bottom:22px; width:78px; height:78px; z-index:40; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; animation:ffFloat 7s ease-in-out infinite; }
 .chat-header.is-home ~ .festival-fab { display:block; }
 .festival-fab .ff-diya { position:absolute; inset:6px; width:calc(100% - 12px); height:calc(100% - 12px); overflow:visible; filter:drop-shadow(0 4px 10px rgba(255,150,40,.55)); transition:transform .3s cubic-bezier(.2,.9,.25,1.2); }
 .festival-fab .ff-flame { transform-box:fill-box; transform-origin:50% 100%; animation:ffFlicker 1.7s ease-in-out infinite; }
@@ -690,7 +690,7 @@
 @keyframes ffFlicker { 0%, 100% { transform:scale(1,1) skewX(0); } 25% { transform:scale(.93,1.07) skewX(-3deg); } 50% { transform:scale(1.05,.95) skewX(2deg); } 75% { transform:scale(.97,1.04) skewX(-2deg); } }
 @keyframes ffPulse { 0%, 100% { opacity:.65; } 50% { opacity:1; } }
 @keyframes ffSpin { to { transform:rotate(360deg); } }
-@media (max-width: 720px) { .festival-fab { right:14px; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); width:66px; height:66px; } }
+@media (max-width: 720px) { .festival-fab { left:calc(50% - 33px); bottom:calc(16px + env(safe-area-inset-bottom, 0px)); width:66px; height:66px; } }
 @media (prefers-reduced-motion: reduce) { .festival-fab, .festival-fab .ff-flame, .festival-fab .ff-glow, .festival-fab .ff-arcs i { animation:none; } }
 
 /* =========================================================================
@@ -1132,12 +1132,12 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 @keyframes dwBurst { from { transform:rotate(var(--a)) translateY(0); opacity:1; } to { transform:rotate(var(--a)) translateY(-54px); opacity:0; } }
 /* Top layer (above the app panels): holds only the peacock + firework hotspot. */
 #diwali-fx-top { position:fixed; inset:0; z-index:50; overflow:hidden; pointer-events:none; }
-#diwali-fx-top .dw-peacock { display:none; position:absolute; top:44px; right:8px; width:150px; height:auto; pointer-events:none; user-select:none; filter:drop-shadow(0 4px 8px rgba(120,80,10,.22)); transition:filter .35s ease; }
+#diwali-fx-top .dw-peacock { display:none; position:absolute; bottom:calc(8px + env(safe-area-inset-bottom, 0px)); right:8px; width:150px; height:auto; pointer-events:none; user-select:none; filter:drop-shadow(0 4px 8px rgba(120,80,10,.22)); transition:filter .35s ease; }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx-top .dw-peacock { display:block; }
 #diwali-fx-top .dw-peacock.dw-peacock-glow { filter:drop-shadow(0 0 7px rgba(255,200,90,.55)) drop-shadow(0 0 18px rgba(255,170,40,.28)); }
 @media (prefers-reduced-motion: reduce) { #diwali-fx-top .dw-peacock { transition:none; } }
 @media (max-width: 720px) {
-  #diwali-fx-top .dw-peacock { width:104px; top:40px; right:6px; }
+  #diwali-fx-top .dw-peacock { width:104px; bottom:calc(6px + env(safe-area-inset-bottom, 0px)); right:6px; }
   .dw-rangoli { width:88px; height:88px; margin-left:-44px; }
   .dw-diya { width:38px; height:32px; }
   .dw-floral { width:34px; height:34px; }
