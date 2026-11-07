@@ -1477,6 +1477,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   const THEME = 'midnight-diwali';
   const reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
   let fx = null;
+  let wsDecor = null;
   let ambientTimer = null;
   let scrollBoostTimer = null;
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -1488,6 +1489,230 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     l.href = 'https://fonts.googleapis.com/css2?family=Dr+Sugiyama&family=Inter:wght@400;500;600&display=swap';
     document.head.appendChild(l);
   }
+  function build() {
+    const small = window.innerWidth < 640;
+    const nP = small ? 16 : 26, nS = small ? 4 : 7;
+    let h = '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>';
+    for (let i = 0; i < nP; i++) {
+      const d = rnd(8, 18);
+      h += `<span class="dw-p" style="--x:${rnd(1, 99).toFixed(1)}%;--s:${rnd(2, 4).toFixed(1)}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-36, 36).toFixed(0)}px;--o:${rnd(.45, .9).toFixed(2)};--sh:${rnd(1.6, 3.4).toFixed(1)}s"><i></i></span>`;
+    }
+    // Diya sparks: short bursts from two "lamp" spots low in the chat area
+    for (let i = 0; i < nS; i++) {
+      const d = rnd(5, 9), spot = i % 2 ? 84 : 52;
+      h += `<span class="dw-spark" style="--x:${(spot + rnd(-3, 3)).toFixed(1)}%;--b:${rnd(70, 96).toFixed(0)}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-26, 26).toFixed(0)}px;--dy:-${rnd(40, 110).toFixed(0)}px"></span>`;
+    }
+    return h;
+  }
+
+  // Build warm golden string lights directly beneath #diwali-strip across .main-chat
+  function buildStringLightsMarkup() {
+    const spans = 12;
+    const width = 1200;
+    const step = width / spans;
+    let wireD = 'M 0 2';
+    let bulbs = '';
+    for (let i = 0; i < spans; i++) {
+      const x1 = i * step;
+      const cx = x1 + step / 2;
+      const x2 = (i + 1) * step;
+      wireD += ` Q ${cx.toFixed(1)} 18 ${x2.toFixed(1)} 2`;
+      // Two bulbs per swag (one at the dip, one near the knot) for a rich festive festoon
+      const pts = [
+        { x: cx, y: 11.5, r: 4.2, halo: 15 },
+        { x: x2 - step * 0.18, y: 6.8, r: 3.4, halo: 12 }
+      ];
+      pts.forEach((pt, idx) => {
+        const dur = (2.1 + ((i * 3 + idx * 5) % 7) * 0.28).toFixed(2);
+        const delay = (-((i * 0.37 + idx * 0.61) % 2.8)).toFixed(2);
+        bulbs += `<g class="dsl-bulb-group" style="--tw-dur:${dur}s;--tw-delay:${delay}s">
+          <circle class="dsl-halo" cx="${pt.x.toFixed(1)}" cy="${(pt.y + 4).toFixed(1)}" r="${pt.halo}"/>
+          <rect class="dsl-cap" x="${(pt.x - 1.6).toFixed(1)}" y="${(pt.y - 1.2).toFixed(1)}" width="3.2" height="2.4" rx="0.8"/>
+          <ellipse class="dsl-core" cx="${pt.x.toFixed(1)}" cy="${(pt.y + 4).toFixed(1)}" rx="${(pt.r * 0.78).toFixed(1)}" ry="${pt.r.toFixed(1)}"/>
+        </g>`;
+      });
+    }
+    return `<svg class="dsl-svg" viewBox="0 0 1200 28" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <radialGradient id="dslHaloGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#FFE89E" stop-opacity="0.95"/>
+          <stop offset="45%" stop-color="#F5B942" stop-opacity="0.48"/>
+          <stop offset="100%" stop-color="#D6A84B" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <path class="dsl-wire" d="${wireD}"/>
+      ${bulbs}
+    </svg>`;
+  }
+
+  function ensureStringLights() {
+    const mainChat = document.querySelector('.main-chat');
+    if (!mainChat) return null;
+    let container = document.getElementById('diwali-string-lights');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'diwali-string-lights';
+      container.className = 'diwali-string-lights';
+      container.setAttribute('aria-hidden', 'true');
+      const strip = document.getElementById('diwali-strip') || document.getElementById('chat-header');
+      if (strip && strip.parentNode === mainChat) strip.insertAdjacentElement('afterend', container);
+      else mainChat.insertBefore(container, mainChat.firstChild);
+    }
+    if (!container.innerHTML.trim()) {
+      container.innerHTML = buildStringLightsMarkup();
+    }
+    return container;
+  }
+
+  // Day = 06:00-18:00 local time, Night/Puja = the rest. Re-applied, never re-created.
+  function isDayNow() { const h = new Date().getHours(); return h >= 6 && h < 18; }
+  function applyAmbientMode() {
+    if (document.documentElement.getAttribute('data-theme') !== THEME) return;
+    const existing = document.documentElement.getAttribute('data-diwali-ambient');
+    if (existing !== 'day' && existing !== 'night') {
+      document.documentElement.setAttribute('data-diwali-ambient', isDayNow() ? 'day' : 'night');
+    }
+  }
+  function startAmbientClock() {
+    document.documentElement.setAttribute('data-diwali-ambient', isDayNow() ? 'day' : 'night');
+    if (ambientTimer) return;
+    ambientTimer = setInterval(() => {
+      if (document.documentElement.getAttribute('data-theme') === THEME) {
+        document.documentElement.setAttribute('data-diwali-ambient', isDayNow() ? 'day' : 'night');
+      }
+    }, 60000);
+    document.addEventListener('visibilitychange', onAmbientWake);
+    window.addEventListener('focus', onAmbientWake);
+  }
+  function stopAmbientClock() {
+    if (ambientTimer) { clearInterval(ambientTimer); ambientTimer = null; }
+    document.removeEventListener('visibilitychange', onAmbientWake);
+    window.removeEventListener('focus', onAmbientWake);
+    document.documentElement.removeAttribute('data-diwali-ambient');
+  }
+  function onAmbientWake() { if (!document.hidden) applyAmbientMode(); }
+
+  // Ember particles "subtly respond to message scrolling"
+  function onAnyScroll(e) {
+    if (reduceMq.matches || !fx || !e.target || e.target.id !== 'messages-list') return;
+    fx.classList.add('dw-scroll-boost');
+    clearTimeout(scrollBoostTimer);
+    scrollBoostTimer = setTimeout(() => { if (fx) fx.classList.remove('dw-scroll-boost'); }, 900);
+  }
+  document.addEventListener('scroll', onAnyScroll, { capture: true, passive: true });
+
+  // SVG symbol defs (including the preserved Day Mode peacock)
+  function svgDefsMarkup() {
+    return `<svg class="dw-defs" aria-hidden="true"><defs>
+<linearGradient id="dwGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6C667"/><stop offset="1" stop-color="#C9972E"/></linearGradient>
+<linearGradient id="dwClay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6A84B"/><stop offset="1" stop-color="#7A4A17"/></linearGradient>
+<radialGradient id="dwFlameG" cx=".5" cy=".2" r=".9"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".55" stop-color="#FFA726"/><stop offset="1" stop-color="#E8572A"/></radialGradient>
+<linearGradient id="dwPeaTail" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1E3A8A"/><stop offset=".6" stop-color="#10B981"/><stop offset="1" stop-color="#F5D98A"/></linearGradient>
+<radialGradient id="dwPeaEye" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#047857"/><stop offset="1" stop-color="#F5D98A"/></radialGradient>
+<symbol id="dwDiya" viewBox="0 0 60 50">
+<path d="M4 28c7 4 17 6 26 6s19-2 26-6c-3 10-14 17-26 17S7 38 4 28z" fill="url(#dwClay)"/>
+<ellipse cx="30" cy="27" rx="25" ry="5.5" fill="url(#dwGold)" opacity=".85"/>
+<path class="dw-flame" d="M30 6c3.5 5.5 7.5 9.5 7.5 14.5a7.5 7.5 0 1 1-15 0C22.5 15.5 26.5 11.5 30 6z" fill="url(#dwFlameG)"/>
+</symbol>
+<symbol id="dwPetal" viewBox="-6 -22 12 22"><path d="M0 0C-5 -6 -5 -16 0 -22C5 -16 5 -6 0 0Z"/></symbol>
+<symbol id="dwRangoli" viewBox="-40 -40 80 80">
+<circle r="38" fill="none" stroke="url(#dwGold)" stroke-width="1.4" opacity=".55"/>
+<use href="#dwPetal" fill="#E2A33D" transform="rotate(0)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(30)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(60)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(90)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(120)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(150)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(180)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(210)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(240)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(270)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(300)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(330)"/>
+<circle r="7" fill="url(#dwGold)"/><circle r="3" fill="#7A1F3D"/>
+</symbol>
+<symbol id="dwBell" viewBox="0 0 34 40">
+<path d="M17 2a3 3 0 0 1 3 3v2c6 2 9 8 9 15v3H5v-3c0-7 3-13 9-15V5a3 3 0 0 1 3-3z" fill="url(#dwGold)"/>
+<rect x="5" y="25" width="24" height="4" rx="2" fill="#7A4A17"/><circle cx="17" cy="34" r="3" fill="#7A4A17"/>
+</symbol>
+<symbol id="dwFloral" viewBox="0 0 60 60"><g fill="url(#dwGold)" opacity=".8">
+<path d="M4 4C20 4 34 10 34 26c0 6-4 10-10 10S14 32 14 26C14 16 8 8 4 4Z"/><circle cx="30" cy="30" r="5"/>
+</g></symbol>
+<symbol id="dwGarland" viewBox="0 0 1200 40" preserveAspectRatio="none">
+<path d="M0 8 Q60 32 120 8 T240 8 T360 8 T480 8 T600 8 T720 8 T840 8 T960 8 T1080 8 T1200 8" fill="none" stroke="#5B3A12" stroke-width="2" opacity=".5"/>
+<g fill="#E2A33D"><circle cx="60" cy="24" r="6"/><circle cx="180" cy="24" r="6"/><circle cx="300" cy="24" r="6"/><circle cx="420" cy="24" r="6"/><circle cx="540" cy="24" r="6"/><circle cx="660" cy="24" r="6"/><circle cx="780" cy="24" r="6"/><circle cx="900" cy="24" r="6"/><circle cx="1020" cy="24" r="6"/><circle cx="1140" cy="24" r="6"/></g>
+<g fill="#C97F1F"><circle cx="60" cy="24" r="2.4"/><circle cx="180" cy="24" r="2.4"/><circle cx="300" cy="24" r="2.4"/><circle cx="420" cy="24" r="2.4"/><circle cx="540" cy="24" r="2.4"/><circle cx="660" cy="24" r="2.4"/><circle cx="780" cy="24" r="2.4"/><circle cx="900" cy="24" r="2.4"/><circle cx="1020" cy="24" r="2.4"/><circle cx="1140" cy="24" r="2.4"/></g>
+</symbol>
+<symbol id="dwFeather" viewBox="-6 -46 12 46">
+<path d="M0 0C-7 -14 -7 -34 0 -46C7 -34 7 -14 0 0Z" fill="url(#dwPeaTail)"/>
+<ellipse cx="0" cy="-37" rx="4.2" ry="6" fill="url(#dwPeaEye)"/><ellipse cx="0" cy="-37" rx="1.6" ry="2.4" fill="#0B3B2E"/>
+</symbol>
+<symbol id="dwPeacock" viewBox="-90 -100 180 110">
+<g transform="translate(6 10)"><use href="#dwFeather" transform="rotate(-50)"/><use href="#dwFeather" transform="rotate(-40)"/><use href="#dwFeather" transform="rotate(-30)"/><use href="#dwFeather" transform="rotate(-20)"/><use href="#dwFeather" transform="rotate(-10)"/><use href="#dwFeather" transform="rotate(0)"/><use href="#dwFeather" transform="rotate(10)"/><use href="#dwFeather" transform="rotate(20)"/><use href="#dwFeather" transform="rotate(30)"/><use href="#dwFeather" transform="rotate(40)"/><use href="#dwFeather" transform="rotate(50)"/></g>
+<ellipse cx="6" cy="18" rx="16" ry="22" fill="url(#dwGold)"/>
+<path d="M6 -2C0 -14 -4 -26 2 -34C8 -28 10 -16 6 -2Z" fill="url(#dwGold)"/>
+<circle cx="4" cy="-30" r="6" fill="url(#dwGold)"/>
+<path d="M4 -36l-2 -6M4 -36l0 -7M4 -36l2 -6" stroke="#C9972E" stroke-width="1.6" stroke-linecap="round"/>
+</symbol>
+</defs></svg>`;
+  }
+
+  function workspaceDecorMarkup() {
+    return `<div class="dw-garland-wrap"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><use href="#dwGarland"/></svg></div>
+<svg class="dw-bell dw-bell-1" viewBox="0 0 34 40"><use href="#dwBell"/></svg>
+<svg class="dw-bell dw-bell-2" viewBox="0 0 34 40"><use href="#dwBell"/></svg>
+<svg class="dw-bell dw-bell-3" viewBox="0 0 34 40"><use href="#dwBell"/></svg>
+<svg class="dw-floral dw-floral-tl" viewBox="0 0 60 60"><use href="#dwFloral"/></svg>
+<svg class="dw-floral dw-floral-br" viewBox="0 0 60 60" style="transform:rotate(180deg)"><use href="#dwFloral"/></svg>
+<svg class="dw-diya dw-diya-1" viewBox="0 0 60 50" aria-hidden="true"><use href="#dwDiya"/></svg>
+<svg class="dw-diya dw-diya-2" viewBox="0 0 60 50" aria-hidden="true"><use href="#dwDiya"/></svg>
+<div class="dw-rangoli" aria-hidden="true"><svg viewBox="-40 -40 80 80"><use href="#dwRangoli"/></svg></div>
+<div class="dw-firework-trigger" aria-hidden="true"></div>
+<svg class="dw-peacock" viewBox="-90 -100 180 110" aria-hidden="true"><use href="#dwPeacock"/></svg>`;
+  }
+
+  function spawnFirework(anchor) {
+    if (reduceMq.matches || !fx) return;
+    const r = anchor.getBoundingClientRect();
+    const burst = document.createElement('span');
+    burst.className = 'dw-burst';
+    burst.style.left = (r.left + r.width / 2) + 'px';
+    burst.style.top = (r.top + r.height / 2) + 'px';
+    let s = '';
+    for (let i = 0; i < 10; i++) s += `<i style="--a:${i * 36}deg;--c:${i % 2 ? '#F6C667' : '#E85A3C'}"></i>`;
+    burst.innerHTML = s;
+    document.body.appendChild(burst);
+    setTimeout(() => burst.remove(), 900);
+  }
+  function onDecorClick(e) {
+    if (!fx) return;
+    const diya = e.target.closest ? e.target.closest('.dw-diya') : null;
+    if (diya) { diya.classList.remove('dw-lit'); void diya.offsetWidth; diya.classList.add('dw-lit'); setTimeout(() => diya.classList.remove('dw-lit'), 1100); return; }
+    const rangoli = e.target.closest ? e.target.closest('.dw-rangoli') : null;
+    if (rangoli) { rangoli.classList.remove('dw-spin'); void rangoli.offsetWidth; rangoli.classList.add('dw-spin'); return; }
+    const fw = e.target.closest ? e.target.closest('.dw-firework-trigger') : null;
+    if (fw) { spawnFirework(fw); return; }
+  }
+  document.addEventListener('click', onDecorClick);
+
+  function activate() {
+    if (fx || !document.body) return;
+    loadFonts();
+    fx = document.createElement('div'); fx.id = 'diwali-fx'; fx.setAttribute('aria-hidden', 'true');
+    fx.innerHTML = svgDefsMarkup() + (reduceMq.matches ? '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>' : build());
+    document.body.insertBefore(fx, document.body.firstChild);
+
+    const mainChat = document.querySelector('.main-chat');
+    if (mainChat) {
+      wsDecor = document.createElement('div');
+      wsDecor.className = 'dw-decor';
+      wsDecor.setAttribute('aria-hidden', 'true');
+      wsDecor.innerHTML = workspaceDecorMarkup();
+      mainChat.appendChild(wsDecor);
+    }
+    ensureStringLights();
+    startAmbientClock();
+  }
+  function deactivate() {
+    if (fx) { fx.remove(); fx = null; }
+    if (wsDecor) { wsDecor.remove(); wsDecor = null; }
+    stopAmbientClock();
+    clearTimeout(scrollBoostTimer);
+  }
+  function sync() { (document.documentElement.getAttribute('data-theme') === THEME) ? activate() : deactivate(); }
+
+  new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
+})();
   function build() {
     const small = window.innerWidth < 640;
     const nP = small ? 16 : 26, nS = small ? 4 : 7;
