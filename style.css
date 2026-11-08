@@ -1059,6 +1059,29 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 @keyframes diyaGlow { 0%,100% { opacity:.55; } 50% { opacity:1; } }
 @media (max-width: 560px) { .diwali-strip { padding:6px 12px; gap:8px; } .diwali-sub { display:none; } }
 @media (prefers-reduced-motion: reduce) { .diya-flame, .diya-glow, .chat-header.is-home ~ .diwali-strip.show { animation:none; } }
+/* ---- Peacock hung below the countdown strip (Day Mode only) ---- */
+.diwali-strip { position:relative; }
+.diwali-peacock { display:none; position:absolute; top:100%; right:10px; margin-top:2px; width:132px; height:auto; z-index:3; pointer-events:none; user-select:none; -webkit-user-drag:none; filter:drop-shadow(0 3px 7px rgba(120,80,10,.2)); transition:filter .35s ease; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .diwali-peacock { display:block; }
+.diwali-peacock.dw-peacock-glow { filter:drop-shadow(0 0 6px rgba(255,200,90,.65)) drop-shadow(0 0 16px rgba(255,170,40,.32)); }
+@media (max-width: 720px) { .diwali-peacock { width:96px; right:6px; } }
+/* ---- Carved diyas (transparent SVG, lit from inside; home view only, Midnight Diwali theme) ---- */
+.dwC-wrap { display:none; position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
+.chat-header.is-home ~ .dwC-wrap { display:block; }
+.dwC-item { position:absolute; display:block; }
+.dwC-item svg { position:relative; display:block; width:100%; height:auto; overflow:visible; filter:drop-shadow(0 5px 8px rgba(0,0,0,.32)) drop-shadow(0 0 9px rgba(255,170,60,.35)); }
+.dwC-pool { position:absolute; left:50%; bottom:-8px; width:230%; height:70%; transform:translateX(-50%); border-radius:50%; background:radial-gradient(ellipse at 50% 55%, rgba(255,176,60,.3), transparent 68%); opacity:.55; animation:dwCPool 3.4s ease-in-out infinite; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dwC-pool { opacity:1; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dwC-item svg { filter:drop-shadow(0 5px 8px rgba(0,0,0,.4)) drop-shadow(0 0 14px rgba(255,170,60,.55)); }
+.dwC-1 { left:18px; bottom:20px; width:74px; } .dwC-2 { left:98px; bottom:22px; width:48px; } .dwC-3 { right:112px; bottom:22px; width:58px; }
+.dwC-flame { transform-box:fill-box; transform-origin:50% 100%; animation:dwCFlick 1.9s ease-in-out infinite; }
+.dwC-2 .dwC-flame { animation-delay:-.7s; } .dwC-3 .dwC-flame { animation-delay:-1.3s; }
+.dwC-lit { animation:dwCLit 2.7s ease-in-out infinite; } .dwC-halo { animation:dwCLit 3.1s ease-in-out infinite; }
+@keyframes dwCFlick { 0%,100% { transform:scale(1,1) skewX(0); } 30% { transform:scale(.94,1.07) skewX(-2deg); } 60% { transform:scale(1.04,.96) skewX(1.5deg); } 80% { transform:scale(.97,1.04) skewX(-1deg); } }
+@keyframes dwCLit { 0%,100% { opacity:.78; } 50% { opacity:1; } }
+@keyframes dwCPool { 0%,100% { transform:translateX(-50%) scale(1); } 50% { transform:translateX(-50%) scale(1.06); } }
+@media (max-width: 560px) { .dwC-2 { display:none; } .dwC-1 { left:10px; bottom:16px; width:60px; } .dwC-3 { right:98px; bottom:18px; width:48px; } }
+@media (prefers-reduced-motion: reduce) { .dwC-flame, .dwC-lit, .dwC-halo, .dwC-pool, .diwali-peacock { animation:none; transition:none; } }
 
 /* =========================================================================
    MIDNIGHT DIWALI — limited-time "Special" theme. Palette: navy #090D20 · indigo #171B3A ·
@@ -1130,10 +1153,7 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 .dw-burst i { position:absolute; left:0; top:0; width:4px; height:4px; border-radius:50%; background:var(--c,#F6C667);
   box-shadow:0 0 6px 1px var(--c,#F6C667); transform:rotate(var(--a)) translateY(0); animation:dwBurst .8s ease-out forwards; }
 @keyframes dwBurst { from { transform:rotate(var(--a)) translateY(0); opacity:1; } to { transform:rotate(var(--a)) translateY(-54px); opacity:0; } }
-.dw-peacock { display:none; position:absolute; top:46px; right:3%; width:140px; height:88px; opacity:.92; filter:drop-shadow(0 6px 14px rgba(0,0,0,.25)); }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-peacock { display:block; }
 @media (max-width: 720px) {
-  .dw-peacock { width:92px; height:58px; top:40px; }
   .dw-rangoli { width:88px; height:88px; margin-left:-44px; }
   .dw-diya { width:38px; height:32px; }
   .dw-floral { width:34px; height:34px; }
