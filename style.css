@@ -1082,6 +1082,19 @@ html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dwC-item svg { 
 @keyframes dwCPool { 0%,100% { transform:translateX(-50%) scale(1); } 50% { transform:translateX(-50%) scale(1.06); } }
 @media (max-width: 560px) { .dwC-2 { display:none; } .dwC-1 { left:10px; bottom:16px; width:60px; } .dwC-3 { right:98px; bottom:18px; width:48px; } }
 @media (prefers-reduced-motion: reduce) { .dwC-flame, .dwC-lit, .dwC-halo, .dwC-pool, .diwali-peacock { animation:none; transition:none; } }
+/* ---- Ambient night fireworks (behind the UI; transform/opacity only; no cost in Day Mode) ---- */
+.dw-fw { position:absolute; width:0; height:0; pointer-events:none; transform:scale(var(--sc, 1)); animation:dwFwDrift 2.9s ease-in forwards; }
+.dw-fw i { position:absolute; left:-1.75px; top:-1.75px; width:3.5px; height:3.5px; border-radius:50%; background:var(--c, #F6C667); box-shadow:0 0 5px 1px var(--c, #F6C667); opacity:0; animation:dwFwRay 1.9s cubic-bezier(.12,.75,.3,1) forwards; }
+.dw-fw i.s { left:-1px; top:-1px; width:2px; height:2px; animation:dwFwSpark 1.7s ease-out .45s forwards; }
+@keyframes dwFwRay { 0% { opacity:0; transform:rotate(var(--a)) translateY(0) scale(.6); } 8% { opacity:1; } 70% { opacity:.85; } 100% { opacity:0; transform:rotate(var(--a)) translateY(calc(var(--r) * -1px)) scale(.35); } }
+@keyframes dwFwSpark { 0% { opacity:0; transform:rotate(var(--a)) translateY(calc(var(--r) * -.55px)) scale(.4); } 25% { opacity:1; } 55% { opacity:.35; } 75% { opacity:.9; } 100% { opacity:0; transform:rotate(var(--a)) translateY(calc(var(--r) * -1px)) scale(.3); } }
+@keyframes dwFwDrift { to { translate:0 16px; } }
+.dw-tw { position:absolute; width:11px; height:11px; margin:-5px 0 0 -5px; pointer-events:none; opacity:0;
+  background:linear-gradient(#FFE9A8,#FFE9A8) center/1px 100% no-repeat, linear-gradient(#FFE9A8,#FFE9A8) center/100% 1px no-repeat, radial-gradient(circle, rgba(255,214,120,.85) 0 18%, rgba(255,170,60,.28) 40%, transparent 70%);
+  animation:dwTw 1.7s ease-in-out forwards; }
+@keyframes dwTw { 0% { opacity:0; transform:scale(.2) rotate(0); } 40% { opacity:.95; transform:scale(1) rotate(25deg); } 100% { opacity:0; transform:scale(.35) rotate(50deg); } }
+@media (max-width: 560px) { .dw-fw { transform:scale(calc(var(--sc, 1) * .7)); } }
+@media (prefers-reduced-motion: reduce) { .dw-fw, .dw-tw { display:none; } }
 
 /* =========================================================================
    MIDNIGHT DIWALI — limited-time "Special" theme. Palette: navy #090D20 · indigo #171B3A ·
