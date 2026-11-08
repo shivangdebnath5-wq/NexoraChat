@@ -1683,7 +1683,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   document.addEventListener('click', onDecorClick);
 
   // <<dw-strip-decor
-  // ---- Peacock hung directly below the countdown strip (Day Mode only, via CSS) + carved diyas (home view) ----
+  // ---- Peacock at the bottom-right (Day Mode only, via CSS) + carved diyas, both on the home view ----
   let stripPeacock = null, carvedWrap = null, peacockMask = null, peacockRaf = 0, peacockTouchT = 0;
   function carvedDiya() {
     const petal = 'M0 0C-5.5 -5 -6.5 -13 0 -19C6.5 -13 5.5 -5 0 0Z';
@@ -1723,11 +1723,11 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     stripPeacock = document.createElement('img');
     stripPeacock.className = 'diwali-peacock'; stripPeacock.src = 'diwali-peacock.png';
     stripPeacock.alt = ''; stripPeacock.setAttribute('aria-hidden', 'true'); stripPeacock.draggable = false;
-    strip.appendChild(stripPeacock);
     loadPeacockMask(stripPeacock.src);
     carvedWrap = document.createElement('div'); carvedWrap.className = 'dwC-wrap'; carvedWrap.setAttribute('aria-hidden', 'true');
     carvedWrap.innerHTML = carvedMarkup();
     strip.parentNode.insertBefore(carvedWrap, strip.nextSibling);
+    carvedWrap.appendChild(stripPeacock);
   }
   function unmountStripDecor() {
     if (stripPeacock) { stripPeacock.remove(); stripPeacock = null; }
