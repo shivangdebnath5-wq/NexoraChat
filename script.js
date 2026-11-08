@@ -1571,12 +1571,67 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 <ellipse cx="30" cy="27" rx="25" ry="5.5" fill="url(#dwGold)" opacity=".85"/>
 <path class="dw-flame" d="M30 6c3.5 5.5 7.5 9.5 7.5 14.5a7.5 7.5 0 1 1-15 0C22.5 15.5 26.5 11.5 30 6z" fill="url(#dwFlameG)"/>
 </symbol>
-<symbol id="dwPetal" viewBox="-6 -22 12 22"><path d="M0 0C-5 -6 -5 -16 0 -22C5 -16 5 -6 0 0Z"/></symbol>
-<symbol id="dwRangoli" viewBox="-40 -40 80 80">
-<circle r="38" fill="none" stroke="url(#dwGold)" stroke-width="1.4" opacity=".55"/>
-<use href="#dwPetal" fill="#E2A33D" transform="rotate(0)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(30)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(60)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(90)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(120)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(150)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(180)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(210)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(240)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(270)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(300)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(330)"/>
-<circle r="7" fill="url(#dwGold)"/><circle r="3" fill="#7A1F3D"/>
-</symbol>
+<g id="dwRangoli">
+<circle r="38" fill="none" stroke="url(#dwGold)" stroke-width="1.2" opacity=".6"/>
+<circle cx="0.00" cy="-38.00" r="1.05" fill="#F5D98A"/>
+<circle cx="9.84" cy="-36.71" r="1.05" fill="#F5D98A"/>
+<circle cx="19.00" cy="-32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="26.87" cy="-26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="32.91" cy="-19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="36.71" cy="-9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="38.00" cy="-0.00" r="1.05" fill="#F5D98A"/>
+<circle cx="36.71" cy="9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="32.91" cy="19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="26.87" cy="26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="19.00" cy="32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="9.84" cy="36.71" r="1.05" fill="#F5D98A"/>
+<circle cx="0.00" cy="38.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-9.84" cy="36.71" r="1.05" fill="#F5D98A"/>
+<circle cx="-19.00" cy="32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="-26.87" cy="26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="-32.91" cy="19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-36.71" cy="9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="-38.00" cy="0.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-36.71" cy="-9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="-32.91" cy="-19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-26.87" cy="-26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="-19.00" cy="-32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="-9.84" cy="-36.71" r="1.05" fill="#F5D98A"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(0.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(22.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(45.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(67.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(90.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(112.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(135.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(157.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(180.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(202.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(225.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(247.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(270.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(292.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(315.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(337.5)" fill="#7A1F3D"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(22.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(67.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(112.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(157.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(202.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(247.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(292.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(337.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(0.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(45.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(90.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(135.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(180.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(225.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(270.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(315.0)" fill="#7A1F3D"/>
+<circle r="11" fill="none" stroke="#E2A33D" stroke-width=".8" opacity=".8"/>
+<circle r="5" fill="url(#dwGold)"/><circle r="2.2" fill="#7A1F3D"/>
+</g>
 <symbol id="dwBell" viewBox="0 0 34 40">
 <path d="M17 2a3 3 0 0 1 3 3v2c6 2 9 8 9 15v3H5v-3c0-7 3-13 9-15V5a3 3 0 0 1 3-3z" fill="url(#dwGold)"/>
 <rect x="5" y="25" width="24" height="4" rx="2" fill="#7A4A17"/><circle cx="17" cy="34" r="3" fill="#7A4A17"/>
@@ -1701,6 +1756,46 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     peacockTouchT = setTimeout(() => { if (stripPeacock) stripPeacock.classList.remove('dw-peacock-glow'); }, 1400);
   }, { passive: true });
   // dw-strip-decor>>
+  // <<dw-night-fireworks
+  // ---- Ambient night fireworks: a rare, soft burst or a few twinkles, drawn BEHIND the UI inside #diwali-fx ----
+  // Cheap by design: one timer, at most one burst alive (~19 tiny transform/opacity-animated nodes, removed after ~3s),
+  // nothing runs in Day Mode, with the tab hidden or with reduced-motion on, and it is quieter inside a chat.
+  let fwTimer = 0, fwLive = 0;
+  const FW_COLORS = ['#F6C667', '#FFE9A8', '#FFB33A', '#F6C667', '#FFD98A', '#C9A8FF'];
+  const fwRand = (a, b) => a + Math.random() * (b - a);
+  function fwNightOk() { return !!fx && !document.hidden && !reduceMq.matches && document.documentElement.getAttribute('data-diwali-ambient') === 'night'; }
+  function fwInChat() { return !document.querySelector('.chat-header.is-home'); }
+  function spawnAmbientBurst(quiet) {
+    const W = window.innerWidth, H = window.innerHeight;
+    const el = document.createElement('span'); el.className = 'dw-fw';
+    el.style.left = fwRand(W * .12, W * .88).toFixed(0) + 'px';
+    el.style.top = fwRand(H * .08, H * .4).toFixed(0) + 'px';
+    el.style.setProperty('--sc', quiet ? '.62' : '1');
+    const c = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)];
+    let h = '';
+    for (let i = 0; i < 12; i++) h += `<i style="--a:${i * 30}deg;--r:${fwRand(34, 52).toFixed(0)};--c:${c}"></i>`;
+    for (let i = 0; i < 6; i++) h += `<i class="s" style="--a:${i * 60 + 20}deg;--r:${fwRand(52, 66).toFixed(0)};--c:#FFE9A8"></i>`;
+    el.innerHTML = h; fx.appendChild(el); fwLive++;
+    setTimeout(() => { el.remove(); fwLive--; }, 2900);
+  }
+  function spawnTwinkles(quiet) {
+    const W = window.innerWidth, H = window.innerHeight, n = quiet ? 1 : 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement('span'); el.className = 'dw-tw';
+      el.style.left = fwRand(W * .08, W * .92).toFixed(0) + 'px'; el.style.top = fwRand(H * .06, H * .5).toFixed(0) + 'px';
+      el.style.animationDelay = (i * .45).toFixed(2) + 's';
+      fx.appendChild(el); setTimeout(() => el.remove(), 2400 + i * 450);
+    }
+  }
+  function fwTick() {
+    fwTimer = 0; if (!fx) return;
+    const quiet = fwInChat();
+    if (fwNightOk()) { if (Math.random() < .45) spawnTwinkles(quiet); else if (!fwLive) spawnAmbientBurst(quiet); }
+    fwTimer = setTimeout(fwTick, quiet ? fwRand(8000, 15000) : fwRand(4500, 9000));
+  }
+  function startFireworks() { if (!fwTimer) fwTimer = setTimeout(fwTick, 3500); }
+  function stopFireworks() { clearTimeout(fwTimer); fwTimer = 0; }
+  // dw-night-fireworks>>
   function activate() {
     if (fx || !document.body) return;
     loadFonts();
@@ -1709,10 +1804,12 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     document.body.insertBefore(fx, document.body.firstChild);
     startAmbientClock();
     mountStripDecor();
+    startFireworks();
   }
   function deactivate() {
     if (fx) { fx.remove(); fx = null; }
     unmountStripDecor();
+    stopFireworks();
     stopAmbientClock();
     clearTimeout(scrollBoostTimer);
   }
