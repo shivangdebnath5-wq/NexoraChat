@@ -674,7 +674,7 @@
 /* "The Festival of Lights" shortcut: a glowing diya floating in the bottom-right corner of the home view.
    Sibling after #chat-header, so it shows exactly while the header carries .is-home and hides in chats/Hubs.
    Float = a gentle curved drift; glow = soft halo + two thin light arcs that curve out past the diya's edges. */
-.festival-fab { display:none; position:absolute; left:calc(50% - 39px); bottom:22px; width:78px; height:78px; z-index:40; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; animation:ffFloat 7s ease-in-out infinite; }
+.festival-fab { display:none; position:absolute; right:22px; bottom:22px; width:78px; height:78px; z-index:40; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; animation:ffFloat 7s ease-in-out infinite; }
 .chat-header.is-home ~ .festival-fab { display:block; }
 .festival-fab .ff-diya { position:absolute; inset:6px; width:calc(100% - 12px); height:calc(100% - 12px); overflow:visible; filter:drop-shadow(0 4px 10px rgba(255,150,40,.55)); transition:transform .3s cubic-bezier(.2,.9,.25,1.2); }
 .festival-fab .ff-flame { transform-box:fill-box; transform-origin:50% 100%; animation:ffFlicker 1.7s ease-in-out infinite; }
@@ -690,7 +690,7 @@
 @keyframes ffFlicker { 0%, 100% { transform:scale(1,1) skewX(0); } 25% { transform:scale(.93,1.07) skewX(-3deg); } 50% { transform:scale(1.05,.95) skewX(2deg); } 75% { transform:scale(.97,1.04) skewX(-2deg); } }
 @keyframes ffPulse { 0%, 100% { opacity:.65; } 50% { opacity:1; } }
 @keyframes ffSpin { to { transform:rotate(360deg); } }
-@media (max-width: 720px) { .festival-fab { left:calc(50% - 33px); bottom:calc(16px + env(safe-area-inset-bottom, 0px)); width:66px; height:66px; } }
+@media (max-width: 720px) { .festival-fab { right:14px; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); width:66px; height:66px; } }
 @media (prefers-reduced-motion: reduce) { .festival-fab, .festival-fab .ff-flame, .festival-fab .ff-glow, .festival-fab .ff-arcs i { animation:none; } }
 
 /* =========================================================================
@@ -1096,192 +1096,50 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 @keyframes dwBreathe { 0%,100% { opacity:.55; } 50% { opacity:1; } }
 @media (prefers-reduced-motion: reduce) { .dw-p, .dw-p i, .dw-spark, #diwali-fx .dw-glow { animation:none; transition:none; } .dw-p, .dw-spark { display:none; } }
 
-/* ---- Festive string lights directly beneath the countdown bar ---- */
-.diwali-string-lights {
-  display: none;
-  position: relative;
-  width: 100%;
-  height: 28px;
-  flex: 0 0 28px;
-  margin-bottom: -10px;
-  z-index: 3;
-  pointer-events: none;
-  overflow: visible;
-}
-html[data-theme="midnight-diwali"] .diwali-string-lights {
-  display: block;
-}
-.diwali-string-lights .dsl-svg {
-  width: 100%;
-  height: 28px;
-  display: block;
-  overflow: visible;
-}
-.diwali-string-lights .dsl-wire {
-  fill: none;
-  stroke: rgba(214, 168, 75, 0.55);
-  stroke-width: 1.35;
-  stroke-linecap: round;
-}
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .diwali-string-lights .dsl-wire {
-  stroke: rgba(180, 118, 28, 0.5);
-}
-.diwali-string-lights .dsl-bulb-group {
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-  animation: dslTwinkle var(--tw-dur, 2.8s) ease-in-out var(--tw-delay, 0s) infinite alternate;
-}
-.diwali-string-lights .dsl-halo {
-  fill: url(#dslHaloGrad);
-  opacity: 0.85;
-  mix-blend-mode: screen;
-}
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .diwali-string-lights .dsl-halo {
-  mix-blend-mode: normal;
-  opacity: 0.55;
-}
-.diwali-string-lights .dsl-core {
-  fill: #FFF7D6;
-  stroke: #F5C451;
-  stroke-width: 0.8;
-  filter: drop-shadow(0 0 6px rgba(255, 200, 75, 0.95)) drop-shadow(0 0 12px rgba(245, 158, 11, 0.65));
-}
-.diwali-string-lights .dsl-cap {
-  fill: #9A6B1F;
-}
-@keyframes dslTwinkle {
-  0% {
-    opacity: 0.58;
-    transform: scale(0.94);
-    filter: brightness(0.9);
-  }
-  50% {
-    opacity: 0.92;
-    transform: scale(1.02);
-    filter: brightness(1.12);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1.07);
-    filter: brightness(1.28);
-  }
-}
-
 /* ---- Festive decorations: carved diyas, rangoli, marigold garland + bells, floral carvings, a
-   firework hotspot, and (day mode only) an ornamental gold peacock. Anchored inside .main-chat so
-   they align cleanly with the workspace header/countdown bar and bottom composer. ---- */
-.dw-defs { position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
-.dw-decor { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
-.main-chat > .dw-decor { z-index:1; }
-.main-chat > .messages-list,
-.main-chat > .chat-header,
-.main-chat > .diwali-strip,
-.main-chat > .diwali-string-lights,
-.main-chat > .chat-input,
-.main-chat > .typing-status { position:relative; z-index:2; }
-
-.dw-garland-wrap { position:absolute; top:0; left:0; right:0; height:32px; opacity:.88; pointer-events:none; }
+   firework hotspot, and (day mode only) an ornamental gold peacock. Behind messages like everything
+   else in #diwali-fx (pointer-events:none on the layer); only the clickable pieces opt back in. ---- */
+.dw-defs { position:absolute; width:0; height:0; overflow:hidden; }
+.dw-decor { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.dw-garland-wrap { position:absolute; top:0; left:0; right:0; height:34px; opacity:.85; }
 .dw-garland-wrap svg { width:100%; height:100%; display:block; }
-.dw-bell { position:absolute; top:18px; width:22px; height:26px; transform-origin:50% 0; filter:drop-shadow(0 3px 5px rgba(0,0,0,.42)); animation:dwSwing 4.5s ease-in-out infinite; }
+.dw-bell { position:absolute; top:22px; width:22px; height:26px; transform-origin:50% 0; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35)); animation:dwSwing 4.5s ease-in-out infinite; }
 .dw-bell-1 { left:14%; } .dw-bell-2 { left:50%; margin-left:-11px; animation-delay:-1.5s; } .dw-bell-3 { left:84%; animation-delay:-3s; }
 @keyframes dwSwing { 0%, 100% { transform:rotate(-4deg); } 50% { transform:rotate(4deg); } }
-
-.dw-floral { position:absolute; width:48px; height:48px; opacity:.55; pointer-events:none; }
-.dw-floral-tl { left:12px; top:108px; }
-.dw-floral-br { right:12px; bottom:84px; }
-
-.dw-diya {
-  position:absolute;
-  bottom:82px;
-  width:50px;
-  height:42px;
-  z-index:3;
-  pointer-events:auto;
-  cursor:pointer;
-  filter:drop-shadow(0 0 12px rgba(246,198,103,.48)) drop-shadow(0 4px 10px rgba(0,0,0,.45));
-  transition:filter .3s ease, transform .3s ease;
-}
-.dw-diya-1 { left:18px; }
-.dw-diya-2 { right:18px; }
-.dw-diya:hover { filter:drop-shadow(0 0 20px rgba(255,210,115,.85)) drop-shadow(0 4px 12px rgba(0,0,0,.5)); transform:translateY(-2px) scale(1.06); }
-.dw-diya.dw-lit { filter:drop-shadow(0 0 28px rgba(255,205,100,1)) drop-shadow(0 0 44px rgba(255,155,45,.75)); }
+.dw-floral { position:absolute; width:48px; height:48px; opacity:.5; }
+.dw-floral-tl { left:8px; top:40px; } .dw-floral-br { right:8px; bottom:68px; }
+.dw-diya { position:absolute; bottom:14px; width:48px; height:40px; pointer-events:auto; cursor:pointer;
+  filter:drop-shadow(0 0 10px rgba(246,198,103,.35)); transition:filter .3s ease, transform .3s ease; }
+.dw-diya-1 { left:14px; } .dw-diya-2 { right:14px; }
+.dw-diya:hover { filter:drop-shadow(0 0 18px rgba(246,198,103,.65)); transform:translateY(-2px) scale(1.05); }
+.dw-diya.dw-lit { filter:drop-shadow(0 0 26px rgba(255,197,92,.9)); }
 .dw-diya.dw-lit .dw-flame { animation-duration:.5s; }
-.dw-flame { transform-box:fill-box; transform-origin:50% 100%; animation:dwFlicker 2.1s ease-in-out infinite; }
+.dw-flame { transform-origin:50% 100%; animation:dwFlicker 2.1s ease-in-out infinite; }
 @keyframes dwFlicker { 0%, 100% { transform:scale(1,1); } 25% { transform:scale(1.05,.95) translateX(-1px); } 50% { transform:scale(.92,1.08); } 75% { transform:scale(.97,1.03) translateX(1px); } }
-
-.dw-rangoli {
-  position:absolute;
-  left:50%;
-  bottom:76px;
-  width:124px;
-  height:124px;
-  margin-left:-62px;
-  opacity:.62;
-  z-index:2;
-  pointer-events:auto;
-  cursor:pointer;
-  transition:opacity .3s ease, transform .3s ease;
-}
-.dw-rangoli svg { width:100%; height:100%; display:block; filter:drop-shadow(0 0 12px rgba(214,168,75,.32)); transition:filter .3s ease; }
-.dw-rangoli:hover { opacity:.82; }
-.dw-rangoli:hover svg { filter:drop-shadow(0 0 20px rgba(245,217,138,.68)); }
+.dw-rangoli { position:absolute; left:50%; bottom:4px; width:118px; height:118px; margin-left:-59px; opacity:.55; pointer-events:auto; cursor:pointer; }
+.dw-rangoli svg { width:100%; height:100%; display:block; transition:filter .3s ease; }
+.dw-rangoli:hover svg { filter:drop-shadow(0 0 14px rgba(226,163,61,.5)); }
 .dw-rangoli.dw-spin svg { animation:dwSpin 1.3s cubic-bezier(.2,.8,.2,1) 1; }
 @keyframes dwSpin { from { transform:rotate(0); } to { transform:rotate(360deg); } }
-
-.dw-firework-trigger {
-  position:absolute;
-  top:116px;
-  left:26px;
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  z-index:3;
-  pointer-events:auto;
-  cursor:pointer;
-  background:radial-gradient(circle, #FFF5C0 0%, #F5C451 45%, rgba(242,184,78,0) 72%);
-  box-shadow:0 0 12px 3px rgba(246,198,103,.65);
-  animation:dwPulse 2.4s ease-in-out infinite;
-}
-.dw-firework-trigger:hover { box-shadow:0 0 20px 5px rgba(255,215,120,.92); }
-@keyframes dwPulse { 0%, 100% { transform:scale(1); opacity:.78; } 50% { transform:scale(1.25); opacity:1; } }
-
-.dw-burst { position:fixed; width:0; height:0; pointer-events:none; z-index:999; }
+.dw-firework-trigger { position:absolute; top:46px; left:4%; width:20px; height:20px; border-radius:50%; pointer-events:auto; cursor:pointer;
+  background:radial-gradient(circle, #FFE9A8 0%, #F2B84E 45%, transparent 72%); box-shadow:0 0 10px 2px rgba(246,198,103,.5);
+  animation:dwPulse 2.4s ease-in-out infinite; }
+.dw-firework-trigger:hover { box-shadow:0 0 18px 4px rgba(246,198,103,.8); }
+@keyframes dwPulse { 0%, 100% { transform:scale(1); opacity:.75; } 50% { transform:scale(1.25); opacity:1; } }
+.dw-burst { position:fixed; width:0; height:0; pointer-events:none; z-index:5; }
 .dw-burst i { position:absolute; left:0; top:0; width:4px; height:4px; border-radius:50%; background:var(--c,#F6C667);
   box-shadow:0 0 6px 1px var(--c,#F6C667); transform:rotate(var(--a)) translateY(0); animation:dwBurst .8s ease-out forwards; }
 @keyframes dwBurst { from { transform:rotate(var(--a)) translateY(0); opacity:1; } to { transform:rotate(var(--a)) translateY(-54px); opacity:0; } }
-
-/* Preserve Day Mode peacock exactly as designed */
 .dw-peacock { display:none; position:absolute; top:46px; right:3%; width:140px; height:88px; opacity:.92; filter:drop-shadow(0 6px 14px rgba(0,0,0,.25)); }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-peacock { display:block; }
-
-/* Night Mode specific decoration refinements */
-html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dw-diya {
-  filter:drop-shadow(0 0 16px rgba(255,198,92,.72)) drop-shadow(0 0 28px rgba(214,168,75,.42));
-}
-html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dw-rangoli {
-  opacity:.72;
-}
-html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dw-rangoli svg {
-  filter:drop-shadow(0 0 16px rgba(245,217,138,.45));
-}
-html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dw-bell {
-  filter:drop-shadow(0 0 8px rgba(245,217,138,.38)) drop-shadow(0 3px 6px rgba(0,0,0,.55));
-}
-html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dw-floral {
-  opacity:.68;
-  filter:drop-shadow(0 0 8px rgba(214,168,75,.35));
-}
-
 @media (max-width: 720px) {
-  .diwali-string-lights { height:22px; flex-basis:22px; margin-bottom:-6px; }
-  .diwali-string-lights .dsl-svg { height:22px; }
   .dw-peacock { width:92px; height:58px; top:40px; }
-  .dw-rangoli { width:88px; height:88px; margin-left:-44px; bottom:70px; }
-  .dw-diya { width:38px; height:32px; bottom:74px; }
+  .dw-rangoli { width:88px; height:88px; margin-left:-44px; }
+  .dw-diya { width:38px; height:32px; }
   .dw-floral { width:34px; height:34px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dw-bell, .dw-flame, .dw-firework-trigger, .diwali-string-lights .dsl-bulb-group { animation:none !important; }
+  .dw-bell, .dw-flame, .dw-firework-trigger { animation:none !important; }
   .dw-rangoli.dw-spin svg { animation:none !important; }
   .dw-burst { display:none; }
 }
