@@ -1505,7 +1505,30 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   }
 
   // Day = 06:00-18:00 local time, Night/Puja = the rest. Re-applied, never re-created.
-  function isDayNow() { const h = new Date().getHours(); return h >= 6 && h < 18; }
+  // Console override to test Day/Night without waiting (in-memory only; reload = real clock).
+  let ambientOverride = null;
+  function isDayNow() {
+    if (ambientOverride) return ambientOverride === 'day';
+    const h = new Date().getHours(); return h >= 6 && h < 18;
+  }
+  // changeTime() toggles | 'day' | 'night' | an hour (14 or '14:30') | 'auto'. Aliases: timeChange(), timechange(), changetime().
+  function changeTime(arg) {
+    let next;
+    if (arg === undefined) next = isDayNow() ? 'night' : 'day';
+    else if (arg === null || /^(auto|real|reset|now)$/i.test(String(arg).trim())) next = null;
+    else if (/^(day|night)$/i.test(String(arg).trim())) next = String(arg).trim().toLowerCase();
+    else {
+      const m = /^(\d{1,2})(?::\d{2})?$/.exec(String(arg).trim());
+      const h = m ? parseInt(m[1], 10) : NaN;
+      if (!(h >= 0 && h <= 23)) { console.warn("changeTime(): use 'day', 'night', an hour 0-23, 'auto', or no argument to toggle."); return; }
+      next = (h >= 6 && h < 18) ? 'day' : 'night';
+    }
+    ambientOverride = next;
+    applyAmbientMode();
+    console.log(next ? ('Theme time forced to ' + next.toUpperCase() + '.') : 'Theme time back to real local time (' + (isDayNow() ? 'day' : 'night') + ').');
+    return next || 'auto';
+  }
+  window.changeTime = window.timeChange = window.timechange = window.changetime = changeTime;
   function applyAmbientMode() {
     if (document.documentElement.getAttribute('data-theme') !== THEME) return;
     document.documentElement.setAttribute('data-diwali-ambient', isDayNow() ? 'day' : 'night');
@@ -1543,19 +1566,72 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 <linearGradient id="dwGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6C667"/><stop offset="1" stop-color="#C9972E"/></linearGradient>
 <linearGradient id="dwClay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6A84B"/><stop offset="1" stop-color="#7A4A17"/></linearGradient>
 <radialGradient id="dwFlameG" cx=".5" cy=".2" r=".9"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".55" stop-color="#FFA726"/><stop offset="1" stop-color="#E8572A"/></radialGradient>
-<linearGradient id="dwPeaTail" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1E3A8A"/><stop offset=".6" stop-color="#10B981"/><stop offset="1" stop-color="#F5D98A"/></linearGradient>
-<radialGradient id="dwPeaEye" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#047857"/><stop offset="1" stop-color="#F5D98A"/></radialGradient>
 <symbol id="dwDiya" viewBox="0 0 60 50">
 <path d="M4 28c7 4 17 6 26 6s19-2 26-6c-3 10-14 17-26 17S7 38 4 28z" fill="url(#dwClay)"/>
 <ellipse cx="30" cy="27" rx="25" ry="5.5" fill="url(#dwGold)" opacity=".85"/>
 <path class="dw-flame" d="M30 6c3.5 5.5 7.5 9.5 7.5 14.5a7.5 7.5 0 1 1-15 0C22.5 15.5 26.5 11.5 30 6z" fill="url(#dwFlameG)"/>
 </symbol>
-<symbol id="dwPetal" viewBox="-6 -22 12 22"><path d="M0 0C-5 -6 -5 -16 0 -22C5 -16 5 -6 0 0Z"/></symbol>
-<symbol id="dwRangoli" viewBox="-40 -40 80 80">
-<circle r="38" fill="none" stroke="url(#dwGold)" stroke-width="1.4" opacity=".55"/>
-<use href="#dwPetal" fill="#E2A33D" transform="rotate(0)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(30)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(60)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(90)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(120)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(150)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(180)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(210)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(240)"/><use href="#dwPetal" fill="#E2A33D" transform="rotate(270)"/><use href="#dwPetal" fill="#7A1F3D" transform="rotate(300)"/><use href="#dwPetal" fill="#FFF3DC" transform="rotate(330)"/>
-<circle r="7" fill="url(#dwGold)"/><circle r="3" fill="#7A1F3D"/>
-</symbol>
+<g id="dwRangoli">
+<circle r="38" fill="none" stroke="url(#dwGold)" stroke-width="1.2" opacity=".6"/>
+<circle cx="0.00" cy="-38.00" r="1.05" fill="#F5D98A"/>
+<circle cx="9.84" cy="-36.71" r="1.05" fill="#F5D98A"/>
+<circle cx="19.00" cy="-32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="26.87" cy="-26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="32.91" cy="-19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="36.71" cy="-9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="38.00" cy="-0.00" r="1.05" fill="#F5D98A"/>
+<circle cx="36.71" cy="9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="32.91" cy="19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="26.87" cy="26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="19.00" cy="32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="9.84" cy="36.71" r="1.05" fill="#F5D98A"/>
+<circle cx="0.00" cy="38.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-9.84" cy="36.71" r="1.05" fill="#F5D98A"/>
+<circle cx="-19.00" cy="32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="-26.87" cy="26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="-32.91" cy="19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-36.71" cy="9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="-38.00" cy="0.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-36.71" cy="-9.84" r="1.05" fill="#F5D98A"/>
+<circle cx="-32.91" cy="-19.00" r="1.05" fill="#F5D98A"/>
+<circle cx="-26.87" cy="-26.87" r="1.05" fill="#F5D98A"/>
+<circle cx="-19.00" cy="-32.91" r="1.05" fill="#F5D98A"/>
+<circle cx="-9.84" cy="-36.71" r="1.05" fill="#F5D98A"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(0.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(22.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(45.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(67.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(90.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(112.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(135.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(157.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(180.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(202.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(225.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(247.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(270.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(292.5)" fill="#7A1F3D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(315.0)" fill="#E2A33D"/>
+<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(337.5)" fill="#7A1F3D"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(22.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(67.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(112.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(157.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(202.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(247.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(292.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(337.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(0.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(45.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(90.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(135.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(180.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(225.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(270.0)" fill="#7A1F3D"/>
+<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(315.0)" fill="#7A1F3D"/>
+<circle r="11" fill="none" stroke="#E2A33D" stroke-width=".8" opacity=".8"/>
+<circle r="5" fill="url(#dwGold)"/><circle r="2.2" fill="#7A1F3D"/>
+</g>
 <symbol id="dwBell" viewBox="0 0 34 40">
 <path d="M17 2a3 3 0 0 1 3 3v2c6 2 9 8 9 15v3H5v-3c0-7 3-13 9-15V5a3 3 0 0 1 3-3z" fill="url(#dwGold)"/>
 <rect x="5" y="25" width="24" height="4" rx="2" fill="#7A4A17"/><circle cx="17" cy="34" r="3" fill="#7A4A17"/>
@@ -1567,17 +1643,6 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 <path d="M0 8 Q60 32 120 8 T240 8 T360 8 T480 8 T600 8 T720 8 T840 8 T960 8 T1080 8 T1200 8" fill="none" stroke="#5B3A12" stroke-width="2" opacity=".5"/>
 <g fill="#E2A33D"><circle cx="60" cy="24" r="6"/><circle cx="180" cy="24" r="6"/><circle cx="300" cy="24" r="6"/><circle cx="420" cy="24" r="6"/><circle cx="540" cy="24" r="6"/><circle cx="660" cy="24" r="6"/><circle cx="780" cy="24" r="6"/><circle cx="900" cy="24" r="6"/><circle cx="1020" cy="24" r="6"/><circle cx="1140" cy="24" r="6"/></g>
 <g fill="#C97F1F"><circle cx="60" cy="24" r="2.4"/><circle cx="180" cy="24" r="2.4"/><circle cx="300" cy="24" r="2.4"/><circle cx="420" cy="24" r="2.4"/><circle cx="540" cy="24" r="2.4"/><circle cx="660" cy="24" r="2.4"/><circle cx="780" cy="24" r="2.4"/><circle cx="900" cy="24" r="2.4"/><circle cx="1020" cy="24" r="2.4"/><circle cx="1140" cy="24" r="2.4"/></g>
-</symbol>
-<symbol id="dwFeather" viewBox="-6 -46 12 46">
-<path d="M0 0C-7 -14 -7 -34 0 -46C7 -34 7 -14 0 0Z" fill="url(#dwPeaTail)"/>
-<ellipse cx="0" cy="-37" rx="4.2" ry="6" fill="url(#dwPeaEye)"/><ellipse cx="0" cy="-37" rx="1.6" ry="2.4" fill="#0B3B2E"/>
-</symbol>
-<symbol id="dwPeacock" viewBox="-90 -100 180 110">
-<g transform="translate(6 10)"><use href="#dwFeather" transform="rotate(-50)"/><use href="#dwFeather" transform="rotate(-40)"/><use href="#dwFeather" transform="rotate(-30)"/><use href="#dwFeather" transform="rotate(-20)"/><use href="#dwFeather" transform="rotate(-10)"/><use href="#dwFeather" transform="rotate(0)"/><use href="#dwFeather" transform="rotate(10)"/><use href="#dwFeather" transform="rotate(20)"/><use href="#dwFeather" transform="rotate(30)"/><use href="#dwFeather" transform="rotate(40)"/><use href="#dwFeather" transform="rotate(50)"/></g>
-<ellipse cx="6" cy="18" rx="16" ry="22" fill="url(#dwGold)"/>
-<path d="M6 -2C0 -14 -4 -26 2 -34C8 -28 10 -16 6 -2Z" fill="url(#dwGold)"/>
-<circle cx="4" cy="-30" r="6" fill="url(#dwGold)"/>
-<path d="M4 -36l-2 -6M4 -36l0 -7M4 -36l2 -6" stroke="#C9972E" stroke-width="1.6" stroke-linecap="round"/>
 </symbol>
 </defs></svg>
 <div class="dw-decor">
@@ -1591,7 +1656,6 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 <svg class="dw-diya dw-diya-2" viewBox="0 0 60 50" aria-hidden="true"><use href="#dwDiya"/></svg>
 <div class="dw-rangoli" aria-hidden="true"><svg viewBox="-40 -40 80 80"><use href="#dwRangoli"/></svg></div>
 <div class="dw-firework-trigger" aria-hidden="true"></div>
-<svg class="dw-peacock" viewBox="-90 -100 180 110" aria-hidden="true"><use href="#dwPeacock"/></svg>
 </div>`;
   }
   function spawnFirework(anchor) {
@@ -1618,6 +1682,120 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   }
   document.addEventListener('click', onDecorClick);
 
+  // <<dw-strip-decor
+  // ---- Peacock at the bottom-right (Day Mode only, via CSS) + carved diyas, both on the home view ----
+  let stripPeacock = null, carvedWrap = null, peacockMask = null, peacockRaf = 0, peacockTouchT = 0;
+  function carvedDiya() {
+    const petal = 'M0 0C-5.5 -5 -6.5 -13 0 -19C6.5 -13 5.5 -5 0 0Z';
+    // Lit-from-inside petal cut-outs (like a carved jack-o'-lantern): dark carved edge + glowing amber core.
+    const cut = (x, y, rot, s) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><path d="${petal}" fill="#2B1405"/><path class="dwC-lit" d="${petal}" fill="url(#dwCGlow)" transform="translate(0 -.6) scale(.8)"/></g>`;
+    let dots = ''; for (let i = 0; i < 9; i++) { const x = 17 + i * 8.25, y = 53 + Math.pow((x - 50) / 33, 2) * 6; dots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.25" fill="#5A3210"/><circle cx="${(x - .4).toFixed(1)}" cy="${(y - .4).toFixed(1)}" r=".5" fill="#FBE39A"/>`; }
+    return `<svg viewBox="-4 0 108 86" aria-hidden="true"><circle class="dwC-halo" cx="50" cy="26" r="34" fill="url(#dwCHalo)"/>`
+      + `<path d="M8 41C0 37 -3 32 1 29C7 30 12 35 15 42Z" fill="url(#dwCBowl)" stroke="#6B3E0E" stroke-width="1.2"/>`
+      + `<path d="M34 80h32l-3 5H37z" fill="#8A5A12" stroke="#6B3E0E" stroke-width="1.1"/>`
+      + `<path d="M6 44C6 68 26 82 50 82C74 82 94 68 94 44Z" fill="url(#dwCBowl)" stroke="#6B3E0E" stroke-width="1.4"/>`
+      + `<ellipse cx="50" cy="44" rx="44" ry="9" fill="url(#dwCRim)" stroke="#6B3E0E" stroke-width="1.2"/>`
+      + `<ellipse class="dwC-lit" cx="50" cy="44.5" rx="36" ry="6" fill="url(#dwCGlow)"/>`
+      + dots + cut(50, 76, 0, 1.15) + cut(31, 72, -24, .85) + cut(69, 72, 24, .85) + cut(17, 64, -48, .55) + cut(83, 64, 48, .55)
+      + `<rect x="48.6" y="33" width="2.8" height="11" rx="1.2" fill="#3A1D08"/>`
+      + `<g class="dwC-flame"><path d="M50 6C59 17 61 28 50 39C39 28 41 17 50 6Z" fill="url(#dwCFlame)"/><path d="M50 19C54.5 25 54.5 32 50 37C45.5 32 45.5 25 50 19Z" fill="#FFF3B0"/></g></svg>`;
+  }
+  function carvedMarkup() {
+    const defs = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="dwCBowl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6C667"/><stop offset=".45" stop-color="#D6A84B"/><stop offset="1" stop-color="#8A5A12"/></linearGradient><linearGradient id="dwCRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B8862F"/><stop offset=".5" stop-color="#FBE39A"/><stop offset="1" stop-color="#B8862F"/></linearGradient><radialGradient id="dwCGlow"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".6" stop-color="#FFB33A"/><stop offset="1" stop-color="#FF7A18"/></radialGradient><linearGradient id="dwCFlame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF7A18"/><stop offset=".6" stop-color="#FFC83D"/><stop offset="1" stop-color="#FFF3B0"/></linearGradient><radialGradient id="dwCHalo"><stop offset="0" stop-color="#FFBE46" stop-opacity=".55"/><stop offset="1" stop-color="#FFBE46" stop-opacity="0"/></radialGradient></defs></svg>';
+    const item = (cls) => `<span class="dwC-item ${cls}"><i class="dwC-pool"></i>${carvedDiya()}</span>`;
+    return defs + item('dwC-1') + item('dwC-2') + item('dwC-3');
+  }
+  function loadPeacockMask(src) {
+    const probe = new Image();
+    probe.onload = () => {
+      try {
+        const w = 64, h = Math.max(1, Math.round(w * probe.naturalHeight / probe.naturalWidth));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(probe, 0, 0, w, h);
+        peacockMask = { w, h, d: cx.getImageData(0, 0, w, h).data };
+      } catch (e) { peacockMask = null; } // e.g. file:// canvas restrictions: fall back to the bounding box
+    };
+    probe.src = src;
+  }
+  function mountStripDecor() {
+    const strip = document.getElementById('diwali-strip');
+    if (!strip || stripPeacock) return;
+    stripPeacock = document.createElement('img');
+    stripPeacock.className = 'diwali-peacock'; stripPeacock.src = 'diwali-peacock.png';
+    stripPeacock.alt = ''; stripPeacock.setAttribute('aria-hidden', 'true'); stripPeacock.draggable = false;
+    loadPeacockMask(stripPeacock.src);
+    carvedWrap = document.createElement('div'); carvedWrap.className = 'dwC-wrap'; carvedWrap.setAttribute('aria-hidden', 'true');
+    carvedWrap.innerHTML = carvedMarkup();
+    strip.parentNode.insertBefore(carvedWrap, strip.nextSibling);
+    carvedWrap.appendChild(stripPeacock);
+  }
+  function unmountStripDecor() {
+    if (stripPeacock) { stripPeacock.remove(); stripPeacock = null; }
+    if (carvedWrap) { carvedWrap.remove(); carvedWrap = null; }
+  }
+  // Glow only while the pointer is over the painted pixels of the peacock (it ignores pointer events itself,
+  // so the home content underneath stays clickable). Touch: a short glow on tap.
+  function overPeacock(x, y) {
+    if (!stripPeacock) return false;
+    const r = stripPeacock.getBoundingClientRect();
+    if (!r.width || x < r.left || x > r.right || y < r.top || y > r.bottom) return false;
+    if (!peacockMask) return true;
+    const px = Math.min(peacockMask.w - 1, Math.floor((x - r.left) / r.width * peacockMask.w));
+    const py = Math.min(peacockMask.h - 1, Math.floor((y - r.top) / r.height * peacockMask.h));
+    return peacockMask.d[(py * peacockMask.w + px) * 4 + 3] > 40;
+  }
+  document.addEventListener('mousemove', (e) => {
+    if (!stripPeacock || peacockRaf) return;
+    const x = e.clientX, y = e.clientY;
+    peacockRaf = requestAnimationFrame(() => { peacockRaf = 0; if (stripPeacock) stripPeacock.classList.toggle('dw-peacock-glow', overPeacock(x, y)); });
+  }, { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => { if (stripPeacock) stripPeacock.classList.remove('dw-peacock-glow'); });
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' || !overPeacock(e.clientX, e.clientY)) return;
+    stripPeacock.classList.add('dw-peacock-glow'); clearTimeout(peacockTouchT);
+    peacockTouchT = setTimeout(() => { if (stripPeacock) stripPeacock.classList.remove('dw-peacock-glow'); }, 1400);
+  }, { passive: true });
+  // dw-strip-decor>>
+  // <<dw-night-fireworks
+  // ---- Ambient night fireworks: a rare, soft burst or a few twinkles, drawn BEHIND the UI inside #diwali-fx ----
+  // Cheap by design: one timer, at most one burst alive (~19 tiny transform/opacity-animated nodes, removed after ~3s),
+  // nothing runs in Day Mode, with the tab hidden or with reduced-motion on, and it is quieter inside a chat.
+  let fwTimer = 0, fwLive = 0;
+  const FW_COLORS = ['#F6C667', '#FFE9A8', '#FFB33A', '#F6C667', '#FFD98A', '#C9A8FF'];
+  const fwRand = (a, b) => a + Math.random() * (b - a);
+  function fwNightOk() { return !!fx && !document.hidden && !reduceMq.matches && document.documentElement.getAttribute('data-diwali-ambient') === 'night'; }
+  function fwInChat() { return !document.querySelector('.chat-header.is-home'); }
+  function spawnAmbientBurst(quiet) {
+    const W = window.innerWidth, H = window.innerHeight;
+    const el = document.createElement('span'); el.className = 'dw-fw';
+    el.style.left = fwRand(W * .12, W * .88).toFixed(0) + 'px';
+    el.style.top = fwRand(H * .08, H * .4).toFixed(0) + 'px';
+    el.style.setProperty('--sc', quiet ? '.62' : '1');
+    const c = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)];
+    let h = '';
+    for (let i = 0; i < 12; i++) h += `<i style="--a:${i * 30}deg;--r:${fwRand(34, 52).toFixed(0)};--c:${c}"></i>`;
+    for (let i = 0; i < 6; i++) h += `<i class="s" style="--a:${i * 60 + 20}deg;--r:${fwRand(52, 66).toFixed(0)};--c:#FFE9A8"></i>`;
+    el.innerHTML = h; fx.appendChild(el); fwLive++;
+    setTimeout(() => { el.remove(); fwLive--; }, 2900);
+  }
+  function spawnTwinkles(quiet) {
+    const W = window.innerWidth, H = window.innerHeight, n = quiet ? 1 : 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement('span'); el.className = 'dw-tw';
+      el.style.left = fwRand(W * .08, W * .92).toFixed(0) + 'px'; el.style.top = fwRand(H * .06, H * .5).toFixed(0) + 'px';
+      el.style.animationDelay = (i * .45).toFixed(2) + 's';
+      fx.appendChild(el); setTimeout(() => el.remove(), 2400 + i * 450);
+    }
+  }
+  function fwTick() {
+    fwTimer = 0; if (!fx) return;
+    const quiet = fwInChat();
+    if (fwNightOk()) { if (Math.random() < .45) spawnTwinkles(quiet); else if (!fwLive) spawnAmbientBurst(quiet); }
+    fwTimer = setTimeout(fwTick, quiet ? fwRand(8000, 15000) : fwRand(4500, 9000));
+  }
+  function startFireworks() { if (!fwTimer) fwTimer = setTimeout(fwTick, 3500); }
+  function stopFireworks() { clearTimeout(fwTimer); fwTimer = 0; }
+  // dw-night-fireworks>>
   function activate() {
     if (fx || !document.body) return;
     loadFonts();
@@ -1625,9 +1803,13 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     fx.innerHTML = decorMarkup() + (reduceMq.matches ? '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>' : build());
     document.body.insertBefore(fx, document.body.firstChild);
     startAmbientClock();
+    mountStripDecor();
+    startFireworks();
   }
   function deactivate() {
     if (fx) { fx.remove(); fx = null; }
+    unmountStripDecor();
+    stopFireworks();
     stopAmbientClock();
     clearTimeout(scrollBoostTimer);
   }
