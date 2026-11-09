@@ -324,7 +324,8 @@
   const spriteUrl = (id) => ASSET_ROOT + id + '.png';
   const uid = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const emptyDecor = () => ({ v: 2, background: 'none', pattern: null, banner: 'none', ambient: [], items: [] });
-  const cleanItem = (i) => ({ uid: i.uid || uid(), id: i.id, x: +i.x || 50, y: +i.y || 50, s: clamp(+i.s || 1, SCALE_MIN, SCALE_MAX), rot: +i.rot || 0, flip: !!i.flip });
+  const num = (v, fb) => (v == null || v === '' || !isFinite(+v) ? fb : +v);                // keeps a legitimate 0 (hanging items sit at y = 0)
+  const cleanItem = (i) => ({ uid: typeof i.uid === 'string' && i.uid ? i.uid : uid(), id: i.id, x: clamp(num(i.x, 50), 0, 100), y: clamp(num(i.y, 50), 0, 100), s: clamp(num(i.s, 1) || 1, SCALE_MIN, SCALE_MAX), rot: num(i.rot, 0), flip: !!i.flip });
   const normDecor = (d) => {
     const base = emptyDecor(); if (!d || typeof d !== 'object') return base;
     return Object.assign(base, d, { items: (Array.isArray(d.items) ? d.items : []).filter((i) => i && SPRITES[i.id]).map(cleanItem), ambient: Array.isArray(d.ambient) ? d.ambient : [] });
@@ -393,18 +394,22 @@
      3. DATA ACCESS (hub.decor is stored on the Hub like its other appearance fields)
      --------------------------------------------------------------------- */
   const mainChat = () => $('.main-chat');
+  // Only touches a class when its state actually changes. classList.add/remove rewrite the attribute even when nothing
+  // changes, and a MutationObserver is watching .main-chat's class — an unconditional write there loops forever.
+  const setCls = (el, name, on) => { if (el && el.classList.contains(name) !== !!on) el.classList.toggle(name, !!on); };
   const hubId = () => g(() => activeHub, null);
   const inHub = () => { const mc = mainChat(); return hubId() != null && !!mc && mc.classList.contains('hub-active'); };   // Hubs only
   const currentHub = () => (inHub() ? g(() => hubById(hubId()), null) : null);
   const canEdit = (hub) => !!hub && g(() => hubCanManage(hub), false);
   const isOwner = (hub) => !!hub && hub.owner === g(() => currentUser, null);
 
-  let editorOn = false, work = emptyDecor(), selected = null, saveTimer = null, clearArmed = null;
+  let editorOn = false, editHubId = null, work = emptyDecor(), selected = null, saveTimer = null, clearArmed = null;
   let chatScene = null, editScene = null, editorEl = null, layerEl = null, noteTimer = null;
 
   function persist() {
     clearTimeout(saveTimer); saveTimer = null;
-    const id = hubId(); if (id == null || !inHub()) return;
+    if (!editorOn || editHubId == null) return;                         // only an open editing session may write, and only to its own Hub
+    const id = editHubId;
     g(() => { const hubs = getHubs(); const hub = hubs.find((h) => h.id === id); if (!hub) return; hub.decor = clone(work); saveHubs(hubs); });
   }
   function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(persist, 350); }
@@ -583,7 +588,9 @@
       }
     }
     finish() {
-      const op = this.op; if (!op) return; this.op = null; this.pending = null; cancelAnimationFrame(this.raf); this.raf = 0;
+      if (!this.op) return;
+      if (this.pending) { cancelAnimationFrame(this.raf); this.raf = 0; this.step(this.pending); }     // apply the final pointer position before closing
+      const op = this.op; this.op = null; this.pending = null; cancelAnimationFrame(this.raf); this.raf = 0;
       this.el.classList.remove('is-operating'); const it = op.it;
       if (op.type === 'move') {
         op.node.classList.remove('is-dragging', 'is-invalid');
@@ -603,8 +610,15 @@
      --------------------------------------------------------------------- */
   function ensureLayer() {
     const mc = mainChat(); if (!mc) return null;
-    if (!layerEl) { layerEl = document.createElement('div'); layerEl.id = 'hub-decor-layer'; layerEl.setAttribute('aria-hidden', 'true'); mc.insertBefore(layerEl, mc.firstChild); }
+    if (!layerEl) { layerEl = document.createElement('div'); layerEl.id = 'hub-decor-layer'; layerEl.setAttribute('aria-hidden', 'true'); }
+    if (layerEl.parentNode !== mc) mc.insertBefore(layerEl, mc.firstChild);
     return layerEl;
+  }
+  let listRO = null;                                                  // keeps the layer glued to the message list (reply bar, search panel, typing status… all change its height)
+  function watchList() {
+    const list = $('#messages-list'); if (!window.ResizeObserver || !list) return;
+    if (!listRO) listRO = new ResizeObserver(() => { if (layerEl && chatScene) positionLayer(); });
+    listRO.disconnect(); listRO.observe(list);
   }
   function positionLayer() {
     const list = $('#messages-list'); if (!layerEl || !list) return;
@@ -617,11 +631,13 @@
     const decor = normDecor(hub.decor); if (!hasDecor(decor)) return hideChatDecor();
     const el = ensureLayer(); if (!el) return;
     if (!chatScene) chatScene = new Scene(el, { editable: false });
-    mc.classList.add('hub-decor-on'); positionLayer(); chatScene.fxKey = '\0'; chatScene.set(decor);
+    setCls(mc, 'hub-decor-on', true); positionLayer(); watchList(); chatScene.fxKey = '\0'; chatScene.set(decor);
   }
   function hideChatDecor() {
-    const mc = mainChat(); if (mc) mc.classList.remove('hub-decor-on');
+    setCls(mainChat(), 'hub-decor-on', false);
     if (chatScene) { chatScene.destroy(); chatScene = null; }
+    if (listRO) listRO.disconnect();
+    if (layerEl && layerEl.parentNode) layerEl.remove();              // nothing of the decor system stays in the DOM outside a Hub
   }
   window.addEventListener('resize', () => { if (layerEl && chatScene) positionLayer(); });
   if (window.ResizeObserver) new ResizeObserver(() => { if (layerEl && chatScene) positionLayer(); }).observe(document.documentElement);
@@ -687,7 +703,7 @@
         </div>
       </div>
       <div class="hd-body">
-        <div class="hd-stage" id="hd-stage"><div class="hd-stage-chip" id="hd-stage-chip">${DEFAULT_NOTE}</div></div>
+        <div class="hd-stage" id="hd-stage"><div id="hd-scene"></div><div class="hd-stage-chip" id="hd-stage-chip" role="status" aria-live="polite">${DEFAULT_NOTE}</div></div>
         <aside class="hd-panel" aria-label="Decorations">${panelHTML()}</aside>
         <div class="hd-settings hidden" id="hd-settings" role="dialog" aria-label="Hub settings and permissions"></div>
       </div>`;
@@ -707,15 +723,15 @@
   function enterEditor() {
     const hub = currentHub(), mc = mainChat();
     if (editorOn || !hub || !mc || !canEdit(hub)) return false;       // Hubs only
-    editorOn = true; work = normDecor(hub.decor); selected = null; hideChatDecor();
+    editorOn = true; editHubId = hub.id; work = normDecor(hub.decor); selected = null; hideChatDecor();
     editorEl = document.createElement('div'); editorEl.id = 'hub-editor'; editorEl.setAttribute('role', 'region'); editorEl.setAttribute('aria-label', 'Hub Editor'); editorEl.innerHTML = editorHTML(hub);
     const list = $('#messages-list'); list.parentNode.insertBefore(editorEl, list.nextSibling);
-    mc.classList.add('hub-editor-on'); document.body.classList.add('hub-editor-active'); $('#hub-more-menu')?.classList.add('hidden');
-    editScene = new Scene($('#hd-stage', editorEl), {
+    setCls(mc, 'hub-editor-on', true); setCls(document.body, 'hub-editor-active', true); $('#hub-more-menu')?.classList.add('hidden');
+    editScene = new Scene($('#hd-scene', editorEl), {
       editable: true,
       onChange: () => { saveSoon(); syncPanel(); }, onLive: () => syncPanel(),
       onSelect: (u) => { selected = u; syncPanel(); },
-      onDelete: (id) => { work.items = work.items.filter((i) => i.uid !== id); if (selected === id) selected = null; editScene.set(work, selected); saveSoon(); syncPanel(); },
+      onDelete: (id) => { if (!editorOn || !editScene) return; work.items = work.items.filter((i) => i.uid !== id); if (selected === id) selected = null; editScene.set(work, selected); saveSoon(); syncPanel(); },
       onNote: (t, bad) => flashNote(t, bad)
     });
     bindEditor(); editScene.set(work, null);
@@ -725,10 +741,10 @@
   }
   function exitEditor(silent) {
     if (!editorOn) return;
-    persist(); editorOn = false; selected = null; clearTimeout(clearArmed); clearTimeout(noteTimer);
+    persist(); editorOn = false; editHubId = null; selected = null; clearTimeout(clearArmed); clearArmed = null; clearTimeout(noteTimer);
     if (editScene) { editScene.destroy(); editScene = null; }
     if (editorEl) { editorEl.remove(); editorEl = null; }
-    const mc = mainChat(); if (mc) mc.classList.remove('hub-editor-on'); document.body.classList.remove('hub-editor-active');
+    setCls(mainChat(), 'hub-editor-on', false); setCls(document.body, 'hub-editor-active', false);
     refreshHammer();
     if (!silent) { applyChatDecor(); g(() => renderHubMessages(true)); $('#hub-editor-btn')?.focus({ preventScroll: true }); }
   }
@@ -835,6 +851,7 @@
   }
   document.addEventListener('keydown', (e) => {
     if (!editorOn) return;
+    if ($('.modal:not(.hidden)')) return;                             // a Nexora dialog is open on top: keys belong to it, not to the stage
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName || '') && e.target.type !== 'range', it = selItem();
     if (e.key === 'Escape') { const s = $('#hd-settings', editorEl); if (s && !s.classList.contains('hidden')) { s.classList.add('hidden'); return; } if (selected) return selAction('deselect'); return exitEditor(); }
     if (typing || !it) return;
