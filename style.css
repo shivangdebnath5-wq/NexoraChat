@@ -1188,36 +1188,88 @@ html[data-theme="midnight-diwali"][data-diwali-ambient="night"] .dwC-item svg { 
    marigold, with a subtle genda (marigold) garland strung along the top of the ambient layer. Toggled
    automatically by script.js via data-diwali-ambient; there is no separate theme or settings option. ---- */
 [data-theme="midnight-diwali"][data-diwali-ambient="day"] {
-  --bg-main:#FFF8EC; --bg-card:#FFFBF2; --bg-sidebar:#FFF1D6; --text-main:#4A3418; --text-muted:#8C6F42;
-  --border:#F0D8A8; --primary:#E2A33D; --primary-hover:#F2B84E; --msg-sent:#E2A33D; --msg-sent-text:#3A2808;
-  --msg-received:#FFF3DC; --msg-received-text:#4A3418; --input-bg:#FFF6E6; --shadow:rgba(190,140,40,.18);
-  --diwali-gradient:linear-gradient(110deg,#F6C667 0%,#E2A33D 55%,#C97F1F 100%);
+  /* Royal Ivory & Champagne — refines Day Mode only; Night/Puja mode above is untouched. */
+  --bg-main:#FFF9EF; --bg-card:#F6EFE2; --bg-sidebar:#F6EFE2; --text-main:#45382B; --text-muted:#8B7A5E;
+  --border:#E9DDC9; --primary:#C5A15B; --primary-hover:#A98245; --msg-sent:#C5A15B; --msg-sent-text:#45382B;
+  --msg-received:#F6EFE2; --msg-received-text:#45382B; --input-bg:#F6EFE2; --shadow:rgba(169,130,69,.16);
+  --diwali-gradient:linear-gradient(110deg,#C5A15B 0%,#A98245 100%);
 }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] body { background:#FFF8EC; }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #app-screen { box-shadow:0 24px 70px rgba(190,140,40,.16), 0 0 50px rgba(226,163,61,.08); }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .sidebar { background:linear-gradient(180deg, rgba(255,251,242,.92), rgba(255,241,214,.96)); border-right-color:rgba(226,163,61,.25); }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] h2, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] h3 { color:#C97F1F; }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .home-greeting-name { color:#C97F1F; }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #send-btn, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .settings-tab.active, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .wizard-chip.selected { color:#3A2808; }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] button:not([class]) { color:#3A2808; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] body { background:#FFF9EF; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #app-screen { box-shadow:0 24px 70px rgba(169,130,69,.14), 0 0 46px rgba(197,161,91,.1); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .sidebar { background:linear-gradient(180deg, rgba(255,249,239,.92), rgba(246,239,226,.96)); border-right-color:rgba(197,161,91,.25); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] h2, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] h3 { color:#A98245; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .home-greeting-name { color:#A98245; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #send-btn, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .settings-tab.active, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .wizard-chip.selected { color:#45382B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] button:not([class]) { color:#45382B; }
 
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx { background:
-    radial-gradient(900px 650px at 12% 108%, rgba(226,163,61,.22), transparent 62%),
-    radial-gradient(800px 600px at 92% -8%, rgba(246,198,103,.16), transparent 60%),
-    radial-gradient(700px 520px at 55% 58%, rgba(255,235,205,.4), transparent 66%),
-    linear-gradient(170deg, #FFF8EC 0%, #FFF3DC 55%, #FFE9C2 100%); }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx .dw-glow-a { background:radial-gradient(circle, rgba(226,163,61,.18), transparent 65%); }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx .dw-glow-b { background:radial-gradient(circle, rgba(246,198,103,.14), transparent 65%); }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-p i { background:radial-gradient(circle, #F6C667 0 45%, rgba(201,127,31,0) 78%); box-shadow:0 0 5px 1px rgba(226,163,61,.4); }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-spark { background:#F2B84E; box-shadow:0 0 4px 1px rgba(226,163,61,.55); }
+    radial-gradient(900px 650px at 12% 108%, rgba(197,161,91,.16), transparent 62%),
+    radial-gradient(800px 600px at 92% -8%, rgba(169,130,69,.12), transparent 60%),
+    radial-gradient(700px 520px at 55% 58%, rgba(255,249,239,.5), transparent 66%),
+    linear-gradient(170deg, #FFF9EF 0%, #F6EFE2 55%, #EFE3CC 100%); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx .dw-glow-a { background:radial-gradient(circle, rgba(197,161,91,.14), transparent 65%); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx .dw-glow-b { background:radial-gradient(circle, rgba(169,130,69,.1), transparent 65%); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-p i { background:radial-gradient(circle, #D9C49A 0 45%, rgba(169,130,69,0) 78%); box-shadow:0 0 5px 1px rgba(197,161,91,.3); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-spark { background:#C5A15B; box-shadow:0 0 4px 1px rgba(169,130,69,.4); }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx::before {
-  content:''; position:absolute; left:0; right:0; top:0; height:30px; opacity:.55; pointer-events:none;
+  content:''; position:absolute; left:0; right:0; top:0; height:30px; opacity:.5; pointer-events:none;
   background-image:
-    radial-gradient(circle 5px at 10px 14px, #E2A33D 0 60%, transparent 62%),
-    radial-gradient(circle 4px at 26px 10px, #F2B84E 0 60%, transparent 62%),
-    radial-gradient(circle 3px at 40px 16px, #C97F1F 0 60%, transparent 62%);
+    radial-gradient(circle 5px at 10px 14px, #C5A15B 0 60%, transparent 62%),
+    radial-gradient(circle 4px at 26px 10px, #A98245 0 60%, transparent 62%),
+    radial-gradient(circle 3px at 40px 16px, #8A6A38 0 60%, transparent 62%);
   background-repeat:repeat-x; background-size:48px 30px;
 }
+
+/* ---- Day Mode decorations harmonized to Royal Ivory & Champagne: the diya/rangoli/garland/bell/floral
+   markup (script.js) reuses literal fills + the shared dwGold/dwClay/dwFlameG gradients across both
+   modes, so re-point just their colors here, scoped to day only. Night keeps the original palette. ---- */
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwGold stop:nth-child(1) { stop-color:#D9C49A; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwGold stop:nth-child(2) { stop-color:#A98245; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwClay stop:nth-child(1) { stop-color:#C5A15B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwClay stop:nth-child(2) { stop-color:#5C4A34; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwFlameG stop:nth-child(1) { stop-color:#FBF3E1; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwFlameG stop:nth-child(2) { stop-color:#D9A74E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwFlameG stop:nth-child(3) { stop-color:#A9772E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [fill="#F5D98A"] { fill:#E9DDC9; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [fill="#E2A33D"] { fill:#C5A15B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [fill="#7A1F3D"] { fill:#A98245; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [fill="#FFF3DC"] { fill:#FFF9EF; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [fill="#5B3A12"] { fill:#8B7A5E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [fill="#C97F1F"] { fill:#A98245; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [fill="#7A4A17"] { fill:#5C4A34; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #diwali-fx [stroke="#E2A33D"] { stroke:#C5A15B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-rangoli, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-floral {
+  opacity:.68; filter:drop-shadow(0 2px 4px rgba(90,70,40,.22));
+}
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dw-firework-trigger {
+  background:radial-gradient(circle, #FBF3E1 0%, #C5A15B 45%, transparent 72%);
+  box-shadow:0 0 10px 2px rgba(169,130,69,.45), inset 0 0 0 1px rgba(90,70,40,.3);
+}
+/* Carved diyas (home view) + peacock: same restrained champagne/antique-gold warmth in Day Mode. */
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCBowl stop:nth-child(1) { stop-color:#E2CDA0; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCBowl stop:nth-child(2) { stop-color:#C5A15B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCBowl stop:nth-child(3) { stop-color:#5C4A34; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCRim stop:nth-child(1) { stop-color:#A98245; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCRim stop:nth-child(2) { stop-color:#F6EFE2; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCRim stop:nth-child(3) { stop-color:#A98245; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCGlow stop:nth-child(1) { stop-color:#FBF3E1; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCGlow stop:nth-child(2) { stop-color:#D99A45; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCGlow stop:nth-child(3) { stop-color:#A9772E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCFlame stop:nth-child(1) { stop-color:#A9772E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCFlame stop:nth-child(2) { stop-color:#D99A45; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCFlame stop:nth-child(3) { stop-color:#FBF3E1; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCHalo stop:nth-child(1) { stop-color:#C5A15B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] #dwCHalo stop:nth-child(2) { stop-color:#C5A15B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-wrap [fill="#2B1405"] { fill:#45382B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-wrap [stroke="#6B3E0E"] { stroke:#8B7A5E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-wrap [fill="#8A5A12"] { fill:#8B7A5E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-wrap [fill="#3A1D08"] { fill:#45382B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-wrap [fill="#5A3210"] { fill:#8B7A5E; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-wrap [fill="#FBE39A"] { fill:#F6EFE2; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-item svg { filter:drop-shadow(0 5px 8px rgba(69,56,43,.2)) drop-shadow(0 0 8px rgba(169,130,69,.3)); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .dwC-pool { background:radial-gradient(ellipse at 50% 55%, rgba(169,130,69,.2), transparent 68%); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .diwali-peacock { filter:sepia(.25) saturate(.75) hue-rotate(-6deg) brightness(1.04) drop-shadow(0 3px 7px rgba(90,70,40,.18)); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .diwali-peacock.dw-peacock-glow { filter:sepia(.25) saturate(.8) hue-rotate(-6deg) brightness(1.08) drop-shadow(0 0 6px rgba(197,161,91,.5)) drop-shadow(0 0 14px rgba(169,130,69,.28)); }
 
 /* ---- Dynamic Ambient: Night/Puja mode — deep indigo/violet (same palette as before) plus a warm, slowly
    breathing gold glow anchored to the bottom of the active chat panel. Reuses the existing dwBreathe
@@ -1293,18 +1345,25 @@ html[data-theme="midnight-diwali"] input, html[data-theme="midnight-diwali"] sel
 @media (max-width: 720px) {
   html[data-theme="midnight-diwali"] .sidebar, html[data-theme="midnight-diwali"] .main-chat { -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
 }
-html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .sidebar { border-right:1px solid rgba(226,163,61,.22);
-  background:linear-gradient(180deg, rgba(255,251,242,.6), rgba(255,241,214,.72)); }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .sidebar { border-right:1px solid rgba(197,161,91,.22);
+  background:linear-gradient(180deg, rgba(255,249,239,.6), rgba(246,239,226,.72)); }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .main-chat {
-  background:linear-gradient(160deg, rgba(255,248,236,.4), rgba(255,243,220,.3) 55%, rgba(226,163,61,.08)); }
+  background:linear-gradient(160deg, rgba(255,249,239,.4), rgba(246,239,226,.3) 55%, rgba(197,161,91,.08)); }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .chat-header,
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .chat-input,
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .sidebar-header {
-  background:linear-gradient(135deg, rgba(255,251,242,.68), rgba(226,163,61,.16)); border-color:rgba(226,163,61,.2); }
+  background:linear-gradient(135deg, rgba(255,249,239,.68), rgba(197,161,91,.14)); border-color:rgba(197,161,91,.2); }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .card {
-  background:linear-gradient(145deg, rgba(255,251,242,.82), rgba(255,241,214,.88)); border-color:rgba(226,163,61,.26); }
+  background:linear-gradient(145deg, rgba(255,249,239,.82), rgba(246,239,226,.88)); border-color:rgba(197,161,91,.24); }
 html[data-theme="midnight-diwali"][data-diwali-ambient="day"] input, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] select, html[data-theme="midnight-diwali"][data-diwali-ambient="day"] textarea {
-  background-color:rgba(255,246,230,.7); border-color:rgba(226,163,61,.24); color:#4A3418; }
+  background-color:rgba(246,239,226,.7); border-color:rgba(197,161,91,.22); color:#45382B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .emoji-picker,
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .extension-menu,
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .quick-status-popover,
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .add-friend-menu,
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .message-hover-bar {
+  background:linear-gradient(145deg, rgba(255,251,245,.94), rgba(246,239,226,.96)); border-color:rgba(197,161,91,.22); color:#45382B; }
+html[data-theme="midnight-diwali"][data-diwali-ambient="day"] .modal { background:rgba(69,56,43,.18); }
 
 /* ===== Rangoli Diwali — exclusive profile frame (Midnight Diwali palette: antique gold, deep violet, jewel accents) =====
    script.js wraps any avatar with the frame-rangoli class in .rangoli-wrap. The ring art (rangoli-diwali-frame.svg) is
