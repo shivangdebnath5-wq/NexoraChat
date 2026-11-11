@@ -1,8 +1,8 @@
 /* =========================================================================
    deepak.js — the hidden "Deepak" Easter egg  🪔
    -------------------------------------------------------------------------
-   Type  D-E-E-P-A-K  (any case) anywhere in Nexora while NOT typing in a text field and a hidden diya
-   glows into view. Click it 5 times: golden sparkles, and the exclusive "Secret Lightkeeper" profile badge
+   Type  D-E-E-P-A-K  (any case) anywhere in Nexora — as a whole word in the message box, or on its own while not
+   in any text field — and a hidden diya glows into view. Click it 5 times: golden sparkles, and the exclusive "Secret Lightkeeper" profile badge
    is unlocked — once per account.
 
    Safe by design:
@@ -39,7 +39,7 @@
   // returns 'unlocked' | 'already' | 'pending' | 'nouser'
   function unlock() {
     const u = me(); if (!u) return 'nouser';
-    if (alreadyUnlocked(u)) return 'already';
+    if (alreadyUnlocked(u) || store.get(pendingKey(u))) return 'already';          // earned (or queued for profile.js): never twice
     const P = window.NexoraProfile;
     if (P && P.awardBadge && registerBadge() && P.awardBadge(BADGE_ID)) { store.set(flagKey(u), '1'); return 'unlocked'; }
     store.set(pendingKey(u), '1'); return 'pending';                  // profile.js not ready yet: finish the award as soon as it is
@@ -65,6 +65,17 @@
     clearTimeout(bufTimer); bufTimer = setTimeout(() => { buf = ''; }, BUFFER_RESET_MS);
     if (buf === WORD) { buf = ''; summon(); }
   });
+
+  /* The message box (the place people actually type — and the only place on a phone): the whole word DEEPAK,
+     any case, once a space/punctuation follows it or the message is sent. "deepaking", "adeepak", "deepakumar"
+     never match. Only the message box is watched (not search); the text is never changed and sending is never blocked.
+     Someone who already owns the badge is not pestered every time they mention a friend called Deepak. */
+  const WORD_RE = /(^|[^\p{L}\p{N}_])deepak(?=$|[^\p{L}\p{N}_])/iu, WORD_DONE_RE = /(^|[^\p{L}\p{N}_])deepak(?=[^\p{L}\p{N}_])/iu;
+  const boxTrigger = () => { const u = me(); if (!u || alreadyUnlocked(u) || store.get(pendingKey(u)) || wrap) return; setTimeout(() => { if (!wrap && me() && !alreadyUnlocked(me())) summon(); }, 700); };
+  const isBox = (t) => !!t && t.id === 'message-input';
+  document.addEventListener('input', (e) => { if (isBox(e.target) && !e.isComposing && WORD_DONE_RE.test(e.target.value || '')) boxTrigger(); }, true);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing && isBox(e.target) && WORD_RE.test(e.target.value || '')) boxTrigger(); }, true);
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[onclick*="sendMessage"],.send-btn,#send-btn'); const i = document.getElementById('message-input'); if (b && i && WORD_RE.test(i.value || '')) boxTrigger(); }, true);
 
   /* ---------------------------------------------------------------------
      3. SPARKLES — one tiny canvas particle system, created on demand and removed when it settles
