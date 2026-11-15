@@ -10,13 +10,13 @@
        messages, search boxes and every other field behave exactly as before (nothing is blocked or changed).
      • No preventDefault / stopPropagation — it only listens.
      • The badge uses profile.js's existing badge system (NexoraProfile.registerBadge / awardBadge) and is
-       stored the same way as the other badges. Image: easter-eggs/deepak-diya.png
+       stored the same way as the other badges. Image: deepak-diya.png
    ========================================================================= */
 (function () {
   'use strict';
   if (window.NexoraDeepak) return;
 
-  const WORD = 'deepak', CLICKS = 5, BADGE_ID = 'secret-lightkeeper', IMG = 'easter-eggs/deepak-diya.png';
+  const WORD = 'deepak', CLICKS = 5, BADGE_ID = 'secret-lightkeeper', IMG = 'deepak-diya.png';
   const BUFFER_RESET_MS = 2000, DIYA_LIFETIME_MS = 25000;
   const g = (fn, fb) => { try { return fn(); } catch (e) { return fb; } };
   const me = () => g(() => currentUser, null);
