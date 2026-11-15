@@ -405,6 +405,9 @@
     .chat-input input[type="text"] { margin-bottom: 0; flex: 1; }
     .chat-input button { width: auto; margin-bottom: 0; white-space: nowrap; }
     .icon-btn { background: var(--input-bg); color: var(--text-main); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-size: 16px; border: 1px solid var(--border); }
+    .settings-gear-icon { transition: transform .5s ease; }
+    .settings-gear-btn:hover .settings-gear-icon, .settings-gear-btn:focus-visible .settings-gear-icon { transform: rotate(180deg); }
+    @media (prefers-reduced-motion: reduce) { .settings-gear-icon { transition: none; } }
     .icon-btn:hover { background: var(--border); }
     
     .attachment-preview { display: flex; align-items: center; justify-content: space-between; background: var(--input-bg); padding: 8px 12px; border-radius: 8px; font-size: 12px; color: var(--text-muted); }
@@ -731,7 +734,7 @@
           </div>
           <div class="user-name-block"><strong id="user-display"></strong><small id="quick-status-label" style="display:block;color:var(--text-muted);font-size:11px;line-height:1.3;"></small></div>
         </div>
-        <div class="sidebar-header-actions"><button class="icon-btn" onclick="openHubCreator()" title="Create a Hub">+</button><button class="icon-btn" onclick="openSettings()" title="Settings"><img src="https://i.ibb.co/cX6q2bwF/images-removebg-preview.png" alt="Settings" style="width:22px; height:22px; object-fit:contain;"></button></div>
+        <div class="sidebar-header-actions"><button class="icon-btn" onclick="openHubCreator()" title="Create a Hub">+</button><button class="icon-btn settings-gear-btn" onclick="openSettings()" title="Settings" aria-label="Settings"><svg class="settings-gear-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 4.3l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
 
         <!-- Custom Status Selector -->
         <div id="status-menu" class="status-menu hidden">
