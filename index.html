@@ -648,7 +648,7 @@
   <!-- Auth Screen -->
   <div id="auth-screen" class="card">
     <img class="brand-logo" src="https://i.ibb.co/Cj76XZz/d5b34859-cdfb-4a7d-9b72-6cea78857d5f.png" alt="Nexora brand">
-    <h2 id="auth-title">PulseChat Login</h2>
+    <h2 id="auth-title">Nexora Chat Login</h2>
     <input type="text" id="username" placeholder="Email or Username">
     <input type="email" id="signup-email" class="hidden" placeholder="Email" autocomplete="email">
     <input type="password" id="password" placeholder="Password" autocomplete="current-password">
@@ -1665,7 +1665,7 @@
 
     function toggleAuthMode() {
       isLogin = !isLogin;
-      document.getElementById('auth-title').innerText = isLogin ? 'PulseChat Login' : 'Create Account';
+      document.getElementById('auth-title').innerText = isLogin ? 'Nexora Chat Login' : 'Create Account';
       document.getElementById('auth-btn').innerText = isLogin ? 'Sign In' : 'Sign Up';
       syncAuthMode();
     }
