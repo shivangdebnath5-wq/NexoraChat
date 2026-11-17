@@ -1067,15 +1067,15 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
 @media (max-width:720px) { .theme-preview[data-theme-preview="frosted-midnight"] .theme-limited-glint-badge, .theme-preview[data-theme-preview="christmas-day"] .theme-limited-glint-badge { top:2px; right:2px; width:16px; height:16px; } }
 
 /* ---- Frosted Midnight: surfaces ---- */
-html[data-theme="frosted-midnight"] body { background:linear-gradient(165deg,#0D1928 0%,#101B2D 45%,#17263A 100%); }
+html[data-theme="frosted-midnight"] body { background:linear-gradient(180deg,#0B1425 0%,#101D32 34%,#14243A 66%,#203A56 100%); }
 html[data-theme="frosted-midnight"] #auth-fx { display:none; }
 html[data-theme="frosted-midnight"] #app-screen, html[data-theme="frosted-midnight"] #auth-screen { position:relative; z-index:1; }
 html[data-theme="frosted-midnight"] #app-screen { background:transparent; border-color:rgba(141,220,242,.22); box-shadow:0 24px 70px rgba(5,10,20,.72), 0 0 46px rgba(141,220,242,.07); }
-html[data-theme="frosted-midnight"] .main-chat { background:linear-gradient(180deg, rgba(23,38,58,.84), rgba(23,38,58,.93)); }
-html[data-theme="frosted-midnight"] .sidebar { background:linear-gradient(180deg, rgba(16,27,45,.96), rgba(13,25,40,.98)); border-right:1px solid #2A3D54; }
+html[data-theme="frosted-midnight"] .main-chat { background:linear-gradient(180deg, rgba(11,20,37,.60) 0%, rgba(14,26,44,.58) 46%, rgba(16,29,50,.42) 76%, rgba(16,29,50,.22) 100%); }
+html[data-theme="frosted-midnight"] .sidebar { background:linear-gradient(180deg, rgba(16,27,45,.94), rgba(13,25,40,.96)); border-right:1px solid #2A3D54; }
 html[data-theme="frosted-midnight"] .sidebar-header { background:linear-gradient(180deg,#1C3048,#17283D); border-bottom:1px solid #2A3D54; }
 html[data-theme="frosted-midnight"] .chat-header { background:linear-gradient(90deg, rgba(23,40,61,.95), rgba(28,48,72,.9)); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid #2A3D54; box-shadow:inset 0 1px 0 rgba(196,217,234,.14); }
-html[data-theme="frosted-midnight"] .chat-input { background:rgba(13,25,40,.9); border-top:1px solid #2A3D54; }
+html[data-theme="frosted-midnight"] .chat-input { background:rgba(13,25,40,.8); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border-top:1px solid #2A3D54; }
 html[data-theme="frosted-midnight"] input, html[data-theme="frosted-midnight"] select, html[data-theme="frosted-midnight"] textarea { background:#0D1928; border-color:#2A3D54; color:#E6F1F8; }
 html[data-theme="frosted-midnight"] input:focus, html[data-theme="frosted-midnight"] select:focus, html[data-theme="frosted-midnight"] textarea:focus { border-color:#8DDCF2; box-shadow:0 0 0 2px rgba(141,220,242,.18); outline:none; }
 html[data-theme="frosted-midnight"] input::placeholder, html[data-theme="frosted-midnight"] textarea::placeholder { color:#9BAFC5; opacity:.85; }
@@ -1093,22 +1093,15 @@ html[data-theme="frosted-midnight"] .unread-dot { background:#D98291; border-col
 html[data-theme="frosted-midnight"] .profile-badges-count, html[data-theme="frosted-midnight"] .gs-count, html[data-theme="frosted-midnight"] .profile-counter { color:#E9C77E; }
 html[data-theme="frosted-midnight"] ::selection { background:rgba(141,220,242,.3); }
 
-/* Snow on the app's own edges: corner mounds + a low drift along the bottom (non-interactive, tiny) */
-html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:absolute; inset:0; z-index:30; pointer-events:none;
-  background:
-    radial-gradient(ellipse 110px 20px at 0 100%, #E8F4FB 60%, transparent 63%),
-    radial-gradient(ellipse 150px 24px at 100% 100%, #DCEBF5 60%, transparent 63%),
-    linear-gradient(90deg, rgba(141,220,242,.5), transparent 30%, transparent 70%, rgba(141,220,242,.5)) top / 100% 1px no-repeat; }
-html[data-theme="frosted-midnight"] #app-screen::after { content:''; position:absolute; left:0; right:0; bottom:0; height:12px; z-index:30; pointer-events:none; opacity:.92;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 30' preserveAspectRatio='none'%3E%3Cpath d='M0 30V20Q60 8 120 18T240 16T360 20T480 14T600 19T720 15T840 20T960 14T1080 18T1200 16V30Z' fill='%239FB8CC' fill-opacity='.55'/%3E%3Cpath d='M0 30V25Q80 15 160 23T320 22T480 25T640 20T800 24T960 21T1120 24L1200 22V30Z' fill='%23E8F4FB'/%3E%3C/svg%3E") bottom/100% 100% no-repeat; }
+html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:absolute; inset:0; z-index:30; pointer-events:none; background:linear-gradient(90deg, rgba(141,220,242,.5), transparent 30%, transparent 70%, rgba(141,220,242,.5)) top / 100% 1px no-repeat; }
 
 /* ---- Frosted Midnight: ambient layer (#frost-fx), behind the UI ---- */
 #frost-fx, #xmas-fx { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
 #frost-fx { background:
-  radial-gradient(900px 650px at 10% 108%, rgba(141,220,242,.13), transparent 62%),
-  radial-gradient(800px 600px at 92% -8%, rgba(196,217,234,.09), transparent 60%),
-  radial-gradient(700px 520px at 55% 60%, rgba(41,75,107,.28), transparent 66%),
-  linear-gradient(170deg, #0D1928 0%, #101B2D 55%, #17263A 100%); }
+  radial-gradient(1100px 620px at 82% -6%, rgba(141,220,242,.16), transparent 62%),
+  radial-gradient(900px 560px at 8% 18%, rgba(32,58,86,.55), transparent 64%),
+  radial-gradient(1000px 420px at 50% 112%, rgba(141,220,242,.14), transparent 62%),
+  linear-gradient(180deg, #0B1425 0%, #101D32 32%, #14243A 64%, #203A56 100%); }
 .fm-glow { position:absolute; border-radius:50%; will-change:opacity; animation:fmBreathe 12s ease-in-out infinite; }
 .fm-glow-a { width:560px; height:560px; left:-140px; bottom:-180px; background:radial-gradient(circle, rgba(141,220,242,.14), transparent 65%); }
 .fm-glow-b { width:480px; height:480px; right:-110px; top:-150px; background:radial-gradient(circle, rgba(233,199,126,.08), transparent 65%); animation-delay:-5s; }
@@ -1865,3 +1858,18 @@ html[data-theme="christmas-day"] .sticker-pane { --st-accent:#E9C77E; --st-accen
   .sticker-pane .sticker-grid .sticker-item, .sticker-pane .sticker-grid .sticker-item img, .sticker-tip, .message-arrive .message.sticker-only .sticker-img { animation:none !important; transition:none !important; }
   .sticker-pane .sticker-grid .sticker-item::after { display:none; }
 }
+/* ---- Frosted Midnight: pixel-art forest scene (sprites from /elements; layers are static, behind the UI) ---- */
+.fm-spr { position:absolute; display:block; height:auto; max-width:none; image-rendering:pixelated; image-rendering:crisp-edges; -webkit-user-drag:none; user-select:none; pointer-events:none; transform:translateX(-50%) scaleX(var(--f,1)); }
+.fm-floor { position:absolute; left:0; right:0; bottom:0; height:26px; background:linear-gradient(180deg,#DCEBF5 0%,#B9D2E6 55%,#8FB2CC 100%); box-shadow:0 -3px 0 #F2F9FD; }
+.fm-moon { position:absolute; right:13%; top:17%; width:86px; height:86px; border-radius:50%; background:radial-gradient(circle at 38% 36%, #F2F9FD 0 38%, #C4D9EA 62%, #9BAFC5 100%); box-shadow:0 0 60px 24px rgba(141,220,242,.22), 0 0 140px 60px rgba(141,220,242,.1); opacity:.9; }
+.fm-stars { position:absolute; left:0; top:0; width:2px; height:2px; animation:fmStars 6s ease-in-out infinite alternate; }
+@keyframes fmStars { from { opacity:.55; } to { opacity:1; } }
+.fm-lantern { position:absolute; top:0; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; }
+.fm-lantern i { width:2px; background:#5A4030; }
+.fm-lantern .fm-spr { position:relative; left:auto; bottom:auto; transform:none; filter:drop-shadow(0 0 14px rgba(255,170,70,.55)); animation:fmFlicker 4.5s ease-in-out infinite alternate; }
+@keyframes fmFlicker { from { opacity:.82; } to { opacity:1; } }
+.fm-flake.px i { border-radius:0; box-shadow:none; background:#F7FBFF; animation:fmSway var(--sw) steps(8,end) infinite alternate; }
+.fm-flake.px.plus i { box-shadow:var(--s) 0 0 #F7FBFF, calc(var(--s) * -1) 0 0 #F7FBFF, 0 var(--s) 0 #F7FBFF, 0 calc(var(--s) * -1) 0 #F7FBFF; }
+.fm-flake.px { animation-timing-function:linear; }
+@media (max-width:720px) { .fm-spr.fm-m { display:none; } .fm-moon { width:56px; height:56px; } .fm-lantern:nth-of-type(2) { display:none; } }
+@media (prefers-reduced-motion: reduce) { .fm-stars, .fm-lantern .fm-spr { animation:none; } }
