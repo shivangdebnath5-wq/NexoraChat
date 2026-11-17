@@ -142,6 +142,44 @@
     .avatar-container { position: relative; display: inline-block; flex-shrink: 0; cursor: pointer; }
     .unread-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: #ef4444; border: 2px solid var(--bg-sidebar, var(--bg-card)); display: none; }
     .unread-dot.show { display: block; }
+    /* In the Conversations list the unread dot sits beside the timestamp, not pinned to the avatar corner */
+    .friend-row-meta .unread-dot { position: static; top: auto; right: auto; width: 9px; height: 9px; border: none; margin-left: auto; }
+
+    /* === Sidebar section headers (Requests / Conversations) — Messenger-style redesign === */
+    .sidebar-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .sidebar-section-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); }
+    .sidebar-section-title svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .85; }
+    .sidebar-section-count { font-size: 11px; font-weight: 700; color: #fff; background: var(--primary); border-radius: 999px; padding: 1px 7px; min-width: 18px; text-align: center; line-height: 1.5; }
+    .sidebar-section-count.hidden { display: none; }
+    #requests-list, .conversations-list { margin-top: 6px; }
+    #requests-list { max-height: 170px; }
+    .friends-section { display: flex; flex-direction: column; min-height: 0; }
+    .conversations-list { flex: 1; max-height: none; min-height: 0; }
+
+    /* Request + conversation rows */
+    /* 3 children now share the row (info, meta, and the pin button script.js appends) — flex:1 on
+       .user-profile-info below does the pushing, so override the base li's space-between here or the
+       extra child would get spread across the row with a big gap instead of hugging the right edge. */
+    .item-list li.request-row, .item-list li.friend-row { padding: 8px 10px; gap: 8px; cursor: pointer; justify-content: flex-start; }
+    .request-row .user-profile-info, .friend-row .user-profile-info { gap: 10px; min-width: 0; flex: 1; }
+    .request-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .request-row-actions .icon-btn { width: 30px; height: 30px; border-radius: 8px; }
+    .request-row-actions .icon-btn svg { width: 15px; height: 15px; }
+    .request-accept-btn { color: var(--status-online, #22c55e); }
+    .request-decline-btn { color: var(--text-muted); }
+    .friend-row-text { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+    .friend-row-text .friend-name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .friend-row-preview { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .friend-row-preview.unread { color: var(--text-main); font-weight: 600; }
+    .friend-row-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .friend-row-time { font-size: 10.5px; color: var(--text-muted); white-space: nowrap; }
+
+    /* Active conversation — soft violet highlight (falls back to a solid tint if color-mix() isn't supported) */
+    .active-friend { background: var(--input-bg) !important; background: color-mix(in srgb, var(--primary) 18%, var(--bg-card)) !important; border-color: var(--primary) !important; }
+    .active-friend .friend-name { color: var(--primary); }
+
+    /* Hover polish for request/conversation rows (kept subtle, no new motion) */
+    .item-list li.request-row:hover, .item-list li.friend-row:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 8%, var(--bg-card)); }
     .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: #dce3e6; display: block; }
     .avatar-large { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); display: block; margin: 0 auto 12px auto; }
     
@@ -776,15 +814,20 @@
       </div>
 
       <!-- Friend Requests -->
-      <div class="section">
-        <small style="color:var(--text-muted);">Requests</small>
-        <ul id="requests-list" class="item-list" style="margin-top:6px;"></ul>
+      <div class="section" id="requests-section">
+        <div class="sidebar-section-head">
+          <span class="sidebar-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Requests</span>
+          <span id="requests-count" class="sidebar-section-count hidden">0</span>
+        </div>
+        <ul id="requests-list" class="item-list requests-list"></ul>
       </div>
 
       <!-- Friends List -->
-      <div class="section" style="flex:1;">
-        <small style="color:var(--text-muted);">Conversations</small>
-        <ul id="friends-list" class="item-list" style="margin-top:6px;"></ul>
+      <div class="section friends-section" style="flex:1;">
+        <div class="sidebar-section-head">
+          <span class="sidebar-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>Conversations</span>
+        </div>
+        <ul id="friends-list" class="item-list conversations-list"></ul>
       </div>
     </div>
 
@@ -3713,14 +3756,69 @@
       renderMessages(false);
     }
 
+    // Short, honest sidebar timestamp for a real message's ms-since-epoch id:
+    // today -> clock time, yesterday -> "Yesterday", this week -> weekday,
+    // older -> short date. Never guesses at a time that isn't in the data.
+    function formatSidebarTimestamp(ms) {
+      if (!ms) return '';
+      const date = new Date(Number(ms));
+      if (isNaN(date.getTime())) return '';
+      const now = new Date();
+      if (date.toDateString() === now.toDateString()) return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+      if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+      if (now - date < 6 * 86400000) return date.toLocaleDateString([], { weekday: 'short' });
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    // One-line label for an extension type, used only as a fallback when a
+    // message has no plain text (a poll, game, attachment, etc.) — describes
+    // the KIND of real content that was actually sent, never invents words
+    // that weren't. Keeps the sidebar preview truthful with no new reads.
+    const SIDEBAR_EXTENSION_LABELS = { poll: '📊 Poll', countdown: '⏳ Countdown', note: '📝 Note', todo: '✅ To-do', calendar: '📅 Event', event: '🎉 Event', quiz: '❓ Quiz', hub_invite: '🔗 Hub invite', game: '🎮 Game' };
+    function sidebarPreviewLabel(m) {
+      if (m.text && m.text.trim()) return m.text.trim();
+      if (m.attachment) return m.attachment.type === 'image' ? '📷 Photo' : `📄 ${m.attachment.name || 'File'}`;
+      if (m.extension?.type) return SIDEBAR_EXTENSION_LABELS[m.extension.type] || '📎 Update';
+      return '';
+    }
+
+    // Last message + its timestamp for one DM, read straight out of the
+    // already-loaded local message cache (DB.getMessages()) — no extra
+    // Firestore query. Returns null (not a guess) when this device has no
+    // local history for that conversation yet.
+    function getLastMessageFor(friend) {
+      const messages = DB.getMessages().filter(m => (m.sender === currentUser && m.receiver === friend) || (m.sender === friend && m.receiver === currentUser));
+      if (!messages.length) return null;
+      const last = messages[messages.length - 1];
+      const label = sidebarPreviewLabel(last);
+      if (!label) return null;
+      return { text: (last.sender === currentUser ? 'You: ' : '') + label, time: last.id };
+    }
+
     function renderSidebar() {
       const users = DB.getUsers();
 
+      const requestRows = window.firestoreRequestRows || [];
+      const reqCountEl = document.getElementById('requests-count');
+      if (reqCountEl) { reqCountEl.textContent = String(requestRows.length); reqCountEl.classList.toggle('hidden', requestRows.length === 0); }
+
       const reqList = document.getElementById('requests-list');
       reqList.innerHTML = '';
-      (window.firestoreRequestRows || []).forEach(req => {
+      requestRows.forEach(req => {
+        const reqPfp = (users[req.username] && users[req.username].pfp) ? users[req.username].pfp : DEFAULT_AVATAR;
         const li = document.createElement('li');
-        li.innerHTML = `<span>@${req.username}</span> <button onclick="acceptRequest('${req.id}')">Accept</button> <button class="secondary" onclick="declineRequest('${req.id}')">Decline</button>`;
+        li.className = 'request-row';
+        li.innerHTML = `
+          <div class="user-profile-info">
+            <div class="avatar-container"><img class="avatar" src="${reqPfp}" alt="${escapeHTML(req.username)}"></div>
+            <span class="friend-name">@${escapeHTML(req.username)}</span>
+          </div>
+          <div class="request-row-actions">
+            <button class="icon-btn request-accept-btn" title="Accept" aria-label="Accept" onclick="acceptRequest('${req.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></button>
+            <button class="icon-btn request-decline-btn secondary" title="Decline" aria-label="Decline" onclick="declineRequest('${req.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button>
+          </div>
+        `;
         reqList.appendChild(li);
       });
 
@@ -3728,20 +3826,29 @@
       friendList.innerHTML = '';
       (window.firestoreFriendUsernames || []).forEach(f => {
         const li = document.createElement('li');
+        li.className = 'friend-row';
         if (f === activeFriend) li.classList.add('active-friend');
 
         const friendPfp = (users[f] && users[f].pfp) ? users[f].pfp : DEFAULT_AVATAR;
         const friendFrame = (users[f] && users[f].frame) ? users[f].frame : '';
         const friendStatus = getBadgeStatusForUser(f);
+        const unread = isFriendUnread(f);
+        const last = getLastMessageFor(f);
 
         li.innerHTML = `
           <div class="user-profile-info">
             <div class="avatar-container">
-              <img class="avatar ${friendFrame}" src="${friendPfp}" alt="${f}">
+              <img class="avatar ${friendFrame}" src="${friendPfp}" alt="${escapeHTML(f)}">
               <span class="status-badge"></span>
-              <span class="unread-dot ${isFriendUnread(f) ? 'show' : ''}"></span>
             </div>
-            <span>@${f}</span>
+            <div class="friend-row-text">
+              <span class="friend-name">@${escapeHTML(f)}</span>
+              <small class="friend-row-preview ${unread ? 'unread' : ''}">${last ? escapeHTML(last.text) : 'No messages yet'}</small>
+            </div>
+          </div>
+          <div class="friend-row-meta">
+            <span class="friend-row-time">${last ? formatSidebarTimestamp(last.time) : ''}</span>
+            <span class="unread-dot ${unread ? 'show' : ''}" title="Unread"></span>
           </div>
         `;
         const badge = li.querySelector('.status-badge');

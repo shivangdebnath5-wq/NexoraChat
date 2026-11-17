@@ -30,9 +30,9 @@ renderSidebar = function() {
   if (!currentUser) return;
   const pins = getPinnedChats(); const list = document.getElementById('friends-list');
   const rows = [...list.children];
-  rows.sort((a,b) => pins.includes(b.querySelector('.user-profile-info > span')?.textContent.replace('@','')) - pins.includes(a.querySelector('.user-profile-info > span')?.textContent.replace('@','')));
+  rows.sort((a,b) => pins.includes(b.querySelector('.friend-name')?.textContent.replace('@','')) - pins.includes(a.querySelector('.friend-name')?.textContent.replace('@','')));
   rows.forEach(row => {
-    const friend = row.querySelector('.user-profile-info > span')?.textContent.replace('@',''); if (!friend) return;
+    const friend = row.querySelector('.friend-name')?.textContent.replace('@',''); if (!friend) return;
     const pinned = pins.includes(friend); row.classList.toggle('pinned-chat', pinned);
     const button = document.createElement('button'); button.className = `pin-chat-btn ${pinned ? 'pinned' : ''}`; button.title = pinned ? 'Unpin chat' : 'Pin chat'; button.textContent = pinned ? '★' : '☆';
     button.onclick = event => togglePinnedChat(friend, event); row.appendChild(button);
