@@ -1460,11 +1460,15 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
       <circle cx="30" cy="50" r="1.5" fill="#0D1928"/><circle cx="30" cy="58" r="1.5" fill="#0D1928"/></symbol>
   </defs></svg>`;
 
-  /* Frosted Midnight scene: pixel-art snowy forest built from the sprites in /elements (see elements/README.md).
-     Layers back→front: stars + icy glow, far trees, far bank, mid trees, mid bank, near forest + props + snowmen,
-     front snowbanks, snow floor, hanging lanterns, falling pixel snow. Everything is static <img>, pointer-events:none,
-     sits behind the UI, and falls back silently (onerror) if a sprite is missing. */
-  const SPRITE_DIR = 'elements/';
+  /* Frosted Midnight scene: pixel-art snowy forest built from the sprites in /frosted-elements/elements
+     (see frosted-elements/elements/README.md). Layers back→front: stars + icy glow, far trees, far bank,
+     mid trees, mid bank, near forest + props + snowmen, front snowbanks, snow floor, hanging lanterns,
+     falling pixel snow. Everything is static <img>, pointer-events:none, sits behind the UI, and falls back
+     silently (onerror) if a sprite is missing.
+     NOTE: this constant previously pointed at 'elements/' (repo root), but the sprites actually live one
+     level deeper under 'frosted-elements/elements/' — every sprite 404ed and onerror quietly removed each
+     <img>, which is why only the CSS-only layers (gradient, stars, moon, glow, snowfall) were ever visible. */
+  const SPRITE_DIR = 'frosted-elements/elements/';
   const SPRITE_DIMS = {"trees/pine-tall-01":[146,342],"trees/far/pine-tall-01":[66,154],"trees/mid/pine-tall-01":[102,239],"trees/pine-tall-02":[174,296],"trees/far/pine-tall-02":[78,133],"trees/mid/pine-tall-02":[122,207],"trees/pine-tall-03":[190,297],"trees/far/pine-tall-03":[86,134],"trees/mid/pine-tall-03":[133,208],"trees/pine-large":[252,305],"trees/far/pine-large":[113,137],"trees/mid/pine-large":[176,214],"trees/pine-pair":[256,287],"trees/far/pine-pair":[115,129],"trees/mid/pine-pair":[179,201],"trees/pine-sapling":[177,288],"trees/far/pine-sapling":[80,130],"trees/mid/pine-sapling":[124,202],"trees/pine-snowbase":[306,447],"trees/tree-bare-snow":[126,130],"bushes/bush-snow-01":[115,100],"bushes/bush-snow-02":[128,103],"bushes/bush-snow-03":[127,122],"bushes/bush-holly":[201,192],"snow/mid/bank-rock-01":[198,111],"snow/mid/bank-rock-02":[145,72],"snow/bank-01":[193,87],"snow/mid/bank-01":[193,87],"snow/bank-02":[152,60],"snow/mid/bank-02":[152,60],"snow/bank-03":[244,66],"snow/mid/bank-03":[244,66],"snow/bank-04":[130,53],"snow/mid/bank-04":[130,53],"snow/mid/bank-small":[69,39],"snowmen/snowman-santa":[148,209],"snowmen/snowman-tophat":[144,223],"snowmen/snowman-earmuffs":[155,196],"snowmen/snowman-broom":[177,207],"snowmen/snowman-sitting":[144,152],"snowmen/snowman-sleeping":[170,152],"snowmen/snowman-small":[87,101],"props/fence":[117,95],"props/sign-01":[101,143],"props/banner-snowflake":[117,156],"props/lantern":[62,105],"props/barrel":[71,95],"props/sled":[163,61],"crystals/crystal-cluster":[161,134],"crystals/crystal-pair":[130,123]};
   function seeded(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function spr(path, left, bottom, k, extra) {
