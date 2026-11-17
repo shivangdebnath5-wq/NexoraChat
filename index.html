@@ -91,7 +91,8 @@
     [data-theme="moonlight-sparkle"] input::placeholder, [data-theme="moonlight-sparkle"] textarea::placeholder { color: var(--text-muted); opacity: .8; }
     [data-theme="sage-green"] { --bg-main:#89AF88; --bg-card:#AFAF88; --bg-sidebar:#9CAF88; --text-main:#26301e; --text-muted:#4d5c3c; --border:#7f9770; --primary:rgb(92,138,82); --primary-hover:#4a7341; --msg-sent:#5c8a52; --msg-sent-text:#fff; --msg-received:#9CAF88; --msg-received-text:#26301e; --input-bg:#cfe0c2; --shadow:rgba(60,80,45,.28); }
     [data-theme="durga-puja"] { --bg-main:#171719; --bg-card:#202023; --bg-sidebar:#1b1b1e; --text-main:#FFF8E7; --text-muted:#c9bea8; --border:#51443a; --primary:#8B1E3F; --primary-hover:#a82a4f; --msg-sent:#8B1E3F; --msg-sent-text:#FFF8E7; --msg-received:#292629; --msg-received-text:#FFF8E7; --input-bg:#29272a; --shadow:rgba(0,0,0,.62); --durga-gradient:linear-gradient(110deg,#FDD835 0%,#D6A84B 52%,#8B1E3F 100%); }
-    [data-theme="midnight-diwali"] { --bg-main:#090D20; --bg-card:#171B3A; --bg-sidebar:#0E1230; --text-main:#EEEAF7; --text-muted:#B3AFCB; --border:#3A3C66; --primary:#D6A84B; --primary-hover:#F5D98A; --msg-sent:#D6A84B; --msg-sent-text:#090D20; --msg-received:#1E2347; --msg-received-text:#EEEAF7; --input-bg:#1E2347; --shadow:rgba(3,5,16,.72); --diwali-gradient:linear-gradient(110deg,#F5D98A 0%,#D6A84B 55%,#B8862F 100%); }
+    [data-theme="frosted-midnight"] { --bg-main:#17263A; --bg-card:#17283D; --bg-sidebar:#101B2D; --text-main:#E6F1F8; --text-muted:#9BAFC5; --border:#2A3D54; --primary:#8DDCF2; --primary-hover:#B5ECF9; --msg-sent:#8DDCF2; --msg-sent-text:#0D1928; --msg-received:#1C3048; --msg-received-text:#E6F1F8; --input-bg:#0D1928; --shadow:rgba(5,10,20,.72); --frost-hover:#223A54; --frost-active:#294B6B; --frost-heading:#C4D9EA; --frost-gold:#E9C77E; --frost-notify:#D98291; --frost-gradient:linear-gradient(135deg,#17283D 0%,#1C3048 50%,#101B2D 100%); }
+    [data-theme="christmas-day"] { --bg-main:#0E2118; --bg-card:#163123; --bg-sidebar:#0B1B13; --text-main:#F6EFE6; --text-muted:#C9D8C5; --border:#355543; --primary:#C8372D; --primary-hover:#E4574D; --msg-sent:#B3282D; --msg-sent-text:#FFF6EC; --msg-received:#1C3A2A; --msg-received-text:#F6EFE6; --input-bg:#122A1E; --shadow:rgba(2,8,5,.7); }
     [data-theme="halloween"] { --bg-main:#35221D; --bg-card:#3F2A23; --bg-sidebar:#35221D; --text-main:#FFF2DE; --text-muted:#D99A46; --border:#6B4330; --primary:#C56B2D; --primary-hover:#D99A46; --msg-sent:#71351F; --msg-sent-text:#FFF2DE; --msg-received:#493128; --msg-received-text:#FFF2DE; --input-bg:#493128; --shadow:rgba(18,8,4,.62); --halloween-gradient:linear-gradient(110deg,#71351F 0%,#9B451F 28%,#C56B2D 54%,#D99A46 78%,#35221D 100%); }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
@@ -240,7 +241,8 @@
     [data-theme="arctic-frost"] .qsp-custom input[type="datetime-local"],
     [data-theme="royal-eclipse"] .qsp-custom input[type="datetime-local"],
     [data-theme="red-velvet"] .qsp-custom input[type="datetime-local"],
-    [data-theme="midnight-diwali"] .qsp-custom input[type="datetime-local"],
+    [data-theme="frosted-midnight"] .qsp-custom input[type="datetime-local"],
+    [data-theme="christmas-day"] .qsp-custom input[type="datetime-local"],
     [data-theme="moonlight-sparkle"] .qsp-custom input[type="datetime-local"] { color-scheme: dark; }
     .qsp-custom button { margin-bottom: 0; padding: 8px; font-size: 12px; }
 
@@ -827,12 +829,6 @@
           <div id="hub-pinned-messages-menu" class="pinned-messages-menu hidden"></div>
         </div>
       </div>
-      <!-- Diwali countdown strip: sits right under the home greeting (only while .is-home); filled in by initDiwaliStrip() in script.js -->
-      <div id="diwali-strip" class="diwali-strip" role="status" aria-live="polite">
-        <span class="diwali-diya" aria-hidden="true"><svg viewBox="0 0 32 32" width="26" height="26"><defs><radialGradient id="diyaGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb938" stop-opacity=".75"/><stop offset="1" stop-color="#ffb938" stop-opacity="0"/></radialGradient><linearGradient id="diyaFlame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff7a18"/><stop offset=".6" stop-color="#ffc83d"/><stop offset="1" stop-color="#fff3b0"/></linearGradient></defs><circle class="diya-glow" cx="16" cy="12" r="11" fill="url(#diyaGlow)"/><path class="diya-flame" d="M16 3c2.6 3 4 5.2 4 7.3a4 4 0 0 1-8 0C12 8.200 13.400 6 16 3z" fill="url(#diyaFlame)"/><path d="M4 17h24c0 5.500-4.800 10-12 10S4 22.500 4 17z" fill="#c2561b"/><path d="M4 17h24" stroke="#f0a04b" stroke-width="2" stroke-linecap="round"/><path d="M11 29h10" stroke="#8a3a10" stroke-width="2" stroke-linecap="round"/></svg></span>
-        <span class="diwali-text"><strong id="diwali-main"></strong><span id="diwali-sub" class="diwali-sub"></span></span>
-        <button type="button" class="diwali-link" onclick="openShop()">Explore Goodies <span aria-hidden="true">→</span></button>
-      </div>
       <!-- Floating "The Festival of Lights" shortcut (glowing diya): only visible on the home view
            (CSS: .chat-header.is-home ~ .festival-fab), hidden inside chats/Hubs. -->
       <a id="festival-fab" class="festival-fab" href="the_festival_of_lights.html" title="Play The Festival of Lights" aria-label="Play The Festival of Lights">
@@ -1089,7 +1085,7 @@
             <option value="oceanic">Oceanic</option><option value="sakura-mist">Sakura Mist</option>
             <option value="forest-pulse">Forest Pulse</option><option value="solar-flare">Solar Flare</option>
             <option value="arctic-frost">Arctic Frost</option><option value="royal-eclipse">Royal Eclipse</option>
-            <option value="sage-green">Sage Green</option><option value="red-velvet">Red Velvet</option><option value="moonlight-sparkle">Moonlight Sparkle</option><option value="durga-puja">Durga Puja</option><option value="halloween">Halloween</option><option value="midnight-diwali">Midnight Diwali</option>
+            <option value="sage-green">Sage Green</option><option value="red-velvet">Red Velvet</option><option value="moonlight-sparkle">Moonlight Sparkle</option><option value="durga-puja">Durga Puja</option><option value="halloween">Halloween</option><option value="frosted-midnight">Winter Wonderland – Frosted Midnight</option><option value="christmas-day">Christmas Day (Exclusive)</option>
           </select>
           <div id="theme-preview-grid" class="theme-preview-grid" role="radiogroup" aria-label="Choose app theme"></div>
         </div>
@@ -2198,7 +2194,8 @@
       { id: 'moonlight-sparkle', name: 'Moonlight Sparkle', colors: ['#210635', '#7B337E', '#6667AB'] },
       { id: 'durga-puja', name: 'Durga Puja', special: true, colors: ['#171719', '#FFF8E7', '#D6A84B'] },
       { id: 'halloween', name: 'Halloween', special: true, colors: ['#71351F', '#35221D', '#D99A46'] },
-      { id: 'midnight-diwali', name: 'Midnight Diwali', special: true, colors: ['#090D20', '#171B3A', '#D6A84B'] }
+      { id: 'frosted-midnight', name: 'Winter Wonderland – Frosted Midnight', special: true, colors: ['#101B2D', '#17263A', '#8DDCF2'] },
+      { id: 'christmas-day', name: 'Christmas Day', special: true, exclusive: true, icon: 'tree', colors: ['#0B1B13', '#163123', '#C8372D'] }
     ];
 
     function renderThemeSelector() {
@@ -2206,23 +2203,28 @@
       if (!grid) return;
       const selectedTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
       const tileHTML = theme => {
-        const badge = theme.special ? '<span class="theme-limited-glint-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 0C13.4 8.6 15.4 10.6 24 12C15.4 13.4 13.4 15.4 12 24C10.6 15.4 8.6 13.4 0 12C8.6 10.6 10.6 8.6 12 0Z"/></svg></span>' : '';
+        const TREE_ICON = '<svg viewBox="0 0 24 24"><path d="M12 1l3 5h-2l3 5h-2l4 6H4l4-6H6l3-5H7z" fill="#4FAE7B"/><rect x="11" y="17" width="2" height="4" fill="#C9A85E"/><circle cx="10" cy="12" r="1" fill="#E5534B"/><circle cx="14" cy="15" r="1" fill="#E9C77E"/></svg>';
+        const badge = theme.special ? '<span class="theme-limited-glint-badge" aria-hidden="true">' + (theme.icon === 'tree' ? TREE_ICON : '<svg viewBox="0 0 24 24"><path d="M12 0C13.4 8.6 15.4 10.6 24 12C15.4 13.4 13.4 15.4 12 24C10.6 15.4 8.6 13.4 0 12C8.6 10.6 10.6 8.6 12 0Z"/></svg>') + '</span>' : '';
         const tileBadge = badge; // sits on the tile's top-right corner (badge is '' for every other theme)
         return `<button type="button" class="theme-preview${theme.id === selectedTheme ? ' selected' : ''}" data-theme-preview="${theme.id}" role="radio" aria-checked="${theme.id === selectedTheme}" onclick="changeTheme('${theme.id}')" title="${theme.name}"><span class="theme-preview-art"><span class="theme-preview-swatch" style="--theme-a:${theme.colors[0]};--theme-b:${theme.colors[1]};--theme-c:${theme.colors[2]}"><i></i><b></b></span></span>${tileBadge}<span>${theme.name}</span></button>`;
       };
       // Regular themes first, then the "Special" (limited-time) section.
       grid.innerHTML = THEMES.filter(t => !t.special).map(tileHTML).join('')
         + '<div class="theme-section-label" role="presentation"><span aria-hidden="true">⭐</span> Special <em>Limited time</em></div>'
-        + THEMES.filter(t => t.special).map(tileHTML).join('');
+        + THEMES.filter(t => t.special && !t.exclusive).map(tileHTML).join('')
+        + '<div class="theme-section-label" role="presentation"><span aria-hidden="true">🎄</span> Exclusive <em>Christmas Day only</em></div>'
+        + THEMES.filter(t => t.exclusive).map(tileHTML).join('');
     }
 
     function changeTheme(theme) {
+      if (theme === 'midnight-diwali') theme = 'frosted-midnight'; // Diwali theme retired
       if (!THEMES.some(item => item.id === theme)) theme = 'light';
       localStorage.setItem('theme', theme);
       applyTheme(theme);
     }
 
     function applyTheme(theme) {
+      if (theme === 'midnight-diwali') { theme = 'frosted-midnight'; try { localStorage.setItem('theme', theme); } catch (e) {} } // Diwali theme retired
       if (!THEMES.some(item => item.id === theme)) theme = 'light';
       document.documentElement.setAttribute('data-theme', theme);
       const select = document.getElementById('theme-select');
