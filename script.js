@@ -1430,394 +1430,86 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   new MutationObserver(queue).observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
   queue();
 })();
-/* ---- Diwali countdown strip (home view only) ----
-   Shows from 30 days before Diwali, switches to "Happy Diwali!" on the day, then hides. Dates are local calendar
-   days; add future years to DIWALI_DATES. "Explore Goodies" opens the existing shop (openShop). */
-(function initDiwaliStrip() {
-  const strip = document.getElementById('diwali-strip');
-  if (!strip) return;
-  const mainEl = document.getElementById('diwali-main');
-  const subEl = document.getElementById('diwali-sub');
-  const DIWALI_DATES = ['2026-11-08', '2027-10-29', '2028-10-17'];
-  const WINDOW_DAYS = 30;
-  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  function daysUntil(iso, now) { const [y, m, d] = iso.split('-').map(Number); return Math.round((new Date(y, m - 1, d) - dayStart(now)) / 86400000); }
-  function setText(el, t) { if (el && el.textContent !== t) el.textContent = t; }
-  function refresh() {
-    const now = new Date();
-    const left = DIWALI_DATES.map((iso) => daysUntil(iso, now)).filter((n) => n >= 0).sort((a, b) => a - b)[0];
-    const show = left !== undefined && left <= WINDOW_DAYS;
-    strip.classList.toggle('show', show);
-    strip.classList.toggle('is-today', show && left === 0);
-    if (!show) return;
-    if (left === 0) { setText(mainEl, 'Happy Diwali!'); setText(subEl, 'May your day glow with light.'); }
-    else { setText(mainEl, `${left} ${left === 1 ? 'day' : 'days'}`); setText(subEl, left === 1 ? 'to Diwali — tomorrow!' : 'to Diwali'); }
-  }
-  setInterval(refresh, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
-  window.addEventListener('focus', refresh);
-  refresh();
-})();
-
-/* ===== Midnight Diwali theme FX (limited-time Special theme) =====
-   Same lifecycle as Moonlight Sparkle: the #diwali-fx layer exists only while data-theme="midnight-diwali".
-   ~26 tiny gold particles (2-4px, 8-18s loops) float up and shimmer/fade, plus a few diya sparks and two
-   breathing gold glows. Pure CSS animation (transform/opacity) - no per-frame JS. Skipped for reduced motion.
-
-   Dynamic Ambient — Light & Glow (still the same theme, no new theme/option added):
-   - A `data-diwali-ambient` attribute ("day" | "night") is set on <html> only while this theme is active,
-     based on local wall-clock time (06:00-18:00 = day). style.css keys the cream/marigold day palette and
-     the indigo/violet night palette + bottom-of-chat gold glow off that attribute. Rechecked every minute
-     (cheap: one Date() read + one attribute write) plus on visibility/focus, same pattern as the Diwali
-     countdown refresh above.
-   - Ember particles stay exactly as built below; a single capturing `scroll` listener on #messages-list
-     (passive, feature-detected once) toggles a `.dw-scroll-boost` class on #diwali-fx that only nudges
-     opacity/brightness via CSS transitions - no per-frame JS, nothing added/removed from the DOM on scroll. */
-(function initMidnightDiwaliFx() {
-  const THEME = 'midnight-diwali';
+/* ===== Winter Wonderland — Frosted Midnight theme FX (replaces Midnight Diwali; Diwali code archived in archive/) =====
+   Same lifecycle as the old theme FX: the #frost-fx layer exists only while data-theme="frosted-midnight".
+   Snowfall = a handful of DOM flakes animated with CSS transform only (no per-frame JS, no canvas), paused while the
+   tab is hidden, removed with prefers-reduced-motion. Christmas Day (#xmas-fx) is a separate theme with its own layer. */
+(function initWinterThemes() {
   const reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
-  let fx = null;
-  let ambientTimer = null;
-  let scrollBoostTimer = null;
   const rnd = (a, b) => a + Math.random() * (b - a);
 
-  function loadFonts() {
-    if (document.getElementById('nexora-diwali-fonts') || !document.head) return;
-    const l = document.createElement('link');
-    l.id = 'nexora-diwali-fonts'; l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Dr+Sugiyama&family=Inter:wght@400;500;600&display=swap';
-    document.head.appendChild(l);
-  }
-  function build() {
-    const small = window.innerWidth < 640;
-    const nP = small ? 16 : 26, nS = small ? 4 : 7;
-    let h = '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>';
-    for (let i = 0; i < nP; i++) {
-      const d = rnd(8, 18);
-      h += `<span class="dw-p" style="--x:${rnd(1, 99).toFixed(1)}%;--s:${rnd(2, 4).toFixed(1)}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-36, 36).toFixed(0)}px;--o:${rnd(.45, .9).toFixed(2)};--sh:${rnd(1.6, 3.4).toFixed(1)}s"><i></i></span>`;
-    }
-    // Diya sparks: short bursts from two "lamp" spots low in the chat area
-    for (let i = 0; i < nS; i++) {
-      const d = rnd(5, 9), spot = i % 2 ? 84 : 52;
-      h += `<span class="dw-spark" style="--x:${(spot + rnd(-3, 3)).toFixed(1)}%;--b:${rnd(70, 96).toFixed(0)}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-26, 26).toFixed(0)}px;--dy:-${rnd(40, 110).toFixed(0)}px"></span>`;
+  function snow(count) {
+    let h = '';
+    for (let i = 0; i < count; i++) {
+      const d = rnd(11, 22);
+      h += `<span class="fm-flake" style="--x:${rnd(1, 99).toFixed(1)}%;--s:${rnd(2, 5).toFixed(1)}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-50, 50).toFixed(0)}px;--o:${rnd(.35, .85).toFixed(2)};--sw:${rnd(3, 6).toFixed(1)}s"><i></i></span>`;
     }
     return h;
   }
+  const flakeCount = () => window.innerWidth < 640 ? 14 : 30;
 
-  // Day = 06:00-18:00 local time, Night/Puja = the rest. Re-applied, never re-created.
-  // Console override to test Day/Night without waiting (in-memory only; reload = real clock).
-  let ambientOverride = null;
-  function isDayNow() {
-    if (ambientOverride) return ambientOverride === 'day';
-    const h = new Date().getHours(); return h >= 6 && h < 18;
-  }
-  // changeTime() toggles | 'day' | 'night' | an hour (14 or '14:30') | 'auto'. Aliases: timeChange(), timechange(), changetime().
-  function changeTime(arg) {
-    let next;
-    if (arg === undefined) next = isDayNow() ? 'night' : 'day';
-    else if (arg === null || /^(auto|real|reset|now)$/i.test(String(arg).trim())) next = null;
-    else if (/^(day|night)$/i.test(String(arg).trim())) next = String(arg).trim().toLowerCase();
-    else {
-      const m = /^(\d{1,2})(?::\d{2})?$/.exec(String(arg).trim());
-      const h = m ? parseInt(m[1], 10) : NaN;
-      if (!(h >= 0 && h <= 23)) { console.warn("changeTime(): use 'day', 'night', an hour 0-23, 'auto', or no argument to toggle."); return; }
-      next = (h >= 6 && h < 18) ? 'day' : 'night';
+  const defs = `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="fm-pine" viewBox="0 0 60 100"><rect x="27" y="86" width="6" height="14" fill="#2B2F36"/>
+      <path d="M30 4 L46 36 H14 Z" fill="#1B3B3A"/><path d="M30 24 L52 62 H8 Z" fill="#173533"/><path d="M30 46 L58 88 H2 Z" fill="#143030"/>
+      <path d="M30 4 L38 20 Q30 15 22 20 Z" fill="#E8F4FB"/><path d="M30 24 L41 43 Q35 39 30 43 Q25 39 19 43 Z" fill="#DCEBF5"/><path d="M30 46 L46 70 Q38 65 30 70 Q22 65 14 70 Z" fill="#E8F4FB"/>
+      <circle cx="26" cy="58" r="1.8" fill="#E9C77E"/><circle cx="36" cy="40" r="1.6" fill="#8DDCF2"/><circle cx="22" cy="76" r="1.8" fill="#D98291"/></symbol>
+    <symbol id="fm-man" viewBox="0 0 60 100"><ellipse cx="30" cy="92" rx="26" ry="7" fill="#E8F4FB"/>
+      <circle cx="30" cy="70" r="21" fill="#E8F4FB"/><circle cx="30" cy="44" r="15" fill="#F2F9FD"/><circle cx="30" cy="22" r="11" fill="#F7FBFE"/>
+      <path d="M18 34 Q30 42 42 34 L44 40 Q30 48 16 40 Z" fill="#D98291"/><rect x="21" y="6" width="18" height="9" rx="2" fill="#17283D"/><rect x="17" y="13" width="26" height="3" rx="1.5" fill="#17283D"/>
+      <circle cx="26" cy="20" r="1.4" fill="#0D1928"/><circle cx="34" cy="20" r="1.4" fill="#0D1928"/><path d="M30 24 L38 26 L30 27 Z" fill="#E9A15B"/>
+      <circle cx="30" cy="50" r="1.5" fill="#0D1928"/><circle cx="30" cy="58" r="1.5" fill="#0D1928"/></symbol>
+  </defs></svg>`;
+
+  const frostedDecor = `${defs}
+    <div class="fm-glow fm-glow-a"></div><div class="fm-glow fm-glow-b"></div>
+    <svg class="fm-art fm-forest" viewBox="0 0 560 130" aria-hidden="true">
+      <use href="#fm-pine" x="10" y="30" width="56" height="94"/><use href="#fm-pine" x="70" y="4" width="78" height="126"/><use href="#fm-pine" x="150" y="38" width="50" height="84"/>
+      <use href="#fm-pine" x="330" y="24" width="60" height="100"/><use href="#fm-pine" x="396" y="0" width="84" height="132"/><use href="#fm-pine" x="486" y="40" width="48" height="82"/>
+      <path d="M0 130 Q60 112 130 124 T270 120 T420 124 T560 118 V130 Z" fill="#E8F4FB"/></svg>
+    <svg class="fm-art fm-snowman" viewBox="0 0 60 100" aria-hidden="true"><use href="#fm-man" width="60" height="100"/></svg>
+    <svg class="fm-art fm-corner" viewBox="0 0 190 120" aria-hidden="true">
+      <path d="M190 14 Q130 22 70 60 T4 96" stroke="#1F4A3E" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <g stroke="#2C6B55" stroke-width="2.4" stroke-linecap="round"><path d="M150 22l-8 14M126 34l-10 14M102 46l-9 16M78 62l-10 13M54 76l-8 14M30 88l-6 12"/></g>
+      <g fill="#2E7A4D"><path d="M60 40q16-12 30-4-8 16-30 4zM84 18q18-8 28 4-12 12-28-4z"/></g>
+      <circle cx="74" cy="40" r="3.4" fill="#D98291"/><circle cx="81" cy="43" r="3.4" fill="#D98291"/><circle cx="78" cy="35" r="3.4" fill="#D98291"/>
+      <g transform="translate(118 52) rotate(24)"><ellipse rx="9" ry="14" fill="#6B5440"/><path d="M-8 -6h16M-8 0h16M-7 6h14" stroke="#4A3A2C" stroke-width="1.6"/><path d="M-9 -10Q0 -16 9 -10" fill="none" stroke="#E8F4FB" stroke-width="3"/></g></svg>
+    <svg class="fm-art fm-orn-row" viewBox="0 0 420 90" aria-hidden="true">
+      <path d="M0 4 Q105 20 210 6 T420 4" stroke="#2C6B55" stroke-width="3" fill="none"/>
+      <g class="fm-orn"><line x1="70" y1="14" x2="70" y2="40" stroke="#9BAFC5" stroke-width="1"/><circle cx="70" cy="48" r="9" fill="#E9C77E"/><rect x="66" y="38" width="8" height="4" fill="#C9A85E"/></g>
+      <g class="fm-orn"><line x1="150" y1="16" x2="150" y2="54" stroke="#9BAFC5" stroke-width="1"/><circle cx="150" cy="63" r="10" fill="#8DDCF2"/><rect x="146" y="52" width="8" height="4" fill="#6FB5CB"/></g>
+      <g class="fm-orn"><line x1="240" y1="12" x2="240" y2="34" stroke="#9BAFC5" stroke-width="1"/><circle cx="240" cy="42" r="8" fill="#D98291"/><rect x="236" y="32" width="8" height="4" fill="#B96878"/></g>
+      <g class="fm-orn"><line x1="330" y1="12" x2="330" y2="48" stroke="#9BAFC5" stroke-width="1"/><circle cx="330" cy="57" r="9" fill="#E9C77E"/><rect x="326" y="46" width="8" height="4" fill="#C9A85E"/></g>
+      <g fill="#E9C77E"><circle class="fm-lt" cx="30" cy="12" r="2.2"/><circle class="fm-lt" cx="110" cy="17" r="2.2"/><circle class="fm-lt" cx="190" cy="13" r="2.2"/><circle class="fm-lt" cx="285" cy="12" r="2.2"/><circle class="fm-lt" cx="375" cy="8" r="2.2"/></g></svg>`;
+
+  const xmasDecor = `${defs}
+    <svg class="xm-lights" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true"><path d="M0 6 Q100 34 200 10 T400 10 T600 10 T800 10 T1000 10 T1200 8" stroke="#1F4A3E" stroke-width="2.4" fill="none"/>
+      ${Array.from({ length: 24 }, (_, i) => `<circle class="fm-lt" cx="${25 + i * 50}" cy="${i % 2 ? 24 : 16}" r="4.2" fill="${['#E5534B', '#E9C77E', '#4FAE7B', '#8DDCF2'][i % 4]}"/>`).join('')}</svg>
+    <svg class="fm-art xm-tree" viewBox="0 0 120 150" aria-hidden="true"><rect x="54" y="128" width="12" height="20" fill="#5A4030"/>
+      <path d="M60 6 L90 56 H30Z" fill="#1F6B45"/><path d="M60 34 L102 94 H18Z" fill="#1A5D3B"/><path d="M60 64 L112 132 H8Z" fill="#165132"/>
+      <path d="M60 6 L66 16 Q60 13 54 16Z" fill="#E8F4FB"/><polygon points="60,0 63,7 70,7 64,11 67,18 60,14 53,18 56,11 50,7 57,7" fill="#E9C77E"/>
+      <g><circle class="fm-lt" cx="52" cy="48" r="4" fill="#E5534B"/><circle class="fm-lt" cx="72" cy="78" r="4.5" fill="#E9C77E"/><circle class="fm-lt" cx="44" cy="100" r="4.5" fill="#8DDCF2"/><circle class="fm-lt" cx="80" cy="114" r="4" fill="#E5534B"/><circle class="fm-lt" cx="58" cy="122" r="4" fill="#E9C77E"/></g></svg>
+    <svg class="fm-art xm-gifts" viewBox="0 0 130 60" aria-hidden="true"><rect x="4" y="22" width="40" height="36" fill="#B3282D"/><rect x="21" y="22" width="6" height="36" fill="#E9C77E"/>
+      <rect x="52" y="30" width="34" height="28" fill="#2F8F5B"/><rect x="66" y="30" width="6" height="28" fill="#E9C77E"/><rect x="92" y="18" width="34" height="40" fill="#294B6B"/><rect x="106" y="18" width="6" height="40" fill="#E9C77E"/></svg>`;
+
+  function makeFx({ theme, id, decor }) {
+    let fx = null;
+    const onVis = () => { if (fx) fx.classList.toggle('fm-paused', document.hidden); };
+    function activate() {
+      if (fx || !document.body) return;
+      fx = document.createElement('div'); fx.id = id; fx.setAttribute('aria-hidden', 'true');
+      fx.innerHTML = decor + (reduceMq.matches ? '' : snow(flakeCount()));
+      document.body.insertBefore(fx, document.body.firstChild);
+      document.addEventListener('visibilitychange', onVis);
     }
-    ambientOverride = next;
-    applyAmbientMode();
-    console.log(next ? ('Theme time forced to ' + next.toUpperCase() + '.') : 'Theme time back to real local time (' + (isDayNow() ? 'day' : 'night') + ').');
-    return next || 'auto';
+    function deactivate() { if (fx) { fx.remove(); fx = null; } document.removeEventListener('visibilitychange', onVis); }
+    function sync() { document.documentElement.getAttribute('data-theme') === theme ? activate() : deactivate(); }
+    new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+    if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
   }
-  window.changeTime = window.timeChange = window.timechange = window.changetime = changeTime;
-  function applyAmbientMode() {
-    if (document.documentElement.getAttribute('data-theme') !== THEME) return;
-    document.documentElement.setAttribute('data-diwali-ambient', isDayNow() ? 'day' : 'night');
-  }
-  function startAmbientClock() {
-    applyAmbientMode();
-    if (ambientTimer) return;
-    ambientTimer = setInterval(applyAmbientMode, 60000);
-    document.addEventListener('visibilitychange', onAmbientWake);
-    window.addEventListener('focus', onAmbientWake);
-  }
-  function stopAmbientClock() {
-    if (ambientTimer) { clearInterval(ambientTimer); ambientTimer = null; }
-    document.removeEventListener('visibilitychange', onAmbientWake);
-    window.removeEventListener('focus', onAmbientWake);
-    document.documentElement.removeAttribute('data-diwali-ambient');
-  }
-  function onAmbientWake() { if (!document.hidden) applyAmbientMode(); }
-
-  // Ember particles "subtly respond to message scrolling": one capturing, passive listener (scroll doesn't
-  // reliably bubble), checked against the live chat's id so it keeps working across chat/Hub switches.
-  function onAnyScroll(e) {
-    if (reduceMq.matches || !fx || !e.target || e.target.id !== 'messages-list') return;
-    fx.classList.add('dw-scroll-boost');
-    clearTimeout(scrollBoostTimer);
-    scrollBoostTimer = setTimeout(() => { if (fx) fx.classList.remove('dw-scroll-boost'); }, 900);
-  }
-  document.addEventListener('scroll', onAnyScroll, { capture: true, passive: true });
-
-  // ---- Festive decorations: carved diyas, rangoli, marigold garland + bells, floral corner carvings,
-  // a firework hotspot, and (day mode only) an ornamental gold peacock. Static artwork + CSS animation;
-  // layered once per activate(), on top of the existing glow/particle system (left untouched). ----
-  function decorMarkup() {
-    return `<svg class="dw-defs" aria-hidden="true"><defs>
-<linearGradient id="dwGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6C667"/><stop offset="1" stop-color="#C9972E"/></linearGradient>
-<linearGradient id="dwClay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6A84B"/><stop offset="1" stop-color="#7A4A17"/></linearGradient>
-<radialGradient id="dwFlameG" cx=".5" cy=".2" r=".9"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".55" stop-color="#FFA726"/><stop offset="1" stop-color="#E8572A"/></radialGradient>
-<symbol id="dwDiya" viewBox="0 0 60 50">
-<path d="M4 28c7 4 17 6 26 6s19-2 26-6c-3 10-14 17-26 17S7 38 4 28z" fill="url(#dwClay)"/>
-<ellipse cx="30" cy="27" rx="25" ry="5.5" fill="url(#dwGold)" opacity=".85"/>
-<path class="dw-flame" d="M30 6c3.5 5.5 7.5 9.5 7.5 14.5a7.5 7.5 0 1 1-15 0C22.5 15.5 26.5 11.5 30 6z" fill="url(#dwFlameG)"/>
-</symbol>
-<g id="dwRangoli">
-<circle r="38" fill="none" stroke="url(#dwGold)" stroke-width="1.2" opacity=".6"/>
-<circle cx="0.00" cy="-38.00" r="1.05" fill="#F5D98A"/>
-<circle cx="9.84" cy="-36.71" r="1.05" fill="#F5D98A"/>
-<circle cx="19.00" cy="-32.91" r="1.05" fill="#F5D98A"/>
-<circle cx="26.87" cy="-26.87" r="1.05" fill="#F5D98A"/>
-<circle cx="32.91" cy="-19.00" r="1.05" fill="#F5D98A"/>
-<circle cx="36.71" cy="-9.84" r="1.05" fill="#F5D98A"/>
-<circle cx="38.00" cy="-0.00" r="1.05" fill="#F5D98A"/>
-<circle cx="36.71" cy="9.84" r="1.05" fill="#F5D98A"/>
-<circle cx="32.91" cy="19.00" r="1.05" fill="#F5D98A"/>
-<circle cx="26.87" cy="26.87" r="1.05" fill="#F5D98A"/>
-<circle cx="19.00" cy="32.91" r="1.05" fill="#F5D98A"/>
-<circle cx="9.84" cy="36.71" r="1.05" fill="#F5D98A"/>
-<circle cx="0.00" cy="38.00" r="1.05" fill="#F5D98A"/>
-<circle cx="-9.84" cy="36.71" r="1.05" fill="#F5D98A"/>
-<circle cx="-19.00" cy="32.91" r="1.05" fill="#F5D98A"/>
-<circle cx="-26.87" cy="26.87" r="1.05" fill="#F5D98A"/>
-<circle cx="-32.91" cy="19.00" r="1.05" fill="#F5D98A"/>
-<circle cx="-36.71" cy="9.84" r="1.05" fill="#F5D98A"/>
-<circle cx="-38.00" cy="0.00" r="1.05" fill="#F5D98A"/>
-<circle cx="-36.71" cy="-9.84" r="1.05" fill="#F5D98A"/>
-<circle cx="-32.91" cy="-19.00" r="1.05" fill="#F5D98A"/>
-<circle cx="-26.87" cy="-26.87" r="1.05" fill="#F5D98A"/>
-<circle cx="-19.00" cy="-32.91" r="1.05" fill="#F5D98A"/>
-<circle cx="-9.84" cy="-36.71" r="1.05" fill="#F5D98A"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(0.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(22.5)" fill="#7A1F3D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(45.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(67.5)" fill="#7A1F3D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(90.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(112.5)" fill="#7A1F3D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(135.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(157.5)" fill="#7A1F3D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(180.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(202.5)" fill="#7A1F3D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(225.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(247.5)" fill="#7A1F3D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(270.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(292.5)" fill="#7A1F3D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(315.0)" fill="#E2A33D"/>
-<path d="M0 -20C-4 -26 -4 -32 0 -35C4 -32 4 -26 0 -20Z" transform="rotate(337.5)" fill="#7A1F3D"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(22.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(67.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(112.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(157.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(202.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(247.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(292.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -8C-7 -14 -7 -22 0 -27C7 -22 7 -14 0 -8Z" transform="rotate(337.5)" fill="#FFF3DC" stroke="#E2A33D" stroke-width=".6"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(0.0)" fill="#7A1F3D"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(45.0)" fill="#7A1F3D"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(90.0)" fill="#7A1F3D"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(135.0)" fill="#7A1F3D"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(180.0)" fill="#7A1F3D"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(225.0)" fill="#7A1F3D"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(270.0)" fill="#7A1F3D"/>
-<path d="M0 -4C-4 -8 -4 -12 0 -14C4 -12 4 -8 0 -4Z" transform="rotate(315.0)" fill="#7A1F3D"/>
-<circle r="11" fill="none" stroke="#E2A33D" stroke-width=".8" opacity=".8"/>
-<circle r="5" fill="url(#dwGold)"/><circle r="2.2" fill="#7A1F3D"/>
-</g>
-<symbol id="dwBell" viewBox="0 0 34 40">
-<path d="M17 2a3 3 0 0 1 3 3v2c6 2 9 8 9 15v3H5v-3c0-7 3-13 9-15V5a3 3 0 0 1 3-3z" fill="url(#dwGold)"/>
-<rect x="5" y="25" width="24" height="4" rx="2" fill="#7A4A17"/><circle cx="17" cy="34" r="3" fill="#7A4A17"/>
-</symbol>
-<symbol id="dwFloral" viewBox="0 0 60 60"><g fill="url(#dwGold)" opacity=".8">
-<path d="M4 4C20 4 34 10 34 26c0 6-4 10-10 10S14 32 14 26C14 16 8 8 4 4Z"/><circle cx="30" cy="30" r="5"/>
-</g></symbol>
-<symbol id="dwGarland" viewBox="0 0 1200 40" preserveAspectRatio="none">
-<path d="M0 8 Q60 32 120 8 T240 8 T360 8 T480 8 T600 8 T720 8 T840 8 T960 8 T1080 8 T1200 8" fill="none" stroke="#5B3A12" stroke-width="2" opacity=".5"/>
-<g fill="#E2A33D"><circle cx="60" cy="24" r="6"/><circle cx="180" cy="24" r="6"/><circle cx="300" cy="24" r="6"/><circle cx="420" cy="24" r="6"/><circle cx="540" cy="24" r="6"/><circle cx="660" cy="24" r="6"/><circle cx="780" cy="24" r="6"/><circle cx="900" cy="24" r="6"/><circle cx="1020" cy="24" r="6"/><circle cx="1140" cy="24" r="6"/></g>
-<g fill="#C97F1F"><circle cx="60" cy="24" r="2.4"/><circle cx="180" cy="24" r="2.4"/><circle cx="300" cy="24" r="2.4"/><circle cx="420" cy="24" r="2.4"/><circle cx="540" cy="24" r="2.4"/><circle cx="660" cy="24" r="2.4"/><circle cx="780" cy="24" r="2.4"/><circle cx="900" cy="24" r="2.4"/><circle cx="1020" cy="24" r="2.4"/><circle cx="1140" cy="24" r="2.4"/></g>
-</symbol>
-</defs></svg>
-<div class="dw-decor">
-<div class="dw-garland-wrap"><svg viewBox="0 0 1200 40" preserveAspectRatio="none"><use href="#dwGarland"/></svg></div>
-<svg class="dw-bell dw-bell-1" viewBox="0 0 34 40"><use href="#dwBell"/></svg>
-<svg class="dw-bell dw-bell-2" viewBox="0 0 34 40"><use href="#dwBell"/></svg>
-<svg class="dw-bell dw-bell-3" viewBox="0 0 34 40"><use href="#dwBell"/></svg>
-<svg class="dw-floral dw-floral-tl" viewBox="0 0 60 60"><use href="#dwFloral"/></svg>
-<svg class="dw-floral dw-floral-br" viewBox="0 0 60 60" style="transform:rotate(180deg)"><use href="#dwFloral"/></svg>
-<svg class="dw-diya dw-diya-1" viewBox="0 0 60 50" aria-hidden="true"><use href="#dwDiya"/></svg>
-<svg class="dw-diya dw-diya-2" viewBox="0 0 60 50" aria-hidden="true"><use href="#dwDiya"/></svg>
-<div class="dw-rangoli" aria-hidden="true"><svg viewBox="-40 -40 80 80"><use href="#dwRangoli"/></svg></div>
-<div class="dw-firework-trigger" aria-hidden="true"></div>
-</div>`;
-  }
-  function spawnFirework(anchor) {
-    if (reduceMq.matches || !fx) return;
-    const r = anchor.getBoundingClientRect();
-    const burst = document.createElement('span');
-    burst.className = 'dw-burst';
-    burst.style.left = (r.left + r.width / 2) + 'px';
-    burst.style.top = (r.top + r.height / 2) + 'px';
-    let s = '';
-    for (let i = 0; i < 10; i++) s += `<i style="--a:${i * 36}deg;--c:${i % 2 ? '#F6C667' : '#E85A3C'}"></i>`;
-    burst.innerHTML = s;
-    fx.appendChild(burst);
-    setTimeout(() => burst.remove(), 900);
-  }
-  function onDecorClick(e) {
-    if (!fx) return;
-    const diya = e.target.closest ? e.target.closest('.dw-diya') : null;
-    if (diya) { diya.classList.remove('dw-lit'); void diya.offsetWidth; diya.classList.add('dw-lit'); setTimeout(() => diya.classList.remove('dw-lit'), 1100); return; }
-    const rangoli = e.target.closest ? e.target.closest('.dw-rangoli') : null;
-    if (rangoli) { rangoli.classList.remove('dw-spin'); void rangoli.offsetWidth; rangoli.classList.add('dw-spin'); return; }
-    const fw = e.target.closest ? e.target.closest('.dw-firework-trigger') : null;
-    if (fw) { spawnFirework(fw); return; }
-  }
-  document.addEventListener('click', onDecorClick);
-
-  // <<dw-strip-decor
-  // ---- Peacock at the bottom-right (Day Mode only, via CSS) + carved diyas, both on the home view ----
-  let stripPeacock = null, carvedWrap = null, peacockMask = null, peacockRaf = 0, peacockTouchT = 0;
-  function carvedDiya() {
-    const petal = 'M0 0C-5.5 -5 -6.5 -13 0 -19C6.5 -13 5.5 -5 0 0Z';
-    // Lit-from-inside petal cut-outs (like a carved jack-o'-lantern): dark carved edge + glowing amber core.
-    const cut = (x, y, rot, s) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><path d="${petal}" fill="#2B1405"/><path class="dwC-lit" d="${petal}" fill="url(#dwCGlow)" transform="translate(0 -.6) scale(.8)"/></g>`;
-    let dots = ''; for (let i = 0; i < 9; i++) { const x = 17 + i * 8.25, y = 53 + Math.pow((x - 50) / 33, 2) * 6; dots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.25" fill="#5A3210"/><circle cx="${(x - .4).toFixed(1)}" cy="${(y - .4).toFixed(1)}" r=".5" fill="#FBE39A"/>`; }
-    return `<svg viewBox="-4 0 108 86" aria-hidden="true"><circle class="dwC-halo" cx="50" cy="26" r="34" fill="url(#dwCHalo)"/>`
-      + `<path d="M8 41C0 37 -3 32 1 29C7 30 12 35 15 42Z" fill="url(#dwCBowl)" stroke="#6B3E0E" stroke-width="1.2"/>`
-      + `<path d="M34 80h32l-3 5H37z" fill="#8A5A12" stroke="#6B3E0E" stroke-width="1.1"/>`
-      + `<path d="M6 44C6 68 26 82 50 82C74 82 94 68 94 44Z" fill="url(#dwCBowl)" stroke="#6B3E0E" stroke-width="1.4"/>`
-      + `<ellipse cx="50" cy="44" rx="44" ry="9" fill="url(#dwCRim)" stroke="#6B3E0E" stroke-width="1.2"/>`
-      + `<ellipse class="dwC-lit" cx="50" cy="44.5" rx="36" ry="6" fill="url(#dwCGlow)"/>`
-      + dots + cut(50, 76, 0, 1.15) + cut(31, 72, -24, .85) + cut(69, 72, 24, .85) + cut(17, 64, -48, .55) + cut(83, 64, 48, .55)
-      + `<rect x="48.6" y="33" width="2.8" height="11" rx="1.2" fill="#3A1D08"/>`
-      + `<g class="dwC-flame"><path d="M50 6C59 17 61 28 50 39C39 28 41 17 50 6Z" fill="url(#dwCFlame)"/><path d="M50 19C54.5 25 54.5 32 50 37C45.5 32 45.5 25 50 19Z" fill="#FFF3B0"/></g></svg>`;
-  }
-  function carvedMarkup() {
-    const defs = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="dwCBowl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6C667"/><stop offset=".45" stop-color="#D6A84B"/><stop offset="1" stop-color="#8A5A12"/></linearGradient><linearGradient id="dwCRim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B8862F"/><stop offset=".5" stop-color="#FBE39A"/><stop offset="1" stop-color="#B8862F"/></linearGradient><radialGradient id="dwCGlow"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".6" stop-color="#FFB33A"/><stop offset="1" stop-color="#FF7A18"/></radialGradient><linearGradient id="dwCFlame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF7A18"/><stop offset=".6" stop-color="#FFC83D"/><stop offset="1" stop-color="#FFF3B0"/></linearGradient><radialGradient id="dwCHalo"><stop offset="0" stop-color="#FFBE46" stop-opacity=".55"/><stop offset="1" stop-color="#FFBE46" stop-opacity="0"/></radialGradient></defs></svg>';
-    const item = (cls) => `<span class="dwC-item ${cls}"><i class="dwC-pool"></i>${carvedDiya()}</span>`;
-    return defs + item('dwC-1') + item('dwC-2') + item('dwC-3');
-  }
-  function loadPeacockMask(src) {
-    const probe = new Image();
-    probe.onload = () => {
-      try {
-        const w = 64, h = Math.max(1, Math.round(w * probe.naturalHeight / probe.naturalWidth));
-        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
-        const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(probe, 0, 0, w, h);
-        peacockMask = { w, h, d: cx.getImageData(0, 0, w, h).data };
-      } catch (e) { peacockMask = null; } // e.g. file:// canvas restrictions: fall back to the bounding box
-    };
-    probe.src = src;
-  }
-  function mountStripDecor() {
-    const strip = document.getElementById('diwali-strip');
-    if (!strip || stripPeacock) return;
-    stripPeacock = document.createElement('img');
-    stripPeacock.className = 'diwali-peacock'; stripPeacock.src = 'diwali-peacock.png';
-    stripPeacock.alt = ''; stripPeacock.setAttribute('aria-hidden', 'true'); stripPeacock.draggable = false;
-    loadPeacockMask(stripPeacock.src);
-    carvedWrap = document.createElement('div'); carvedWrap.className = 'dwC-wrap'; carvedWrap.setAttribute('aria-hidden', 'true');
-    carvedWrap.innerHTML = carvedMarkup();
-    strip.parentNode.insertBefore(carvedWrap, strip.nextSibling);
-    carvedWrap.appendChild(stripPeacock);
-  }
-  function unmountStripDecor() {
-    if (stripPeacock) { stripPeacock.remove(); stripPeacock = null; }
-    if (carvedWrap) { carvedWrap.remove(); carvedWrap = null; }
-  }
-  // Glow only while the pointer is over the painted pixels of the peacock (it ignores pointer events itself,
-  // so the home content underneath stays clickable). Touch: a short glow on tap.
-  function overPeacock(x, y) {
-    if (!stripPeacock) return false;
-    const r = stripPeacock.getBoundingClientRect();
-    if (!r.width || x < r.left || x > r.right || y < r.top || y > r.bottom) return false;
-    if (!peacockMask) return true;
-    const px = Math.min(peacockMask.w - 1, Math.floor((x - r.left) / r.width * peacockMask.w));
-    const py = Math.min(peacockMask.h - 1, Math.floor((y - r.top) / r.height * peacockMask.h));
-    return peacockMask.d[(py * peacockMask.w + px) * 4 + 3] > 40;
-  }
-  document.addEventListener('mousemove', (e) => {
-    if (!stripPeacock || peacockRaf) return;
-    const x = e.clientX, y = e.clientY;
-    peacockRaf = requestAnimationFrame(() => { peacockRaf = 0; if (stripPeacock) stripPeacock.classList.toggle('dw-peacock-glow', overPeacock(x, y)); });
-  }, { passive: true });
-  document.documentElement.addEventListener('mouseleave', () => { if (stripPeacock) stripPeacock.classList.remove('dw-peacock-glow'); });
-  document.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse' || !overPeacock(e.clientX, e.clientY)) return;
-    stripPeacock.classList.add('dw-peacock-glow'); clearTimeout(peacockTouchT);
-    peacockTouchT = setTimeout(() => { if (stripPeacock) stripPeacock.classList.remove('dw-peacock-glow'); }, 1400);
-  }, { passive: true });
-  // dw-strip-decor>>
-  // <<dw-night-fireworks
-  // ---- Ambient night fireworks: a rare, soft burst or a few twinkles, drawn BEHIND the UI inside #diwali-fx ----
-  // Cheap by design: one timer, at most one burst alive (~19 tiny transform/opacity-animated nodes, removed after ~3s),
-  // nothing runs in Day Mode, with the tab hidden or with reduced-motion on, and it is quieter inside a chat.
-  let fwTimer = 0, fwLive = 0;
-  const FW_COLORS = ['#F6C667', '#FFE9A8', '#FFB33A', '#F6C667', '#FFD98A', '#C9A8FF'];
-  const fwRand = (a, b) => a + Math.random() * (b - a);
-  function fwNightOk() { return !!fx && !document.hidden && !reduceMq.matches && document.documentElement.getAttribute('data-diwali-ambient') === 'night'; }
-  function fwInChat() { return !document.querySelector('.chat-header.is-home'); }
-  function spawnAmbientBurst(quiet) {
-    const W = window.innerWidth, H = window.innerHeight;
-    const el = document.createElement('span'); el.className = 'dw-fw';
-    el.style.left = fwRand(W * .12, W * .88).toFixed(0) + 'px';
-    el.style.top = fwRand(H * .08, H * .4).toFixed(0) + 'px';
-    el.style.setProperty('--sc', quiet ? '.62' : '1');
-    const c = FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)];
-    let h = '';
-    for (let i = 0; i < 12; i++) h += `<i style="--a:${i * 30}deg;--r:${fwRand(34, 52).toFixed(0)};--c:${c}"></i>`;
-    for (let i = 0; i < 6; i++) h += `<i class="s" style="--a:${i * 60 + 20}deg;--r:${fwRand(52, 66).toFixed(0)};--c:#FFE9A8"></i>`;
-    el.innerHTML = h; fx.appendChild(el); fwLive++;
-    setTimeout(() => { el.remove(); fwLive--; }, 2900);
-  }
-  function spawnTwinkles(quiet) {
-    const W = window.innerWidth, H = window.innerHeight, n = quiet ? 1 : 2 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < n; i++) {
-      const el = document.createElement('span'); el.className = 'dw-tw';
-      el.style.left = fwRand(W * .08, W * .92).toFixed(0) + 'px'; el.style.top = fwRand(H * .06, H * .5).toFixed(0) + 'px';
-      el.style.animationDelay = (i * .45).toFixed(2) + 's';
-      fx.appendChild(el); setTimeout(() => el.remove(), 2400 + i * 450);
-    }
-  }
-  function fwTick() {
-    fwTimer = 0; if (!fx) return;
-    const quiet = fwInChat();
-    if (fwNightOk()) { if (Math.random() < .45) spawnTwinkles(quiet); else if (!fwLive) spawnAmbientBurst(quiet); }
-    fwTimer = setTimeout(fwTick, quiet ? fwRand(8000, 15000) : fwRand(4500, 9000));
-  }
-  function startFireworks() { if (!fwTimer) fwTimer = setTimeout(fwTick, 3500); }
-  function stopFireworks() { clearTimeout(fwTimer); fwTimer = 0; }
-  // dw-night-fireworks>>
-  function activate() {
-    if (fx || !document.body) return;
-    loadFonts();
-    fx = document.createElement('div'); fx.id = 'diwali-fx'; fx.setAttribute('aria-hidden', 'true');
-    fx.innerHTML = decorMarkup() + (reduceMq.matches ? '<div class="dw-glow dw-glow-a"></div><div class="dw-glow dw-glow-b"></div>' : build());
-    document.body.insertBefore(fx, document.body.firstChild);
-    startAmbientClock();
-    mountStripDecor();
-    startFireworks();
-  }
-  function deactivate() {
-    if (fx) { fx.remove(); fx = null; }
-    unmountStripDecor();
-    stopFireworks();
-    stopAmbientClock();
-    clearTimeout(scrollBoostTimer);
-  }
-  function sync() { (document.documentElement.getAttribute('data-theme') === THEME) ? activate() : deactivate(); }
-
-  new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
-  if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
+  makeFx({ theme:'frosted-midnight', id:'frost-fx', decor:frostedDecor });
+  makeFx({ theme:'christmas-day', id:'xmas-fx', decor:xmasDecor });
 })();
+
 
 /* ===== Rangoli Diwali: exclusive limited-time profile frame =====
    Added to every signed-in user's frame inventory (like the Spectral Flame reward) and listed in Settings. */
