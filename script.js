@@ -1460,26 +1460,51 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
       <circle cx="30" cy="50" r="1.5" fill="#0D1928"/><circle cx="30" cy="58" r="1.5" fill="#0D1928"/></symbol>
   </defs></svg>`;
 
-  const frostedDecor = `${defs}
-    <div class="fm-glow fm-glow-a"></div><div class="fm-glow fm-glow-b"></div>
-    <svg class="fm-art fm-forest" viewBox="0 0 560 130" aria-hidden="true">
-      <use href="#fm-pine" x="10" y="30" width="56" height="94"/><use href="#fm-pine" x="70" y="4" width="78" height="126"/><use href="#fm-pine" x="150" y="38" width="50" height="84"/>
-      <use href="#fm-pine" x="330" y="24" width="60" height="100"/><use href="#fm-pine" x="396" y="0" width="84" height="132"/><use href="#fm-pine" x="486" y="40" width="48" height="82"/>
-      <path d="M0 130 Q60 112 130 124 T270 120 T420 124 T560 118 V130 Z" fill="#E8F4FB"/></svg>
-    <svg class="fm-art fm-snowman" viewBox="0 0 60 100" aria-hidden="true"><use href="#fm-man" width="60" height="100"/></svg>
-    <svg class="fm-art fm-corner" viewBox="0 0 190 120" aria-hidden="true">
-      <path d="M190 14 Q130 22 70 60 T4 96" stroke="#1F4A3E" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <g stroke="#2C6B55" stroke-width="2.4" stroke-linecap="round"><path d="M150 22l-8 14M126 34l-10 14M102 46l-9 16M78 62l-10 13M54 76l-8 14M30 88l-6 12"/></g>
-      <g fill="#2E7A4D"><path d="M60 40q16-12 30-4-8 16-30 4zM84 18q18-8 28 4-12 12-28-4z"/></g>
-      <circle cx="74" cy="40" r="3.4" fill="#D98291"/><circle cx="81" cy="43" r="3.4" fill="#D98291"/><circle cx="78" cy="35" r="3.4" fill="#D98291"/>
-      <g transform="translate(118 52) rotate(24)"><ellipse rx="9" ry="14" fill="#6B5440"/><path d="M-8 -6h16M-8 0h16M-7 6h14" stroke="#4A3A2C" stroke-width="1.6"/><path d="M-9 -10Q0 -16 9 -10" fill="none" stroke="#E8F4FB" stroke-width="3"/></g></svg>
-    <svg class="fm-art fm-orn-row" viewBox="0 0 420 90" aria-hidden="true">
-      <path d="M0 4 Q105 20 210 6 T420 4" stroke="#2C6B55" stroke-width="3" fill="none"/>
-      <g class="fm-orn"><line x1="70" y1="14" x2="70" y2="40" stroke="#9BAFC5" stroke-width="1"/><circle cx="70" cy="48" r="9" fill="#E9C77E"/><rect x="66" y="38" width="8" height="4" fill="#C9A85E"/></g>
-      <g class="fm-orn"><line x1="150" y1="16" x2="150" y2="54" stroke="#9BAFC5" stroke-width="1"/><circle cx="150" cy="63" r="10" fill="#8DDCF2"/><rect x="146" y="52" width="8" height="4" fill="#6FB5CB"/></g>
-      <g class="fm-orn"><line x1="240" y1="12" x2="240" y2="34" stroke="#9BAFC5" stroke-width="1"/><circle cx="240" cy="42" r="8" fill="#D98291"/><rect x="236" y="32" width="8" height="4" fill="#B96878"/></g>
-      <g class="fm-orn"><line x1="330" y1="12" x2="330" y2="48" stroke="#9BAFC5" stroke-width="1"/><circle cx="330" cy="57" r="9" fill="#E9C77E"/><rect x="326" y="46" width="8" height="4" fill="#C9A85E"/></g>
-      <g fill="#E9C77E"><circle class="fm-lt" cx="30" cy="12" r="2.2"/><circle class="fm-lt" cx="110" cy="17" r="2.2"/><circle class="fm-lt" cx="190" cy="13" r="2.2"/><circle class="fm-lt" cx="285" cy="12" r="2.2"/><circle class="fm-lt" cx="375" cy="8" r="2.2"/></g></svg>`;
+  /* Frosted Midnight scene: pixel-art snowy forest built from the sprites in /elements (see elements/README.md).
+     Layers back→front: stars + icy glow, far trees, far bank, mid trees, mid bank, near forest + props + snowmen,
+     front snowbanks, snow floor, hanging lanterns, falling pixel snow. Everything is static <img>, pointer-events:none,
+     sits behind the UI, and falls back silently (onerror) if a sprite is missing. */
+  const SPRITE_DIR = 'elements/';
+  const SPRITE_DIMS = {"trees/pine-tall-01":[146,342],"trees/far/pine-tall-01":[66,154],"trees/mid/pine-tall-01":[102,239],"trees/pine-tall-02":[174,296],"trees/far/pine-tall-02":[78,133],"trees/mid/pine-tall-02":[122,207],"trees/pine-tall-03":[190,297],"trees/far/pine-tall-03":[86,134],"trees/mid/pine-tall-03":[133,208],"trees/pine-large":[252,305],"trees/far/pine-large":[113,137],"trees/mid/pine-large":[176,214],"trees/pine-pair":[256,287],"trees/far/pine-pair":[115,129],"trees/mid/pine-pair":[179,201],"trees/pine-sapling":[177,288],"trees/far/pine-sapling":[80,130],"trees/mid/pine-sapling":[124,202],"trees/pine-snowbase":[306,447],"trees/far/pine-snowbase":[138,201],"trees/mid/pine-snowbase":[214,313],"trees/tree-bare-snow":[126,130],"trees/far/tree-bare-snow":[57,58],"trees/mid/tree-bare-snow":[88,91],"bushes/bush-snow-01":[115,100],"bushes/bush-snow-02":[128,103],"bushes/bush-snow-03":[127,122],"bushes/bush-holly":[201,192],"snow/bank-rock-01":[198,111],"snow/mid/bank-rock-01":[198,111],"snow/bank-rock-02":[145,72],"snow/mid/bank-rock-02":[145,72],"snow/rocks-snow":[140,112],"snow/bank-01":[193,87],"snow/mid/bank-01":[193,87],"snow/bank-02":[152,60],"snow/mid/bank-02":[152,60],"snow/bank-03":[244,66],"snow/mid/bank-03":[244,66],"snow/bank-04":[130,53],"snow/mid/bank-04":[130,53],"snow/bank-small":[69,39],"snow/mid/bank-small":[69,39],"snowmen/snowman-santa":[148,209],"snowmen/snowman-tophat":[144,223],"snowmen/snowman-earmuffs":[155,196],"snowmen/snowman-broom":[177,207],"snowmen/snowman-sitting":[144,152],"snowmen/snowman-sleeping":[170,152],"snowmen/snowman-small":[87,101],"snowmen/snow-mound-small":[67,76],"props/fence":[117,95],"props/sign-01":[101,143],"props/sign-02":[97,156],"props/banner-snowflake":[117,156],"props/lantern":[62,105],"props/stone-wall":[185,127],"props/barrel":[71,95],"props/crate":[71,75],"props/sled":[163,61],"props/stone-arch":[145,137],"crystals/crystal-cluster":[161,134],"crystals/crystal-small":[79,104],"crystals/crystal-pair":[130,123]};
+  function seeded(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function spr(path, left, bottom, k, extra) {
+    const d = SPRITE_DIMS[path]; if (!d) return '';
+    const o = extra || {};
+    return `<img class="fm-spr${o.m ? ' fm-m' : ''}" src="${SPRITE_DIR}${path}.png" alt="" draggable="false" decoding="async" onerror="this.remove()" style="left:${left.toFixed(1)}%;bottom:${bottom}px;width:${Math.round(d[0] * k)}px${o.flip ? ';--f:-1' : ''}">`;
+  }
+  function frostedDecor() {
+    const small = window.innerWidth < 720, rnd = seeded(2026);
+    const FAR = ['pine-tall-01', 'pine-tall-02', 'pine-tall-03', 'pine-large', 'pine-pair', 'pine-sapling'];
+    let h = '<div class="fm-moon"></div><div class="fm-glow fm-glow-a"></div><div class="fm-glow fm-glow-b"></div>';
+    let stars = ''; for (let i = 0; i < 34; i++) stars += `${(rnd() * 100).toFixed(1)}vw ${(rnd() * 46).toFixed(1)}vh 0 ${rnd() < .25 ? 1 : 0}px rgba(${rnd() < .4 ? '141,220,242' : '230,241,248'},${(.35 + rnd() * .55).toFixed(2)}),`;
+    h += `<div class="fm-stars" style="box-shadow:${stars.slice(0, -1)}"></div>`;
+    const farN = small ? 9 : 22, midN = small ? 5 : 13;
+    for (let i = 0; i < farN; i++) h += spr('trees/far/' + FAR[i % FAR.length], (i + .5) / farN * 100 + rnd() * 3 - 1.5, 74 + Math.round(rnd() * 34), 1);
+    ['bank-01', 'bank-02', 'bank-03', 'bank-04', 'bank-01', 'bank-03'].slice(0, small ? 3 : 6).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length) + rnd() * 3, 52, small ? 1.2 : 1.5); });
+    for (let i = 0; i < midN; i++) h += spr('trees/mid/' + FAR[(i * 5 + 2) % FAR.length], (i + .5) / midN * 100 + rnd() * 4 - 2, 40 + Math.round(rnd() * 24), 1, { flip: i % 2 });
+    ['bank-02', 'bank-04', 'bank-01', 'bank-03', 'bank-02'].slice(0, small ? 3 : 5).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length), 26, small ? 1.3 : 1.8); });
+    // near forest, props and snowmen: [sprite, left%, bottom px, scale, mobile-visible]
+    [['trees/pine-snowbase', 21, 66, .8], ['bushes/bush-snow-03', 26, 52, .8], ['trees/pine-tall-01', 36, 72, .85, 1], ['bushes/bush-snow-01', 41, 54, .8],
+     ['trees/pine-tall-03', 47, 68, .9], ['trees/tree-bare-snow', 53, 76, .7], ['trees/pine-large', 64, 70, 1, 1], ['bushes/bush-holly', 59, 50, .8, 1],
+     ['trees/pine-sapling', 75, 62, .9], ['trees/pine-pair', 93, 66, 1, 1], ['props/fence', 50, 44, .9], ['props/sled', 56, 36, .75],
+     ['props/sign-01', 78, 44, .8], ['props/barrel', 80, 36, .8], ['props/banner-snowflake', 70, 48, .85], ['bushes/bush-snow-02', 87, 48, .8],
+     ['crystals/crystal-pair', 33, 40, .6], ['crystals/crystal-cluster', 96, 36, .55]].forEach(a => { h += spr(a[0], a[1], a[2], a[3], { m: !a[4] }); });
+    [['snowman-tophat', 30, 76, .7, 1], ['snowman-earmuffs', 43, 72, .7], ['snowman-santa', 57, 72, .72, 1], ['snowman-sitting', 68, 68, .72],
+     ['snowman-broom', 83, 72, .72, 1], ['snowman-sleeping', 90, 64, .6], ['snowman-small', 24, 70, .8]].forEach(a => { h += spr('snowmen/' + a[0], a[1], a[2], a[3], { m: !a[4] }); });
+    const FB = ['bank-03', 'bank-02', 'bank-04', 'bank-03', 'bank-02', 'bank-04', 'bank-03', 'bank-02'].slice(0, small ? 4 : 8);
+    FB.forEach((b, i) => { h += spr('snow/' + b, (i + .5) * (100 / FB.length) + rnd() * 2 - 1, -20 - Math.round(rnd() * 8), small ? 1.25 : 1.5); });
+    h += '<div class="fm-floor"></div>';
+    [['58%', 160], ['92%', 128]].forEach(l => { h += `<div class="fm-lantern" style="left:${l[0]}"><i style="height:${l[1]}px"></i>${spr('props/lantern', 0, 0, .55)}</div>`; });
+    return h;
+  }
+  function pixelSnow(count) {
+    const sizes = [2, 2, 2, 3, 3, 4, 4, 5, 6]; let h = '';
+    for (let i = 0; i < count; i++) {
+      const s = sizes[Math.floor(rnd(0, sizes.length))], d = Math.max(8, 24 - s * 1.6 + rnd(-2, 2));
+      h += `<span class="fm-flake px${s === 4 ? ' plus' : ''}" style="--x:${rnd(1, 99).toFixed(1)}%;--s:${s}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px;--o:${(.45 + s / 8 * .5 + rnd(0, .1)).toFixed(2)};--sw:${rnd(3, 6).toFixed(1)}s"><i></i></span>`;
+    }
+    return h;
+  }
 
   const xmasDecor = `${defs}
     <svg class="xm-lights" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true"><path d="M0 6 Q100 34 200 10 T400 10 T600 10 T800 10 T1000 10 T1200 8" stroke="#1F4A3E" stroke-width="2.4" fill="none"/>
@@ -1491,13 +1516,13 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     <svg class="fm-art xm-gifts" viewBox="0 0 130 60" aria-hidden="true"><rect x="4" y="22" width="40" height="36" fill="#B3282D"/><rect x="21" y="22" width="6" height="36" fill="#E9C77E"/>
       <rect x="52" y="30" width="34" height="28" fill="#2F8F5B"/><rect x="66" y="30" width="6" height="28" fill="#E9C77E"/><rect x="92" y="18" width="34" height="40" fill="#294B6B"/><rect x="106" y="18" width="6" height="40" fill="#E9C77E"/></svg>`;
 
-  function makeFx({ theme, id, decor }) {
+  function makeFx({ theme, id, decor, px }) {
     let fx = null;
     const onVis = () => { if (fx) fx.classList.toggle('fm-paused', document.hidden); };
     function activate() {
       if (fx || !document.body) return;
       fx = document.createElement('div'); fx.id = id; fx.setAttribute('aria-hidden', 'true');
-      fx.innerHTML = decor + (reduceMq.matches ? '' : snow(flakeCount()));
+      fx.innerHTML = (typeof decor === 'function' ? decor() : decor) + (reduceMq.matches ? '' : (px ? pixelSnow(flakeCount() + 8) : snow(flakeCount())));
       document.body.insertBefore(fx, document.body.firstChild);
       document.addEventListener('visibilitychange', onVis);
     }
@@ -1506,7 +1531,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
     if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
   }
-  makeFx({ theme:'frosted-midnight', id:'frost-fx', decor:frostedDecor });
+  makeFx({ theme:'frosted-midnight', id:'frost-fx', decor:frostedDecor, px:true });
   makeFx({ theme:'christmas-day', id:'xmas-fx', decor:xmasDecor });
 })();
 
