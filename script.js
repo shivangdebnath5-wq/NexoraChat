@@ -1488,14 +1488,14 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     </svg><div class="fm-glow fm-glow-a"></div><div class="fm-glow fm-glow-b"></div>`;
     let stars = ''; for (let i = 0; i < 18; i++) stars += `${(rnd() * 100).toFixed(1)}vw ${(rnd() * 46).toFixed(1)}vh 0 0px rgba(${rnd() < .4 ? '141,220,242' : '230,241,248'},${(.3 + rnd() * .4).toFixed(2)}),`;
     h += `<div class="fm-stars" style="box-shadow:${stars.slice(0, -1)}"></div>`;
-    const farN = small ? 6 : 13, midN = small ? 4 : 8;
+    const farN = small ? 4 : 8, midN = small ? 3 : 5;
     for (let i = 0; i < farN; i++) h += spr('trees/far/' + FAR[i % FAR.length], (i + .5) / farN * 100 + rnd() * 3 - 1.5, 74 + Math.round(rnd() * 34), 1);
     ['bank-01', 'bank-03', 'bank-02', 'bank-04'].slice(0, small ? 2 : 4).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length) + rnd() * 3, 52, small ? 1 : 1.2); });
     for (let i = 0; i < midN; i++) h += spr('trees/mid/' + FAR[(i * 5 + 2) % FAR.length], (i + .5) / midN * 100 + rnd() * 4 - 2, 40 + Math.round(rnd() * 24), 1, { flip: i % 2 });
     ['bank-02', 'bank-04', 'bank-01'].slice(0, small ? 2 : 3).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length), 26, small ? 1.1 : 1.4); });
     // near forest, props and snowmen: [sprite, left%, bottom px, scale, mobile-visible] — kept clear of the 34-61% middle band
-    [['trees/pine-snowbase', 15, 66, .75], ['bushes/bush-snow-03', 20, 50, .75], ['trees/pine-tall-01', 28, 70, .8, 1], ['crystals/crystal-pair', 34, 38, .55],
-     ['trees/pine-large', 66, 70, .95, 1], ['bushes/bush-holly', 61, 48, .75, 1], ['props/sign-01', 72, 42, .75], ['trees/pine-sapling', 78, 60, .85],
+    [['trees/pine-snowbase', 15, 66, .75], ['bushes/bush-snow-03', 20, 50, .75], ['crystals/crystal-pair', 34, 38, .55],
+     ['trees/pine-large', 66, 70, .95, 1], ['bushes/bush-holly', 61, 48, .75, 1], ['props/sign-01', 72, 42, .75],
      ['trees/pine-pair', 92, 64, .95, 1], ['bushes/bush-snow-02', 86, 46, .75], ['crystals/crystal-cluster', 96, 34, .5]].forEach(a => { h += spr(a[0], a[1], a[2], a[3], { m: !a[4] }); });
     [['snowman-tophat', 20, 74, .68, 1], ['snowman-santa', 80, 72, .7, 1], ['snowman-small', 90, 66, .75]].forEach(a => { h += spr('snowmen/' + a[0], a[1], a[2], a[3], { m: !a[4] }); });
     const FB = ['bank-03', 'bank-02', 'bank-04', 'bank-03', 'bank-02'].slice(0, small ? 3 : 5);
