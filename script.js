@@ -1479,30 +1479,33 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   function frostedDecor() {
     const small = window.innerWidth < 720, rnd = seeded(2026);
     const FAR = ['pine-tall-01', 'pine-tall-02', 'pine-tall-03', 'pine-large', 'pine-pair', 'pine-sapling'];
-    let h = '<div class="fm-moon"></div><div class="fm-glow fm-glow-a"></div><div class="fm-glow fm-glow-b"></div>';
-    let stars = ''; for (let i = 0; i < 34; i++) stars += `${(rnd() * 100).toFixed(1)}vw ${(rnd() * 46).toFixed(1)}vh 0 ${rnd() < .25 ? 1 : 0}px rgba(${rnd() < .4 ? '141,220,242' : '230,241,248'},${(.35 + rnd() * .55).toFixed(2)}),`;
+    let h = `<svg class="fm-moon" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="30" fill="#EAF6FC"/>
+      <circle cx="21" cy="19" r="6" fill="#C4D9EA" opacity=".55"/>
+      <circle cx="40" cy="25" r="4" fill="#C4D9EA" opacity=".5"/>
+      <circle cx="25" cy="41" r="5" fill="#C4D9EA" opacity=".45"/>
+      <circle cx="43" cy="43" r="3" fill="#C4D9EA" opacity=".4"/>
+    </svg><div class="fm-glow fm-glow-a"></div><div class="fm-glow fm-glow-b"></div>`;
+    let stars = ''; for (let i = 0; i < 18; i++) stars += `${(rnd() * 100).toFixed(1)}vw ${(rnd() * 46).toFixed(1)}vh 0 0px rgba(${rnd() < .4 ? '141,220,242' : '230,241,248'},${(.3 + rnd() * .4).toFixed(2)}),`;
     h += `<div class="fm-stars" style="box-shadow:${stars.slice(0, -1)}"></div>`;
-    const farN = small ? 9 : 22, midN = small ? 5 : 13;
+    const farN = small ? 6 : 13, midN = small ? 4 : 8;
     for (let i = 0; i < farN; i++) h += spr('trees/far/' + FAR[i % FAR.length], (i + .5) / farN * 100 + rnd() * 3 - 1.5, 74 + Math.round(rnd() * 34), 1);
-    ['bank-01', 'bank-02', 'bank-03', 'bank-04', 'bank-01', 'bank-03'].slice(0, small ? 3 : 6).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length) + rnd() * 3, 52, small ? 1.2 : 1.5); });
+    ['bank-01', 'bank-03', 'bank-02', 'bank-04'].slice(0, small ? 2 : 4).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length) + rnd() * 3, 52, small ? 1 : 1.2); });
     for (let i = 0; i < midN; i++) h += spr('trees/mid/' + FAR[(i * 5 + 2) % FAR.length], (i + .5) / midN * 100 + rnd() * 4 - 2, 40 + Math.round(rnd() * 24), 1, { flip: i % 2 });
-    ['bank-02', 'bank-04', 'bank-01', 'bank-03', 'bank-02'].slice(0, small ? 3 : 5).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length), 26, small ? 1.3 : 1.8); });
-    // near forest, props and snowmen: [sprite, left%, bottom px, scale, mobile-visible]
-    [['trees/pine-snowbase', 21, 66, .8], ['bushes/bush-snow-03', 26, 52, .8], ['trees/pine-tall-01', 36, 72, .85, 1], ['bushes/bush-snow-01', 41, 54, .8],
-     ['trees/pine-tall-03', 47, 68, .9], ['trees/tree-bare-snow', 53, 76, .7], ['trees/pine-large', 64, 70, 1, 1], ['bushes/bush-holly', 59, 50, .8, 1],
-     ['trees/pine-sapling', 75, 62, .9], ['trees/pine-pair', 93, 66, 1, 1], ['props/fence', 50, 44, .9], ['props/sled', 56, 36, .75],
-     ['props/sign-01', 78, 44, .8], ['props/barrel', 80, 36, .8], ['props/banner-snowflake', 70, 48, .85], ['bushes/bush-snow-02', 87, 48, .8],
-     ['crystals/crystal-pair', 33, 40, .6], ['crystals/crystal-cluster', 96, 36, .55]].forEach(a => { h += spr(a[0], a[1], a[2], a[3], { m: !a[4] }); });
-    [['snowman-tophat', 30, 76, .7, 1], ['snowman-earmuffs', 43, 72, .7], ['snowman-santa', 57, 72, .72, 1], ['snowman-sitting', 68, 68, .72],
-     ['snowman-broom', 83, 72, .72, 1], ['snowman-sleeping', 90, 64, .6], ['snowman-small', 24, 70, .8]].forEach(a => { h += spr('snowmen/' + a[0], a[1], a[2], a[3], { m: !a[4] }); });
-    const FB = ['bank-03', 'bank-02', 'bank-04', 'bank-03', 'bank-02', 'bank-04', 'bank-03', 'bank-02'].slice(0, small ? 4 : 8);
-    FB.forEach((b, i) => { h += spr('snow/' + b, (i + .5) * (100 / FB.length) + rnd() * 2 - 1, -20 - Math.round(rnd() * 8), small ? 1.25 : 1.5); });
+    ['bank-02', 'bank-04', 'bank-01'].slice(0, small ? 2 : 3).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length), 26, small ? 1.1 : 1.4); });
+    // near forest, props and snowmen: [sprite, left%, bottom px, scale, mobile-visible] — kept clear of the 34-61% middle band
+    [['trees/pine-snowbase', 15, 66, .75], ['bushes/bush-snow-03', 20, 50, .75], ['trees/pine-tall-01', 28, 70, .8, 1], ['crystals/crystal-pair', 34, 38, .55],
+     ['trees/pine-large', 66, 70, .95, 1], ['bushes/bush-holly', 61, 48, .75, 1], ['props/sign-01', 72, 42, .75], ['trees/pine-sapling', 78, 60, .85],
+     ['trees/pine-pair', 92, 64, .95, 1], ['bushes/bush-snow-02', 86, 46, .75], ['crystals/crystal-cluster', 96, 34, .5]].forEach(a => { h += spr(a[0], a[1], a[2], a[3], { m: !a[4] }); });
+    [['snowman-tophat', 20, 74, .68, 1], ['snowman-santa', 80, 72, .7, 1], ['snowman-small', 90, 66, .75]].forEach(a => { h += spr('snowmen/' + a[0], a[1], a[2], a[3], { m: !a[4] }); });
+    const FB = ['bank-03', 'bank-02', 'bank-04', 'bank-03', 'bank-02'].slice(0, small ? 3 : 5);
+    FB.forEach((b, i) => { h += spr('snow/' + b, (i + .5) * (100 / FB.length) + rnd() * 2 - 1, -20 - Math.round(rnd() * 8), small ? 1 : 1.2); });
     h += '<div class="fm-floor"></div>';
-    [['58%', 160], ['92%', 128]].forEach(l => { h += `<div class="fm-lantern" style="left:${l[0]}"><i style="height:${l[1]}px"></i>${spr('props/lantern', 0, 0, .55)}</div>`; });
+    [['25%', 130], ['90%', 110]].forEach(l => { h += `<div class="fm-lantern" style="left:${l[0]}"><i style="height:${l[1]}px"></i>${spr('props/lantern', 0, 0, .42)}</div>`; });
     return h;
   }
   function pixelSnow(count) {
-    const sizes = [2, 2, 2, 3, 3, 4, 4, 5, 6]; let h = '';
+    const sizes = [2, 2, 2, 2, 3, 3, 3, 4, 5]; let h = '';
     for (let i = 0; i < count; i++) {
       const s = sizes[Math.floor(rnd(0, sizes.length))], d = Math.max(8, 24 - s * 1.6 + rnd(-2, 2));
       h += `<span class="fm-flake px${s === 4 ? ' plus' : ''}" style="--x:${rnd(1, 99).toFixed(1)}%;--s:${s}px;--d:${d.toFixed(1)}s;--dl:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px;--o:${(.45 + s / 8 * .5 + rnd(0, .1)).toFixed(2)};--sw:${rnd(3, 6).toFixed(1)}s"><i></i></span>`;
@@ -1526,7 +1529,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     function activate() {
       if (fx || !document.body) return;
       fx = document.createElement('div'); fx.id = id; fx.setAttribute('aria-hidden', 'true');
-      fx.innerHTML = (typeof decor === 'function' ? decor() : decor) + (reduceMq.matches ? '' : (px ? pixelSnow(flakeCount() + 8) : snow(flakeCount())));
+      fx.innerHTML = (typeof decor === 'function' ? decor() : decor) + (reduceMq.matches ? '' : (px ? pixelSnow(flakeCount()) : snow(flakeCount())));
       document.body.insertBefore(fx, document.body.firstChild);
       document.addEventListener('visibilitychange', onVis);
     }

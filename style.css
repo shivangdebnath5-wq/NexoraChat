@@ -671,27 +671,6 @@
 .main-chat:not(.hub-active) #hub-more-menu { display:none !important; }
 #hub-more-menu #hub-invite-btn sup { position:static; margin-left:1px; font-size:9px; }
 
-/* "The Festival of Lights" shortcut: a glowing diya floating in the bottom-right corner of the home view.
-   Sibling after #chat-header, so it shows exactly while the header carries .is-home and hides in chats/Hubs.
-   Float = a gentle curved drift; glow = soft halo + two thin light arcs that curve out past the diya's edges. */
-.festival-fab { display:none; position:absolute; left:calc(50% - 39px); bottom:22px; width:78px; height:78px; z-index:40; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; animation:ffFloat 7s ease-in-out infinite; }
-.chat-header.is-home ~ .festival-fab { display:block; }
-.festival-fab .ff-diya { position:absolute; inset:6px; width:calc(100% - 12px); height:calc(100% - 12px); overflow:visible; filter:drop-shadow(0 4px 10px rgba(255,150,40,.55)); transition:transform .3s cubic-bezier(.2,.9,.25,1.2); }
-.festival-fab .ff-flame { transform-box:fill-box; transform-origin:50% 100%; animation:ffFlicker 1.7s ease-in-out infinite; }
-.festival-fab .ff-glow { position:absolute; left:50%; top:30%; width:155%; height:155%; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none; background:radial-gradient(circle, rgba(255,196,90,.55), rgba(255,140,40,.2) 40%, transparent 68%); animation:ffPulse 3.4s ease-in-out infinite; }
-.festival-fab .ff-arcs i { position:absolute; border-radius:50%; border:2px solid transparent; pointer-events:none; }
-.festival-fab .ff-arcs i:nth-child(1) { inset:-12px; border-top-color:rgba(255,205,110,.85); border-left-color:rgba(255,160,50,.35); filter:blur(.6px); animation:ffSpin 7s linear infinite; }
-.festival-fab .ff-arcs i:nth-child(2) { inset:-18px; border-bottom-color:rgba(255,170,60,.6); border-right-color:rgba(255,205,110,.25); filter:blur(1px); animation:ffSpin 11s linear infinite reverse; }
-.festival-fab:hover .ff-diya { transform:scale(1.1); }
-.festival-fab:hover .ff-glow { filter:brightness(1.25); }
-.festival-fab:active .ff-diya { transform:scale(.95); }
-.festival-fab:focus-visible { outline:2px solid var(--primary); outline-offset:6px; border-radius:50%; }
-@keyframes ffFloat { 0%, 100% { translate:0 0; } 25% { translate:-6px -9px; } 50% { translate:0 -15px; } 75% { translate:6px -8px; } }
-@keyframes ffFlicker { 0%, 100% { transform:scale(1,1) skewX(0); } 25% { transform:scale(.93,1.07) skewX(-3deg); } 50% { transform:scale(1.05,.95) skewX(2deg); } 75% { transform:scale(.97,1.04) skewX(-2deg); } }
-@keyframes ffPulse { 0%, 100% { opacity:.65; } 50% { opacity:1; } }
-@keyframes ffSpin { to { transform:rotate(360deg); } }
-@media (max-width: 720px) { .festival-fab { left:calc(50% - 33px); bottom:calc(16px + env(safe-area-inset-bottom, 0px)); width:66px; height:66px; } }
-@media (prefers-reduced-motion: reduce) { .festival-fab, .festival-fab .ff-flame, .festival-fab .ff-glow, .festival-fab .ff-arcs i { animation:none; } }
 
 /* =========================================================================
    MOONLIGHT SPARKLE — enhanced theme (starfield, lunar ambience, interactive
@@ -1072,7 +1051,7 @@ html[data-theme="frosted-midnight"] #auth-fx { display:none; }
 html[data-theme="frosted-midnight"] #app-screen, html[data-theme="frosted-midnight"] #auth-screen { position:relative; z-index:1; }
 html[data-theme="frosted-midnight"] #app-screen { background:transparent; border-color:rgba(141,220,242,.22); box-shadow:0 24px 70px rgba(5,10,20,.72), 0 0 46px rgba(141,220,242,.07); }
 html[data-theme="frosted-midnight"] .main-chat { background:linear-gradient(180deg, rgba(11,20,37,.60) 0%, rgba(14,26,44,.58) 46%, rgba(16,29,50,.42) 76%, rgba(16,29,50,.22) 100%); }
-html[data-theme="frosted-midnight"] .sidebar { background:linear-gradient(180deg, rgba(16,27,45,.94), rgba(13,25,40,.96)); border-right:1px solid #2A3D54; }
+html[data-theme="frosted-midnight"] .sidebar { background:linear-gradient(180deg, #101B2D, #0D1928); border-right:1px solid #2A3D54; }
 html[data-theme="frosted-midnight"] .sidebar-header { background:linear-gradient(180deg,#1C3048,#17283D); border-bottom:1px solid #2A3D54; }
 html[data-theme="frosted-midnight"] .chat-header { background:linear-gradient(90deg, rgba(23,40,61,.95), rgba(28,48,72,.9)); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid #2A3D54; box-shadow:inset 0 1px 0 rgba(196,217,234,.14); }
 html[data-theme="frosted-midnight"] .chat-input { background:rgba(13,25,40,.8); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border-top:1px solid #2A3D54; }
@@ -1861,7 +1840,7 @@ html[data-theme="christmas-day"] .sticker-pane { --st-accent:#E9C77E; --st-accen
 /* ---- Frosted Midnight: pixel-art forest scene (sprites from /elements; layers are static, behind the UI) ---- */
 .fm-spr { position:absolute; display:block; height:auto; max-width:none; image-rendering:pixelated; image-rendering:crisp-edges; -webkit-user-drag:none; user-select:none; pointer-events:none; transform:translateX(-50%) scaleX(var(--f,1)); }
 .fm-floor { position:absolute; left:0; right:0; bottom:0; height:26px; background:linear-gradient(180deg,#DCEBF5 0%,#B9D2E6 55%,#8FB2CC 100%); box-shadow:0 -3px 0 #F2F9FD; }
-.fm-moon { position:absolute; right:13%; top:17%; width:86px; height:86px; border-radius:50%; background:radial-gradient(circle at 38% 36%, #F2F9FD 0 38%, #C4D9EA 62%, #9BAFC5 100%); box-shadow:0 0 60px 24px rgba(141,220,242,.22), 0 0 140px 60px rgba(141,220,242,.1); opacity:.9; }
+.fm-moon { position:absolute; right:13%; top:17%; width:68px; height:68px; border-radius:50%; shape-rendering:crispEdges; box-shadow:0 0 50px 20px rgba(141,220,242,.2), 0 0 120px 50px rgba(141,220,242,.09); opacity:.92; }
 .fm-stars { position:absolute; left:0; top:0; width:2px; height:2px; animation:fmStars 6s ease-in-out infinite alternate; }
 @keyframes fmStars { from { opacity:.55; } to { opacity:1; } }
 .fm-lantern { position:absolute; top:0; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; }
