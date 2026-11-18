@@ -1606,7 +1606,7 @@ openSettings = function() { grantRangoliDiwali(); openSettingsWithRangoli.apply(
   queue();
 })();
 
-/* Greeting Studio (Greeting Wisher) now lives in wishing.js */
+/* Greeting Studio (Greeting Wisher) now lives in festive/wishing.js */
 
 /* ===== Sticker packs (picker "Stickers" tab) =====
    Packs are plain folders in the repo, so the app can load them straight from GitHub Pages:

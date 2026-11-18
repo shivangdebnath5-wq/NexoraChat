@@ -4,7 +4,7 @@
    A small glowing hammer button in the HUB header (top-right) switches that Hub from Chat Mode to an
    editing-only workspace: messages are hidden (never deleted) and chatting is disabled until you press
    "Return to Chat". A side panel offers: Backgrounds · Banners · Ambient Effects · Patterns ·
-   Seasonal Decors (Diyas, Hanging Diyas, Garlands, Lanterns, Bells & Chimes, Rangoli — images in /decor).
+   Seasonal Decors (Diyas, Hanging Diyas, Garlands, Lanterns, Bells & Chimes, Rangoli — images in /festive/decor).
 
    PLACEMENT RULES (each decoration type has its own highlighted zone):
      • Garlands, Hanging Diyas, Lanterns, Bells  → hang from the top rail, directly under the header
@@ -25,7 +25,7 @@
   /* ---------------------------------------------------------------------
      1. CATALOG
      --------------------------------------------------------------------- */
-  const ASSET_ROOT = 'decor/';
+  const ASSET_ROOT = 'festive/decor/';
   const SPRITES = {
     "diyas/clay-diya-1": {
      "name": "Clay Diya",

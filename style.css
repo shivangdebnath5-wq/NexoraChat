@@ -1110,7 +1110,7 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 .rangoli-wrap.rangoli-lg { display:block; width:70px; margin:34px auto 44px auto; }
 .rangoli-wrap::before { content:''; position:absolute; inset:-2px; border-radius:50%; z-index:0; pointer-events:none; animation:rangoliAura 4.2s ease-in-out infinite; }
 .rangoli-wrap::after { content:''; position:absolute; left:50%; top:50%; width:185%; height:185%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
-  background:url('rangoli-diwali-frame.svg?v=1') center/100% 100% no-repeat; filter:drop-shadow(0 0 3px rgba(214,168,75,.45)); }
+  background:url('festive/rangoli-diwali-frame.svg?v=1') center/100% 100% no-repeat; filter:drop-shadow(0 0 3px rgba(214,168,75,.45)); }
 .rangoli-wrap .rg-shine, .rangoli-wrap .rg-glint { position:absolute; inset:-42.5%; z-index:3; pointer-events:none; border-radius:50%; }
 .rangoli-wrap .rg-shine { overflow:hidden; mix-blend-mode:screen;
   -webkit-mask:radial-gradient(farthest-side,#0000 54%,#000 62%,#000 86%,#0000 97%); mask:radial-gradient(farthest-side,#0000 54%,#000 62%,#000 86%,#0000 97%); }
@@ -1134,7 +1134,7 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 .diya-wrap.diya-lg { display:block; width:70px; margin:34px auto 44px auto; }
 .diya-wrap::before { content:''; position:absolute; inset:-2px; border-radius:50%; z-index:0; pointer-events:none; animation:diyaAura 4.4s ease-in-out infinite; }
 .diya-wrap::after { content:''; position:absolute; left:50%; top:50%; width:170%; height:170%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
-  background:url('diya-glow-profile-frame.svg?v=1') center/100% 100% no-repeat; animation:diyaArt 4.4s ease-in-out infinite; }
+  background:url('festive/diya-glow-profile-frame.svg?v=1') center/100% 100% no-repeat; animation:diyaArt 4.4s ease-in-out infinite; }
 .diya-wrap .dg-flame { position:absolute; left:50%; top:80.6%; width:36%; height:36%; transform:translate(-50%,-50%); z-index:3; pointer-events:none; border-radius:50%; mix-blend-mode:screen;
   background:radial-gradient(circle, rgba(255,214,120,.55), rgba(255,160,50,.2) 45%, transparent 70%); animation:diyaFlame 2.6s ease-in-out infinite; }
 .message-wrapper.msg-grouped .diya-wrap { visibility:hidden; }
@@ -1152,7 +1152,7 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 .celestial-wrap.celestial-lg { display:block; width:70px; margin:34px auto 44px auto; }
 .celestial-wrap::before { content:''; position:absolute; inset:-2px; border-radius:50%; z-index:0; pointer-events:none; animation:celestialAura 5s ease-in-out infinite; }
 .celestial-wrap::after { content:''; position:absolute; left:50%; top:50%; width:152%; height:152%; z-index:2; pointer-events:none; transform:translate(-50%,-50%);
-  background:url('celestial-night-profile-frame.svg?v=1') center/100% 100% no-repeat; animation:celestialTwinkle 3.6s ease-in-out infinite; }
+  background:url('assets/celestial-night-profile-frame.svg?v=1') center/100% 100% no-repeat; animation:celestialTwinkle 3.6s ease-in-out infinite; }
 .celestial-wrap .cn-shine { position:absolute; inset:-26%; z-index:3; pointer-events:none; border-radius:50%; overflow:hidden; mix-blend-mode:screen;
   -webkit-mask:radial-gradient(farthest-side,#0000 63%,#000 66%,#000 71%,#0000 75%); mask:radial-gradient(farthest-side,#0000 63%,#000 66%,#000 71%,#0000 75%); }
 .celestial-wrap .cn-shine b { position:absolute; inset:-30%; animation:rangoliSpin 9s linear infinite;
@@ -1164,7 +1164,7 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 @media (prefers-reduced-motion: reduce) { .celestial-wrap::before, .celestial-wrap::after, .celestial-wrap .cn-shine b { animation:none; } }
 
 /* =========================================================================
-   🪔 DIWALI WISHES (diwali-wishes.js) — composer shortcut, compact picker and
+   🪔 DIWALI WISHES (festive/diwali-wishes.js) — composer shortcut, compact picker and
    the festive message bubble. Colours are the Midnight Diwali palette
    (#090D20 / #171B3A navy, #D6A84B / #F5D98A gold) and stay the same in every
    theme, so a wish always looks like a wish.
@@ -1511,7 +1511,7 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 }
 
 /* =========================================================================
-   GREETING CARD STUDIO (wishing.js) — frosted-glass workspace: editor LEFT, live preview RIGHT,
+   GREETING CARD STUDIO (festive/wishing.js) — frosted-glass workspace: editor LEFT, live preview RIGHT,
    share sheet on top. Pure CSS animation (transform/opacity); respects reduced motion.
    ========================================================================= */
 .gs-modal { background:rgba(3,5,16,.62); -webkit-backdrop-filter:blur(10px) saturate(130%); backdrop-filter:blur(10px) saturate(130%); animation:gsFade .25s ease both; }

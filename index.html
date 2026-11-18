@@ -4652,14 +4652,12 @@
   onAuthStateChanged(auth, user => { if (user) setupFriendListeners(user.uid); else teardownFriendListeners(); });
 </script>
   <script src="script.js"></script>
-  <!-- Diwali Wishes: composer shortcut + festive greeting picker (see diwali-wishes.js) -->
-  <script src="diwali-wishes.js"></script>
+  <!-- Diwali Wishes: composer shortcut + festive greeting picker (see festive/diwali-wishes.js) -->
+  <script src="festive/diwali-wishes.js"></script>
   <!-- Greeting Wisher / Greeting Card Studio (templates, live preview, sharing) -->
-  <script src="wishing.js" onerror="window.toggleGreetingStudioTab=window.openDiwaliGreetingStudio=function(){alert('Greeting Studio could not load: wishing.js was not found. Put wishing.js in the same folder as index.html and refresh.');};"></script>
-  <!-- Hub Decor Editor: hammer button, editing workspace + decor behind Hub messages (Hubs only; see hub-decors.js). Must load after script.js. -->
-  <script src="hub-decors.js"></script>
-  <!-- Hidden Deepak Easter Egg: secret word -> glowing diya -> Secret Lightkeeper badge (see deepak.js) -->
-  <script src="deepak.js"></script>
+  <script src="festive/wishing.js" onerror="window.toggleGreetingStudioTab=window.openDiwaliGreetingStudio=function(){alert('Greeting Studio could not load: festive/wishing.js was not found. Put wishing.js in the festive folder next to index.html and refresh.');};"></script>
+  <!-- Hub Decor Editor: hammer button, editing workspace + decor behind Hub messages (Hubs only; see festive/hub-decors.js). Must load after script.js. -->
+  <script src="festive/hub-decors.js"></script>
   <!-- User Profile feature (self-contained module; see profile.js) -->
   <script type="module" src="profile.js"></script>
 </body>
