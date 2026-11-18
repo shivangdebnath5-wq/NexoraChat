@@ -1034,16 +1034,12 @@ html[data-theme="moonlight-sparkle"] #profile-view button.profile-btn:not(.secon
    script.js only while this theme is active; animation is transform/opacity-only (no per-frame JS).
    ========================================================================= */
 
-/* ---- Picker tile badges (Frosted Midnight keeps the star; Christmas Day has its own tree icon) ---- */
-.theme-preview[data-theme-preview="frosted-midnight"], .theme-preview[data-theme-preview="christmas-day"] { position:relative; }
-.theme-preview[data-theme-preview="frosted-midnight"] .theme-limited-glint-badge,
-.theme-preview[data-theme-preview="christmas-day"] .theme-limited-glint-badge { position:absolute; z-index:2; top:8px; right:8px; width:22px; height:22px; margin:0; display:grid; place-items:center; border-radius:50%; animation:fmBadgePulse 2.8s ease-in-out infinite; }
-.theme-preview[data-theme-preview="frosted-midnight"] .theme-limited-glint-badge { border:1px solid rgba(233,199,126,.55); background:rgba(13,25,40,.85); box-shadow:0 0 8px rgba(141,220,242,.3); }
+/* ---- Picker tile badge (Frosted Midnight's star) ---- */
+.theme-preview[data-theme-preview="frosted-midnight"] { position:relative; }
+.theme-preview[data-theme-preview="frosted-midnight"] .theme-limited-glint-badge { position:absolute; z-index:2; top:8px; right:8px; width:22px; height:22px; margin:0; display:grid; place-items:center; border-radius:50%; animation:fmBadgePulse 2.8s ease-in-out infinite; border:1px solid rgba(233,199,126,.55); background:rgba(13,25,40,.85); box-shadow:0 0 8px rgba(141,220,242,.3); }
 .theme-preview[data-theme-preview="frosted-midnight"] .theme-limited-glint-badge svg { fill:#E9C77E; filter:drop-shadow(0 0 2px rgba(233,199,126,.8)); }
-.theme-preview[data-theme-preview="christmas-day"] .theme-limited-glint-badge { border:1px solid rgba(233,199,126,.6); background:rgba(11,27,19,.88); box-shadow:0 0 8px rgba(229,83,75,.35); }
-.theme-preview[data-theme-preview="christmas-day"] .theme-limited-glint-badge svg { width:15px; height:15px; }
 @keyframes fmBadgePulse { 0%,100% { transform:scale(1); opacity:.9; } 50% { transform:scale(1.08); opacity:1; } }
-@media (max-width:720px) { .theme-preview[data-theme-preview="frosted-midnight"] .theme-limited-glint-badge, .theme-preview[data-theme-preview="christmas-day"] .theme-limited-glint-badge { top:2px; right:2px; width:16px; height:16px; } }
+@media (max-width:720px) { .theme-preview[data-theme-preview="frosted-midnight"] .theme-limited-glint-badge { top:2px; right:2px; width:16px; height:16px; } }
 
 /* ---- Frosted Midnight: surfaces ---- */
 html[data-theme="frosted-midnight"] body { background:linear-gradient(180deg,#0B1425 0%,#101D32 34%,#14243A 66%,#203A56 100%); }
@@ -1075,7 +1071,7 @@ html[data-theme="frosted-midnight"] ::selection { background:rgba(141,220,242,.3
 html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:absolute; inset:0; z-index:30; pointer-events:none; background:linear-gradient(90deg, rgba(141,220,242,.5), transparent 30%, transparent 70%, rgba(141,220,242,.5)) top / 100% 1px no-repeat; }
 
 /* ---- Frosted Midnight: ambient layer (#frost-fx), behind the UI ---- */
-#frost-fx, #xmas-fx { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+#frost-fx { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
 #frost-fx { background:
   radial-gradient(1100px 620px at 82% -6%, rgba(141,220,242,.16), transparent 62%),
   radial-gradient(900px 560px at 8% 18%, rgba(32,58,86,.55), transparent 64%),
@@ -1089,7 +1085,7 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 .fm-flake i { display:block; width:100%; height:100%; border-radius:50%; background:#F2F9FD; box-shadow:0 0 5px 1px rgba(220,240,252,.45); animation:fmSway var(--sw) ease-in-out infinite alternate; }
 @keyframes fmFall { to { transform:translate3d(var(--dx),calc(100vh + 24px),0); } }
 @keyframes fmSway { from { transform:translateX(-7px); } to { transform:translateX(7px); } }
-#frost-fx.fm-paused .fm-flake, #frost-fx.fm-paused .fm-flake i, #frost-fx.fm-paused .fm-glow, #xmas-fx.fm-paused * { animation-play-state:paused; }
+#frost-fx.fm-paused .fm-flake, #frost-fx.fm-paused .fm-flake i, #frost-fx.fm-paused .fm-glow { animation-play-state:paused; }
 .fm-art { position:absolute; display:block; overflow:visible; }
 .fm-forest { right:2%; bottom:10px; width:min(46vw,560px); opacity:.55; }
 .fm-snowman { right:calc(2% + min(40vw,490px)); bottom:6px; width:92px; opacity:.6; }
@@ -1104,31 +1100,6 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 @media (max-width:720px) { .fm-forest, .fm-snowman, .fm-corner { display:none; } .fm-orn-row { width:70vw; left:6%; } }
 @media (prefers-reduced-motion: reduce) { .fm-flake { display:none; } .fm-glow, .fm-orn, .fm-lt { animation:none; } }
 
-/* =========================================================================
-   CHRISTMAS DAY — separate exclusive theme (its own palette, effects layer #xmas-fx and tree icon).
-   Not part of Frosted Midnight.
-   ========================================================================= */
-html[data-theme="christmas-day"] body { background:linear-gradient(165deg,#0A1812 0%,#0E2118 50%,#13291D 100%); }
-html[data-theme="christmas-day"] #auth-fx { display:none; }
-html[data-theme="christmas-day"] #app-screen, html[data-theme="christmas-day"] #auth-screen { position:relative; z-index:1; }
-html[data-theme="christmas-day"] #app-screen { background:transparent; border-color:rgba(233,199,126,.3); box-shadow:0 24px 70px rgba(2,8,5,.7), 0 0 46px rgba(200,55,45,.08); }
-html[data-theme="christmas-day"] .main-chat { background:linear-gradient(180deg, rgba(19,41,29,.86), rgba(15,34,24,.94)); }
-html[data-theme="christmas-day"] .sidebar { background:linear-gradient(180deg, rgba(14,33,24,.96), rgba(10,24,18,.98)); border-right:1px solid #355543; }
-html[data-theme="christmas-day"] .sidebar-header, html[data-theme="christmas-day"] .chat-header { background:linear-gradient(90deg,#163123,#1D3A29); border-bottom:2px solid transparent; border-image:linear-gradient(90deg,#C8372D,#E9C77E,#2F8F5B,#E9C77E,#C8372D) 1; }
-html[data-theme="christmas-day"] .chat-input { background:rgba(10,24,18,.9); border-top:1px solid #355543; }
-html[data-theme="christmas-day"] input, html[data-theme="christmas-day"] select, html[data-theme="christmas-day"] textarea { background:#122A1E; border-color:#355543; color:#F6EFE6; }
-html[data-theme="christmas-day"] input::placeholder, html[data-theme="christmas-day"] textarea::placeholder { color:#C9D8C5; opacity:.8; }
-html[data-theme="christmas-day"] .card { background:rgba(22,49,35,.9); border:1px solid rgba(233,199,126,.2); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
-html[data-theme="christmas-day"] .modal { background:rgba(5,14,9,.58); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
-html[data-theme="christmas-day"] h1, html[data-theme="christmas-day"] h2, html[data-theme="christmas-day"] h3, html[data-theme="christmas-day"] h4, html[data-theme="christmas-day"] .home-greeting-title, html[data-theme="christmas-day"] .home-greeting-name { color:#E9C77E; }
-html[data-theme="christmas-day"] #send-btn, html[data-theme="christmas-day"] .wizard-chip.selected, html[data-theme="christmas-day"] .settings-tab.active { background:linear-gradient(135deg,#C8372D,#9E2A24); color:#FFF6EC; border-color:#E9C77E; }
-html[data-theme="christmas-day"] .icon-btn:hover, html[data-theme="christmas-day"] .settings-tab:hover, html[data-theme="christmas-day"] .popover-dropdown-item:hover, html[data-theme="christmas-day"] .status-option:hover { background:#24432F; }
-html[data-theme="christmas-day"] .unread-dot { background:#E9C77E; }
-#xmas-fx { background:radial-gradient(900px 600px at 50% 112%, rgba(200,55,45,.16), transparent 62%), linear-gradient(170deg,#0A1812,#0E2118 55%,#13291D); }
-.xm-lights { position:absolute; left:0; top:0; width:100%; height:46px; opacity:.85; }
-.xm-tree { right:3%; bottom:8px; width:min(30vw,300px); opacity:.62; }
-.xm-gifts { right:calc(3% + min(28vw,280px)); bottom:6px; width:130px; opacity:.6; }
-@media (max-width:720px) { .xm-tree, .xm-gifts { display:none; } }
 
 /* ===== Rangoli Diwali — exclusive profile frame (Midnight Diwali palette: antique gold, deep violet, jewel accents) =====
    script.js wraps any avatar with the frame-rangoli class in .rangoli-wrap. The ring art (rangoli-diwali-frame.svg) is
@@ -1756,7 +1727,6 @@ html[data-theme="christmas-day"] .unread-dot { background:#E9C77E; }
 }
 /* navy & gold: Midnight Diwali theme, or whenever the Diwali pack is showing */
 html[data-theme="frosted-midnight"] .sticker-pane { --st-accent:#8DDCF2; --st-accent-hi:#B5ECF9; --st-on-accent:#0D1928; }
-html[data-theme="christmas-day"] .sticker-pane { --st-accent:#E9C77E; --st-accent-hi:#F3DDA5; --st-on-accent:#0B1B13; }
 .sticker-pane[data-pack="diwali-2026"] { --st-accent:#D6A84B; --st-accent-hi:#F5D98A; --st-on-accent:#090D20; }
 
 /* the picker is a little roomier on the Stickers tab (the other tabs keep their size) */

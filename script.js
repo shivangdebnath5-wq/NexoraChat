@@ -1433,7 +1433,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
 /* ===== Winter Wonderland — Frosted Midnight theme FX (replaces Midnight Diwali; Diwali code archived in archive/) =====
    Same lifecycle as the old theme FX: the #frost-fx layer exists only while data-theme="frosted-midnight".
    Snowfall = a handful of DOM flakes animated with CSS transform only (no per-frame JS, no canvas), paused while the
-   tab is hidden, removed with prefers-reduced-motion. Christmas Day (#xmas-fx) is a separate theme with its own layer. */
+   tab is hidden, removed with prefers-reduced-motion. */
 (function initWinterThemes() {
   const reduceMq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches:false };
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -1448,17 +1448,6 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   }
   const flakeCount = () => window.innerWidth < 640 ? 14 : 30;
 
-  const defs = `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-    <symbol id="fm-pine" viewBox="0 0 60 100"><rect x="27" y="86" width="6" height="14" fill="#2B2F36"/>
-      <path d="M30 4 L46 36 H14 Z" fill="#1B3B3A"/><path d="M30 24 L52 62 H8 Z" fill="#173533"/><path d="M30 46 L58 88 H2 Z" fill="#143030"/>
-      <path d="M30 4 L38 20 Q30 15 22 20 Z" fill="#E8F4FB"/><path d="M30 24 L41 43 Q35 39 30 43 Q25 39 19 43 Z" fill="#DCEBF5"/><path d="M30 46 L46 70 Q38 65 30 70 Q22 65 14 70 Z" fill="#E8F4FB"/>
-      <circle cx="26" cy="58" r="1.8" fill="#E9C77E"/><circle cx="36" cy="40" r="1.6" fill="#8DDCF2"/><circle cx="22" cy="76" r="1.8" fill="#D98291"/></symbol>
-    <symbol id="fm-man" viewBox="0 0 60 100"><ellipse cx="30" cy="92" rx="26" ry="7" fill="#E8F4FB"/>
-      <circle cx="30" cy="70" r="21" fill="#E8F4FB"/><circle cx="30" cy="44" r="15" fill="#F2F9FD"/><circle cx="30" cy="22" r="11" fill="#F7FBFE"/>
-      <path d="M18 34 Q30 42 42 34 L44 40 Q30 48 16 40 Z" fill="#D98291"/><rect x="21" y="6" width="18" height="9" rx="2" fill="#17283D"/><rect x="17" y="13" width="26" height="3" rx="1.5" fill="#17283D"/>
-      <circle cx="26" cy="20" r="1.4" fill="#0D1928"/><circle cx="34" cy="20" r="1.4" fill="#0D1928"/><path d="M30 24 L38 26 L30 27 Z" fill="#E9A15B"/>
-      <circle cx="30" cy="50" r="1.5" fill="#0D1928"/><circle cx="30" cy="58" r="1.5" fill="#0D1928"/></symbol>
-  </defs></svg>`;
 
   /* Frosted Midnight scene: pixel-art snowy forest built from the sprites in /frosted-elements/elements
      (see frosted-elements/elements/README.md). Layers back→front: stars + icy glow, far trees, far bank,
@@ -1513,16 +1502,6 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     return h;
   }
 
-  const xmasDecor = `${defs}
-    <svg class="xm-lights" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true"><path d="M0 6 Q100 34 200 10 T400 10 T600 10 T800 10 T1000 10 T1200 8" stroke="#1F4A3E" stroke-width="2.4" fill="none"/>
-      ${Array.from({ length: 24 }, (_, i) => `<circle class="fm-lt" cx="${25 + i * 50}" cy="${i % 2 ? 24 : 16}" r="4.2" fill="${['#E5534B', '#E9C77E', '#4FAE7B', '#8DDCF2'][i % 4]}"/>`).join('')}</svg>
-    <svg class="fm-art xm-tree" viewBox="0 0 120 150" aria-hidden="true"><rect x="54" y="128" width="12" height="20" fill="#5A4030"/>
-      <path d="M60 6 L90 56 H30Z" fill="#1F6B45"/><path d="M60 34 L102 94 H18Z" fill="#1A5D3B"/><path d="M60 64 L112 132 H8Z" fill="#165132"/>
-      <path d="M60 6 L66 16 Q60 13 54 16Z" fill="#E8F4FB"/><polygon points="60,0 63,7 70,7 64,11 67,18 60,14 53,18 56,11 50,7 57,7" fill="#E9C77E"/>
-      <g><circle class="fm-lt" cx="52" cy="48" r="4" fill="#E5534B"/><circle class="fm-lt" cx="72" cy="78" r="4.5" fill="#E9C77E"/><circle class="fm-lt" cx="44" cy="100" r="4.5" fill="#8DDCF2"/><circle class="fm-lt" cx="80" cy="114" r="4" fill="#E5534B"/><circle class="fm-lt" cx="58" cy="122" r="4" fill="#E9C77E"/></g></svg>
-    <svg class="fm-art xm-gifts" viewBox="0 0 130 60" aria-hidden="true"><rect x="4" y="22" width="40" height="36" fill="#B3282D"/><rect x="21" y="22" width="6" height="36" fill="#E9C77E"/>
-      <rect x="52" y="30" width="34" height="28" fill="#2F8F5B"/><rect x="66" y="30" width="6" height="28" fill="#E9C77E"/><rect x="92" y="18" width="34" height="40" fill="#294B6B"/><rect x="106" y="18" width="6" height="40" fill="#E9C77E"/></svg>`;
-
   function makeFx({ theme, id, decor, px }) {
     let fx = null;
     const onVis = () => { if (fx) fx.classList.toggle('fm-paused', document.hidden); };
@@ -1539,7 +1518,6 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
   }
   makeFx({ theme:'frosted-midnight', id:'frost-fx', decor:frostedDecor, px:true });
-  makeFx({ theme:'christmas-day', id:'xmas-fx', decor:xmasDecor });
 })();
 
 

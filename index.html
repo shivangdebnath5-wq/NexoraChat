@@ -92,7 +92,6 @@
     [data-theme="sage-green"] { --bg-main:#89AF88; --bg-card:#AFAF88; --bg-sidebar:#9CAF88; --text-main:#26301e; --text-muted:#4d5c3c; --border:#7f9770; --primary:rgb(92,138,82); --primary-hover:#4a7341; --msg-sent:#5c8a52; --msg-sent-text:#fff; --msg-received:#9CAF88; --msg-received-text:#26301e; --input-bg:#cfe0c2; --shadow:rgba(60,80,45,.28); }
     [data-theme="durga-puja"] { --bg-main:#171719; --bg-card:#202023; --bg-sidebar:#1b1b1e; --text-main:#FFF8E7; --text-muted:#c9bea8; --border:#51443a; --primary:#8B1E3F; --primary-hover:#a82a4f; --msg-sent:#8B1E3F; --msg-sent-text:#FFF8E7; --msg-received:#292629; --msg-received-text:#FFF8E7; --input-bg:#29272a; --shadow:rgba(0,0,0,.62); --durga-gradient:linear-gradient(110deg,#FDD835 0%,#D6A84B 52%,#8B1E3F 100%); }
     [data-theme="frosted-midnight"] { --bg-main:#17263A; --bg-card:#17283D; --bg-sidebar:#101B2D; --text-main:#E6F1F8; --text-muted:#9BAFC5; --border:#2A3D54; --primary:#8DDCF2; --primary-hover:#B5ECF9; --msg-sent:#8DDCF2; --msg-sent-text:#0D1928; --msg-received:#1C3048; --msg-received-text:#E6F1F8; --input-bg:#0D1928; --shadow:rgba(5,10,20,.72); --frost-hover:#223A54; --frost-active:#294B6B; --frost-heading:#C4D9EA; --frost-gold:#E9C77E; --frost-notify:#D98291; --frost-gradient:linear-gradient(135deg,#17283D 0%,#1C3048 50%,#101B2D 100%); }
-    [data-theme="christmas-day"] { --bg-main:#0E2118; --bg-card:#163123; --bg-sidebar:#0B1B13; --text-main:#F6EFE6; --text-muted:#C9D8C5; --border:#355543; --primary:#C8372D; --primary-hover:#E4574D; --msg-sent:#B3282D; --msg-sent-text:#FFF6EC; --msg-received:#1C3A2A; --msg-received-text:#F6EFE6; --input-bg:#122A1E; --shadow:rgba(2,8,5,.7); }
     [data-theme="halloween"] { --bg-main:#35221D; --bg-card:#3F2A23; --bg-sidebar:#35221D; --text-main:#FFF2DE; --text-muted:#D99A46; --border:#6B4330; --primary:#C56B2D; --primary-hover:#D99A46; --msg-sent:#71351F; --msg-sent-text:#FFF2DE; --msg-received:#493128; --msg-received-text:#FFF2DE; --input-bg:#493128; --shadow:rgba(18,8,4,.62); --halloween-gradient:linear-gradient(110deg,#71351F 0%,#9B451F 28%,#C56B2D 54%,#D99A46 78%,#35221D 100%); }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
@@ -280,7 +279,6 @@
     [data-theme="royal-eclipse"] .qsp-custom input[type="datetime-local"],
     [data-theme="red-velvet"] .qsp-custom input[type="datetime-local"],
     [data-theme="frosted-midnight"] .qsp-custom input[type="datetime-local"],
-    [data-theme="christmas-day"] .qsp-custom input[type="datetime-local"],
     [data-theme="moonlight-sparkle"] .qsp-custom input[type="datetime-local"] { color-scheme: dark; }
     .qsp-custom button { margin-bottom: 0; padding: 8px; font-size: 12px; }
 
@@ -1121,7 +1119,7 @@
             <option value="oceanic">Oceanic</option><option value="sakura-mist">Sakura Mist</option>
             <option value="forest-pulse">Forest Pulse</option><option value="solar-flare">Solar Flare</option>
             <option value="arctic-frost">Arctic Frost</option><option value="royal-eclipse">Royal Eclipse</option>
-            <option value="sage-green">Sage Green</option><option value="red-velvet">Red Velvet</option><option value="moonlight-sparkle">Moonlight Sparkle</option><option value="durga-puja">Durga Puja</option><option value="halloween">Halloween</option><option value="frosted-midnight">Winter Wonderland – Frosted Midnight</option><option value="christmas-day">Christmas Day (Exclusive)</option>
+            <option value="sage-green">Sage Green</option><option value="red-velvet">Red Velvet</option><option value="moonlight-sparkle">Moonlight Sparkle</option><option value="durga-puja">Durga Puja</option><option value="halloween">Halloween</option><option value="frosted-midnight">Winter Wonderland – Frosted Midnight</option>
           </select>
           <div id="theme-preview-grid" class="theme-preview-grid" role="radiogroup" aria-label="Choose app theme"></div>
         </div>
@@ -2230,8 +2228,7 @@
       { id: 'moonlight-sparkle', name: 'Moonlight Sparkle', colors: ['#210635', '#7B337E', '#6667AB'] },
       { id: 'durga-puja', name: 'Durga Puja', special: true, colors: ['#171719', '#FFF8E7', '#D6A84B'] },
       { id: 'halloween', name: 'Halloween', special: true, colors: ['#71351F', '#35221D', '#D99A46'] },
-      { id: 'frosted-midnight', name: 'Winter Wonderland – Frosted Midnight', special: true, colors: ['#101B2D', '#17263A', '#8DDCF2'] },
-      { id: 'christmas-day', name: 'Christmas Day', special: true, exclusive: true, icon: 'tree', colors: ['#0B1B13', '#163123', '#C8372D'] }
+      { id: 'frosted-midnight', name: 'Winter Wonderland – Frosted Midnight', special: true, colors: ['#101B2D', '#17263A', '#8DDCF2'] }
     ];
 
     function renderThemeSelector() {
@@ -2247,9 +2244,7 @@
       // Regular themes first, then the "Special" (limited-time) section.
       grid.innerHTML = THEMES.filter(t => !t.special).map(tileHTML).join('')
         + '<div class="theme-section-label" role="presentation"><span aria-hidden="true">⭐</span> Special <em>Limited time</em></div>'
-        + THEMES.filter(t => t.special && !t.exclusive).map(tileHTML).join('')
-        + '<div class="theme-section-label" role="presentation"><span aria-hidden="true">🎄</span> Exclusive <em>Christmas Day only</em></div>'
-        + THEMES.filter(t => t.exclusive).map(tileHTML).join('');
+        + THEMES.filter(t => t.special).map(tileHTML).join('');
     }
 
     function changeTheme(theme) {
