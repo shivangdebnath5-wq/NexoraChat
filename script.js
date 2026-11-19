@@ -1458,12 +1458,47 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
      level deeper under 'frosted-elements/elements/' — every sprite 404ed and onerror quietly removed each
      <img>, which is why only the CSS-only layers (gradient, stars, moon, glow, snowfall) were ever visible. */
   const SPRITE_DIR = 'frosted-elements/elements/';
-  const SPRITE_DIMS = {"trees/pine-tall-01":[146,342],"trees/far/pine-tall-01":[66,154],"trees/mid/pine-tall-01":[102,239],"trees/pine-tall-02":[174,296],"trees/far/pine-tall-02":[78,133],"trees/mid/pine-tall-02":[122,207],"trees/pine-tall-03":[190,297],"trees/far/pine-tall-03":[86,134],"trees/mid/pine-tall-03":[133,208],"trees/pine-large":[252,305],"trees/far/pine-large":[113,137],"trees/mid/pine-large":[176,214],"trees/pine-pair":[256,287],"trees/far/pine-pair":[115,129],"trees/mid/pine-pair":[179,201],"trees/pine-sapling":[177,288],"trees/far/pine-sapling":[80,130],"trees/mid/pine-sapling":[124,202],"trees/pine-snowbase":[306,447],"trees/tree-bare-snow":[126,130],"bushes/bush-snow-01":[115,100],"bushes/bush-snow-02":[128,103],"bushes/bush-snow-03":[127,122],"bushes/bush-holly":[201,192],"snow/mid/bank-rock-01":[198,111],"snow/mid/bank-rock-02":[145,72],"snow/bank-01":[193,87],"snow/mid/bank-01":[193,87],"snow/bank-02":[152,60],"snow/mid/bank-02":[152,60],"snow/bank-03":[244,66],"snow/mid/bank-03":[244,66],"snow/bank-04":[130,53],"snow/mid/bank-04":[130,53],"snow/mid/bank-small":[69,39],"snowmen/snowman-santa":[148,209],"snowmen/snowman-tophat":[144,223],"snowmen/snowman-earmuffs":[155,196],"snowmen/snowman-broom":[177,207],"snowmen/snowman-sitting":[144,152],"snowmen/snowman-sleeping":[170,152],"snowmen/snowman-small":[87,101],"props/fence":[117,95],"props/sign-01":[101,143],"props/banner-snowflake":[117,156],"props/lantern":[62,105],"props/barrel":[71,95],"props/sled":[163,61],"crystals/crystal-cluster":[161,134],"crystals/crystal-pair":[130,123]};
+  const SPRITE_DIMS = {"trees/pine-tall-01":[146,342],"trees/far/pine-tall-01":[66,154],"trees/mid/pine-tall-01":[102,239],"trees/pine-tall-02":[174,296],"trees/far/pine-tall-02":[78,133],"trees/mid/pine-tall-02":[122,207],"trees/pine-tall-03":[190,297],"trees/far/pine-tall-03":[86,134],"trees/mid/pine-tall-03":[133,208],"trees/pine-large":[252,305],"trees/far/pine-large":[113,137],"trees/mid/pine-large":[176,214],"trees/pine-pair":[256,287],"trees/far/pine-pair":[115,129],"trees/mid/pine-pair":[179,201],"trees/pine-sapling":[177,288],"trees/far/pine-sapling":[80,130],"trees/mid/pine-sapling":[124,202],"trees/pine-snowbase":[306,447],"trees/tree-bare-snow":[126,130],"bushes/bush-snow-01":[115,100],"bushes/bush-snow-02":[128,103],"bushes/bush-snow-03":[127,122],"bushes/bush-holly":[201,192],"snow/mid/bank-rock-01":[198,111],"snow/mid/bank-rock-02":[145,72],"snow/bank-01":[193,87],"snow/mid/bank-01":[193,87],"snow/bank-02":[152,60],"snow/mid/bank-02":[152,60],"snow/bank-03":[244,66],"snow/mid/bank-03":[244,66],"snow/bank-04":[130,53],"snow/mid/bank-04":[130,53],"snow/mid/bank-small":[69,39],"snowmen/snowman-santa":[148,209],"snowmen/snowman-tophat":[144,223],"snowmen/snowman-earmuffs":[155,196],"snowmen/snowman-broom":[177,207],"snowmen/snowman-sitting":[144,152],"snowmen/snowman-sleeping":[170,152],"snowmen/snowman-small":[87,101],"props/fence":[117,95],"props/sign-01":[101,143],"props/banner-snowflake":[117,156],"props/lantern":[62,105],"props/barrel":[71,95],"props/sled":[163,61],"crystals/crystal-cluster":[161,134],"crystals/crystal-pair":[130,123],"christmas/xmas-tree":[288,364],"christmas/gift-pile":[322,265],"christmas/stocking-red":[142,280],"christmas/stocking-green":[143,282],"christmas/candy-canes":[262,275],"christmas/wreath":[298,296],"christmas/garland-swag":[368,169]};
+
+  /* ---- Christmas mode: a temporary seasonal overlay on top of Frosted Midnight, not a separate theme.
+     Active automatically Dec 25-27 (any year, based on the visitor's local clock), reverting to plain
+     Frosted Midnight on Dec 28. window.forceChristmasMode(on) lets you preview it without waiting. */
+  const XMAS_FORCE_KEY = 'fm_xmas_force';
+  function isChristmasMode() {
+    try { if (localStorage.getItem(XMAS_FORCE_KEY) === '1') return true; if (localStorage.getItem(XMAS_FORCE_KEY) === '0') return false; } catch (e) {}
+    const d = new Date(); return d.getMonth() === 11 && d.getDate() >= 25 && d.getDate() <= 27;
+  }
+  window.forceChristmasMode = function (on) {
+    try {
+      if (on === undefined) { localStorage.removeItem(XMAS_FORCE_KEY); console.log('[Nexora] Christmas mode override cleared — back to the real date.'); }
+      else { localStorage.setItem(XMAS_FORCE_KEY, on ? '1' : '0'); console.log('[Nexora] Christmas mode override: ' + (on ? 'ON' : 'OFF') + '. Switch to Frosted Midnight (or reload) to see it.'); }
+    } catch (e) {}
+    syncXmasMode();
+  };
+  function syncXmasMode() {
+    const html = document.documentElement;
+    const on = html.getAttribute('data-theme') === 'frosted-midnight' && isChristmasMode();
+    if (on) html.setAttribute('data-fm-xmas', '1'); else html.removeAttribute('data-fm-xmas');
+  }
   function seeded(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function spr(path, left, bottom, k, extra) {
     const d = SPRITE_DIMS[path]; if (!d) return '';
     const o = extra || {};
-    return `<img class="fm-spr${o.m ? ' fm-m' : ''}" src="${SPRITE_DIR}${path}.png" alt="" draggable="false" decoding="async" onerror="this.remove()" style="left:${left.toFixed(1)}%;bottom:${bottom}px;width:${Math.round(d[0] * k)}px${o.flip ? ';--f:-1' : ''}">`;
+    const pos = o.top != null ? `top:${o.top}px` : `bottom:${bottom}px`;
+    return `<img class="fm-spr${o.m ? ' fm-m' : ''}" src="${SPRITE_DIR}${path}.png" alt="" draggable="false" decoding="async" onerror="this.remove()" style="left:${left.toFixed(1)}%;${pos};width:${Math.round(d[0] * k)}px${o.flip ? ';--f:-1' : ''}">`;
+  }
+  // Christmas mode overlay: a handful of festive sprites added on top of the base winter scene when
+  // isChristmasMode() is true. Deliberately sparse (7 small pieces, used once each) so it reads as "Frosted
+  // Midnight dressed for Christmas" rather than a different scene. Ground pieces avoid the 34-61% band kept
+  // clear of clutter; the wreath/garland hang from the very top edge, out of that band entirely.
+  function christmasDecor(small) {
+    let h = spr('christmas/xmas-tree', 10, 66, .5, { m: 1 }) + spr('christmas/gift-pile', 78, 38, .48, { m: 1 });
+    if (!small) {
+      h += spr('christmas/candy-canes', 26, 44, .32)
+        + spr('christmas/stocking-red', 91, 138, .3) + spr('christmas/stocking-green', 95.5, 124, .28)
+        + spr('christmas/wreath', 6, 0, .28, { top: 14 }) + spr('christmas/garland-swag', 42, 0, .46, { top: 8 });
+    }
+    return h;
   }
   function frostedDecor() {
     const small = window.innerWidth < 720, rnd = seeded(2026);
@@ -1491,6 +1526,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     FB.forEach((b, i) => { h += spr('snow/' + b, (i + .5) * (100 / FB.length) + rnd() * 2 - 1, -20 - Math.round(rnd() * 8), small ? 1 : 1.2); });
     h += '<div class="fm-floor"></div>';
     [['25%', 130], ['90%', 110]].forEach(l => { h += `<div class="fm-lantern" style="left:${l[0]}"><i style="height:${l[1]}px"></i>${spr('props/lantern', 0, 0, .42)}</div>`; });
+    if (document.documentElement.hasAttribute('data-fm-xmas')) h += christmasDecor(small);
     return h;
   }
   function pixelSnow(count) {
@@ -1503,7 +1539,7 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   }
 
   function makeFx({ theme, id, decor, px }) {
-    let fx = null;
+    let fx = null, builtXmas = false;
     const onVis = () => { if (fx) fx.classList.toggle('fm-paused', document.hidden); };
     function activate() {
       if (fx || !document.body) return;
@@ -1511,13 +1547,49 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
       fx.innerHTML = (typeof decor === 'function' ? decor() : decor) + (reduceMq.matches ? '' : (px ? pixelSnow(flakeCount()) : snow(flakeCount())));
       document.body.insertBefore(fx, document.body.firstChild);
       document.addEventListener('visibilitychange', onVis);
+      builtXmas = document.documentElement.hasAttribute('data-fm-xmas');
     }
     function deactivate() { if (fx) { fx.remove(); fx = null; } document.removeEventListener('visibilitychange', onVis); }
-    function sync() { document.documentElement.getAttribute('data-theme') === theme ? activate() : deactivate(); }
-    new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+    function sync() {
+      const match = document.documentElement.getAttribute('data-theme') === theme;
+      // Rebuild if Christmas mode toggled while already on this theme (e.g. the console override, or the
+      // date rolling over at midnight with the tab left open) so the decor layer picks up the change.
+      if (match && fx && document.documentElement.hasAttribute('data-fm-xmas') !== builtXmas) deactivate();
+      match ? activate() : deactivate();
+    }
+    new MutationObserver(sync).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme', 'data-fm-xmas'] });
     if (document.body) sync(); else document.addEventListener('DOMContentLoaded', sync);
   }
   makeFx({ theme:'frosted-midnight', id:'frost-fx', decor:frostedDecor, px:true });
+
+  // Keep data-fm-xmas in sync with the theme and the calendar: on load, whenever the theme changes, when the
+  // tab regains focus (catches the date rolling over at midnight while it was in the background), and on a
+  // periodic timer as a backstop for a tab left open and focused across midnight.
+  syncXmasMode();
+  new MutationObserver(syncXmasMode).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncXmasMode(); });
+  setInterval(syncXmasMode, 30 * 60 * 1000);
+
+  // Hidden Christmas Easter egg: type "letitsnow" anywhere on the page (no need to focus an input) while
+  // Christmas mode is active for a one-off gold/red spark burst + greeting. Never mentioned in the UI.
+  let eggBuf = '';
+  const EGG_PHRASE = 'letitsnow';
+  function fireXmasEgg() {
+    if (!document.documentElement.hasAttribute('data-fm-xmas') || document.getElementById('fm-xmas-egg') || reduceMq.matches) return;
+    const wrap = document.createElement('div'); wrap.id = 'fm-xmas-egg'; wrap.setAttribute('aria-hidden', 'true');
+    let sparks = '';
+    for (let i = 0; i < 24; i++) {
+      sparks += `<i style="left:${rnd(1, 99).toFixed(1)}%;--d:${rnd(2.2, 3.8).toFixed(2)}s;--dl:${rnd(0, .6).toFixed(2)}s;color:${Math.random() < .5 ? '#D9B66F' : '#A82832'}"></i>`;
+    }
+    wrap.innerHTML = `<div class="fm-xmas-egg-spark">${sparks}</div><div class="fm-xmas-egg-msg">🎄 Merry Christmas from Nexora!</div>`;
+    document.body.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 3600);
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || !e.key || e.key.length !== 1) { eggBuf = ''; return; }
+    eggBuf = (eggBuf + e.key.toLowerCase()).slice(-EGG_PHRASE.length);
+    if (eggBuf === EGG_PHRASE) { eggBuf = ''; fireXmasEgg(); }
+  });
 })();
 
 

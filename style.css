@@ -1070,6 +1070,52 @@ html[data-theme="frosted-midnight"] ::selection { background:rgba(141,220,242,.3
 
 html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:absolute; inset:0; z-index:30; pointer-events:none; background:linear-gradient(90deg, rgba(141,220,242,.5), transparent 30%, transparent 70%, rgba(141,220,242,.5)) top / 100% 1px no-repeat; }
 
+/* ---- Frosted Midnight: Christmas mode (temporary seasonal re-skin, Dec 25-27 or window.forceChristmasMode(true)) ----
+   Palette: Pine Green #123D2B, Christmas Red #A82832, Deep Burgundy #651E2B, Evergreen #205B40, Warm Gold
+   #D9B66F, Snow White #F4F1E8. Every selector below is the exact Frosted Midnight selector above it, scoped
+   with the extra [data-fm-xmas="1"] attribute — same layout, same elements, only the paint changes — and the
+   added attribute makes each selector more specific, so these always win over the plain-winter rules above. */
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] body { background:linear-gradient(165deg,#0B1425 0%,#123D2B 32%,#1C3048 58%,#651E2B 100%); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] #app-screen { border-color:rgba(217,182,111,.3); box-shadow:0 24px 70px rgba(5,15,10,.75), 0 0 50px rgba(168,40,50,.14); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .main-chat { background:linear-gradient(180deg, rgba(18,61,43,.56) 0%, rgba(101,30,43,.32) 46%, rgba(16,29,50,.4) 76%, rgba(16,29,50,.22) 100%); }
+/* Premium frosted-glass sidebar: translucent layered green/burgundy + blur (safe to blur, unlike flat low-opacity —
+   blur softens the ambient forest behind it into a glow rather than letting sharp sprite edges show through),
+   with a pair of slow-pulsing Christmas-coloured glow strips along its edges. */
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar { position:relative; background:linear-gradient(180deg, rgba(15,46,32,.9) 0%, rgba(22,56,38,.84) 45%, rgba(101,30,43,.38) 100%); border-right:1px solid rgba(217,182,111,.3); -webkit-backdrop-filter:blur(18px) saturate(1.15); backdrop-filter:blur(18px) saturate(1.15); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar::before, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar::after { content:''; position:absolute; top:0; bottom:0; width:3px; pointer-events:none; background:linear-gradient(180deg,#A82832,#D9B66F 35%,#205B40 70%,#A82832); opacity:.45; animation:fmXmasGlow 6s ease-in-out infinite; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar::before { left:0; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar::after { right:0; box-shadow:-6px 0 16px -4px rgba(217,182,111,.35); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar-header { background:linear-gradient(180deg,#651E2B,#123D2B); border-bottom:1px solid rgba(217,182,111,.3); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .chat-header { background:linear-gradient(90deg, rgba(18,61,43,.95), rgba(101,30,43,.82)); border-bottom:1px solid rgba(217,182,111,.3); box-shadow:inset 0 1px 0 rgba(217,182,111,.16); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .chat-input { background:rgba(15,46,32,.82); border-top:1px solid rgba(217,182,111,.3); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] input, html[data-theme="frosted-midnight"][data-fm-xmas="1"] select, html[data-theme="frosted-midnight"][data-fm-xmas="1"] textarea { background:#0F2E20; border-color:#3A5A47; color:#F4F1E8; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] input:focus, html[data-theme="frosted-midnight"][data-fm-xmas="1"] select:focus, html[data-theme="frosted-midnight"][data-fm-xmas="1"] textarea:focus { border-color:#D9B66F; box-shadow:0 0 0 2px rgba(217,182,111,.22); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] input::placeholder, html[data-theme="frosted-midnight"][data-fm-xmas="1"] textarea::placeholder { color:#CFC9B8; opacity:.85; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .card { background-color:rgba(22,56,38,.84); background-image:linear-gradient(160deg, rgba(217,182,111,.1), rgba(168,40,50,.05) 45%, transparent), radial-gradient(rgba(244,241,232,.05) 1px, transparent 1.3px); background-size:auto, 7px 7px; border:1px solid rgba(217,182,111,.2); box-shadow:inset 0 1px 0 rgba(244,241,232,.08), 0 18px 50px rgba(5,10,8,.55); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .modal { background:rgba(10,22,16,.58); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .emoji-picker, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .extension-menu, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .quick-status-popover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .add-friend-menu, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .message-hover-bar { background:rgba(22,56,38,.92); border:1px solid rgba(217,182,111,.22); box-shadow:0 12px 34px rgba(5,10,8,.55); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .message.received { box-shadow:inset 0 0 0 1px #3A5A47; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] h1, html[data-theme="frosted-midnight"][data-fm-xmas="1"] h2, html[data-theme="frosted-midnight"][data-fm-xmas="1"] h3, html[data-theme="frosted-midnight"][data-fm-xmas="1"] h4, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-greeting-title { color:#D9B66F; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-greeting-name { color:#F4F1E8; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-greeting-sub, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-clock { color:#CFC9B8; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] #send-btn, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .wizard-chip.selected { background:linear-gradient(135deg,#A82832,#651E2B); color:#F4F1E8; border-color:#D9B66F; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .icon-btn:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .settings-tab:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .popover-dropdown-item:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .status-option:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .extension-option:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .qsp-option:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .pinned-message-item:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sticker-item:hover { background:#1C4731; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .settings-tab.active, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .picker-tab.active, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .qsp-option.active, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sticker-pack-tab.active { background:linear-gradient(135deg,#205B40,#123D2B); color:#F4F1E8; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .unread-dot { background:#A82832; border-color:#0F2E20; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .profile-badges-count, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .gs-count, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .profile-counter { color:#D9B66F; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] ::selection { background:rgba(217,182,111,.3); }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] #app-screen::before { background:linear-gradient(90deg, rgba(217,182,111,.6), transparent 30%, transparent 70%, rgba(168,40,50,.6)) top / 100% 1px no-repeat; }
+@keyframes fmXmasGlow { 0%,100% { opacity:.3; } 50% { opacity:.65; } }
+@media (prefers-reduced-motion: reduce) { html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar::before, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sidebar::after { animation:none; opacity:.5; } }
+
+/* ---- Christmas mode: hidden Easter egg (type "letitsnow" — see script.js) ---- */
+#fm-xmas-egg { position:fixed; inset:0; z-index:9999; pointer-events:none; overflow:hidden; }
+#fm-xmas-egg .fm-xmas-egg-spark { position:absolute; inset:0; }
+#fm-xmas-egg .fm-xmas-egg-spark i { position:absolute; top:-5%; width:6px; height:6px; border-radius:50%; background:currentColor; box-shadow:0 0 6px currentColor; opacity:0; animation:fmEggFall var(--d,3s) ease-in var(--dl,0s) 1 both; }
+#fm-xmas-egg .fm-xmas-egg-msg { position:absolute; left:50%; top:40%; transform:translate(-50%,-50%); font-size:20px; font-weight:700; color:#F4F1E8; text-shadow:0 2px 6px rgba(0,0,0,.5); background:linear-gradient(135deg, rgba(18,61,43,.9), rgba(101,30,43,.8)); padding:14px 26px; border-radius:14px; border:1px solid rgba(217,182,111,.5); box-shadow:0 0 28px rgba(217,182,111,.3); white-space:nowrap; opacity:0; animation:fmEggMsg 3.4s ease both; }
+@keyframes fmEggFall { 0% { transform:translateY(0) scale(1); opacity:0; } 10% { opacity:1; } 100% { transform:translateY(110vh) scale(.4); opacity:0; } }
+@keyframes fmEggMsg { 0% { opacity:0; transform:translate(-50%,-40%) scale(.9); } 12% { opacity:1; transform:translate(-50%,-50%) scale(1); } 82% { opacity:1; } 100% { opacity:0; transform:translate(-50%,-55%) scale(.95); } }
+
 /* ---- Frosted Midnight: ambient layer (#frost-fx), behind the UI ---- */
 #frost-fx { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
 #frost-fx { background:
@@ -1727,6 +1773,7 @@ html[data-theme="frosted-midnight"] #app-screen::before { content:''; position:a
 }
 /* navy & gold: Midnight Diwali theme, or whenever the Diwali pack is showing */
 html[data-theme="frosted-midnight"] .sticker-pane { --st-accent:#8DDCF2; --st-accent-hi:#B5ECF9; --st-on-accent:#0D1928; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sticker-pane { --st-accent:#D9B66F; --st-accent-hi:#F4F1E8; --st-on-accent:#123D2B; }
 .sticker-pane[data-pack="diwali-2026"] { --st-accent:#D6A84B; --st-accent-hi:#F5D98A; --st-on-accent:#090D20; }
 
 /* the picker is a little roomier on the Stickers tab (the other tabs keep their size) */

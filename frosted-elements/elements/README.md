@@ -10,6 +10,7 @@ Keep this folder next to index.html (it is loaded as `elements/<folder>/<name>.p
 | snowmen/   | santa, top hat, earmuffs, broom, sitting, sleeping, small, mound      |
 | props/     | fence, signs, banner, lantern, barrel, crate, sled, stone wall/arch   |
 | crystals/  | ice crystals                                                          |
+| christmas/ | seasonal Christmas overlay sprites (tree, wreath, garland, gift pile, stockings, candy canes) — used only when Frosted Midnight's Christmas mode is active (see `isChristmasMode()` in script.js); the base Frosted Midnight scene never references these |
 
 Add a sprite: drop the PNG in the right folder, then add its width/height to `SPRITE_DIMS` in script.js
 (search `SPRITE_DIMS`) and one `spr('folder/name', left%, bottom px, scale)` line in `frostedDecor()`.
