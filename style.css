@@ -1098,6 +1098,12 @@ html[data-theme="frosted-midnight"][data-fm-xmas="1"] .message.received { box-sh
 html[data-theme="frosted-midnight"][data-fm-xmas="1"] h1, html[data-theme="frosted-midnight"][data-fm-xmas="1"] h2, html[data-theme="frosted-midnight"][data-fm-xmas="1"] h3, html[data-theme="frosted-midnight"][data-fm-xmas="1"] h4, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-greeting-title { color:#D9B66F; }
 html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-greeting-name { color:#F4F1E8; }
 html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-greeting-sub, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .home-clock { color:#CFC9B8; }
+html[data-theme="frosted-midnight"][data-fm-xmas="1"] .xmas-greeting-glow { animation:fmXmasGreetingGlow 2.6s ease-in-out infinite; }
+@keyframes fmXmasGreetingGlow {
+  0%, 100% { text-shadow:0 0 10px rgba(217,182,111,.55), 0 0 22px rgba(168,40,50,.35); }
+  50% { text-shadow:0 0 18px rgba(217,182,111,.9), 0 0 34px rgba(32,91,64,.6), 0 0 44px rgba(168,40,50,.5); }
+}
+@media (prefers-reduced-motion: reduce) { html[data-theme="frosted-midnight"][data-fm-xmas="1"] .xmas-greeting-glow { animation:none; text-shadow:0 0 14px rgba(217,182,111,.7), 0 0 26px rgba(168,40,50,.4); } }
 html[data-theme="frosted-midnight"][data-fm-xmas="1"] #send-btn, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .wizard-chip.selected { background:linear-gradient(135deg,#A82832,#651E2B); color:#F4F1E8; border-color:#D9B66F; }
 html[data-theme="frosted-midnight"][data-fm-xmas="1"] .icon-btn:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .settings-tab:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .popover-dropdown-item:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .status-option:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .extension-option:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .qsp-option:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .pinned-message-item:hover, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sticker-item:hover { background:#1C4731; }
 html[data-theme="frosted-midnight"][data-fm-xmas="1"] .settings-tab.active, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .picker-tab.active, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .qsp-option.active, html[data-theme="frosted-midnight"][data-fm-xmas="1"] .sticker-pack-tab.active { background:linear-gradient(135deg,#205B40,#123D2B); color:#F4F1E8; }

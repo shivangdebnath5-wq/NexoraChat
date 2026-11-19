@@ -1084,10 +1084,17 @@ function applyMessageGrouping() {
     header.classList.toggle('is-home', isHome);
     if (!isHome) return;
     const now = new Date();
-    const [hello, sub] = greetingFor(now);
+    // Christmas mode swaps the time-based greeting for a festive one and lights
+    // the title up with a glow in the Christmas palette; the time-based
+    // greeting returns the moment Christmas mode ends.
+    const xmas = document.documentElement.hasAttribute('data-fm-xmas');
+    let hello, sub;
+    if (xmas) { hello = 'Merry Christmas'; sub = 'Wishing you a cosy, joyful season.'; }
+    else { [hello, sub] = greetingFor(now); }
     setText(helloEl, hello);
-    setText(nameEl, currentUser ? `, ${currentUser}` : '');
+    setText(nameEl, currentUser ? (xmas ? `, ${currentUser}!` : `, ${currentUser}`) : (xmas ? '!' : ''));
     setText(subEl, sub);
+    helloEl?.classList.toggle('xmas-greeting-glow', xmas);
     setText(timeEl, now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
     setText(dateEl, now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }));
   }
@@ -1098,6 +1105,9 @@ function applyMessageGrouping() {
   const observer = new MutationObserver(refreshHomeHeader);
   [document.querySelector('.main-chat'), document.getElementById('chat-header-avatar-container'), document.getElementById('app-screen')]
     .forEach(node => { if (node) observer.observe(node, { attributes: true, attributeFilter: ['class'] }); });
+  // Also catch Christmas mode switching on/off (theme change, console override,
+  // or the date rolling into/out of Dec 25-27) so the greeting swaps instantly.
+  new MutationObserver(refreshHomeHeader).observe(document.documentElement, { attributes: true, attributeFilter: ['data-fm-xmas'] });
 
   // Clock: tick on the minute boundary (the display has no seconds), and
   // catch up immediately when the tab/window comes back to the foreground.
