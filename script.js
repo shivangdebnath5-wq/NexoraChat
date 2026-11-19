@@ -1492,10 +1492,13 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
   // Midnight dressed for Christmas" rather than a different scene. Ground pieces avoid the 34-61% band kept
   // clear of clutter; the wreath/garland hang from the very top edge, out of that band entirely.
   function christmasDecor(small) {
-    let h = spr('christmas/xmas-tree', 10, 66, .5, { m: 1 }) + spr('christmas/gift-pile', 78, 38, .48, { m: 1 });
+    // Centrepiece: a big tree front-and-centre (not tucked behind the sidebar) with the gifts right beside
+    // it and the candy canes tucked at its base. Everything else (snowmen, crystals) is pushed out to the
+    // sides in frostedDecor()'s xmas-mode layout below, so nothing crowds the tree.
+    let h = spr('christmas/xmas-tree', 48, 60, .85, { m: 1 }) + spr('christmas/gift-pile', 59, 34, .5, { m: 1 });
     if (!small) {
-      h += spr('christmas/candy-canes', 26, 44, .32)
-        + spr('christmas/stocking-red', 91, 138, .3) + spr('christmas/stocking-green', 95.5, 124, .28)
+      h += spr('christmas/candy-canes', 41, 32, .3)
+        + spr('christmas/stocking-red', 90, 0, .3, { top: 130 }) + spr('christmas/stocking-green', 95, 0, .28, { top: 118 })
         + spr('christmas/wreath', 6, 0, .28, { top: 14 }) + spr('christmas/garland-swag', 42, 0, .46, { top: 8 });
     }
     return h;
@@ -1517,16 +1520,28 @@ window.addEventListener('storage', event => { if (event.key === 'nexora_spectral
     ['bank-01', 'bank-03', 'bank-02', 'bank-04'].slice(0, small ? 2 : 4).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length) + rnd() * 3, 52, small ? 1 : 1.2); });
     for (let i = 0; i < midN; i++) h += spr('trees/mid/' + FAR[(i * 5 + 2) % FAR.length], (i + .5) / midN * 100 + rnd() * 4 - 2, 40 + Math.round(rnd() * 24), 1, { flip: i % 2 });
     ['bank-02', 'bank-04', 'bank-01'].slice(0, small ? 2 : 3).forEach((b, i, arr) => { h += spr('snow/mid/' + b, (i + .5) * (100 / arr.length), 26, small ? 1.1 : 1.4); });
-    // near forest, props and snowmen: [sprite, left%, bottom px, scale, mobile-visible] — kept clear of the 34-61% middle band
-    [['trees/pine-snowbase', 15, 66, .75], ['bushes/bush-snow-03', 20, 50, .75], ['crystals/crystal-pair', 34, 38, .55],
-     ['trees/pine-large', 66, 70, .95, 1], ['bushes/bush-holly', 61, 48, .75, 1], ['props/sign-01', 72, 42, .75],
-     ['bushes/bush-snow-02', 86, 46, .75], ['crystals/crystal-cluster', 96, 34, .5]].forEach(a => { h += spr(a[0], a[1], a[2], a[3], { m: !a[4] }); });
-    [['snowman-tophat', 20, 74, .68, 1], ['snowman-santa', 80, 72, .7, 1], ['snowman-small', 90, 66, .75]].forEach(a => { h += spr('snowmen/' + a[0], a[1], a[2], a[3], { m: !a[4] }); });
+    // near forest, props and snowmen: [sprite, left%, bottom px, scale, mobile-visible] — kept clear of the 34-61%
+    // middle band; in Christmas mode that band instead holds the centred tree, so everything here is spread
+    // further out to the sides (wider gaps from 40-62%, and from each other) to keep clear of it and of the
+    // snowmen/crystals that would otherwise cluster together.
+    const xmas = document.documentElement.hasAttribute('data-fm-xmas');
+    (xmas
+      ? [['trees/pine-snowbase', 13, 66, .75], ['bushes/bush-snow-03', 19, 50, .75], ['crystals/crystal-pair', 26, 38, .55],
+         ['bushes/bush-holly', 68, 48, .75, 1], ['trees/pine-large', 76, 70, .95, 1], ['props/sign-01', 84, 42, .75],
+         ['bushes/bush-snow-02', 92, 46, .75], ['crystals/crystal-cluster', 99, 34, .5]]
+      : [['trees/pine-snowbase', 15, 66, .75], ['bushes/bush-snow-03', 20, 50, .75], ['crystals/crystal-pair', 34, 38, .55],
+         ['trees/pine-large', 66, 70, .95, 1], ['bushes/bush-holly', 61, 48, .75, 1], ['props/sign-01', 72, 42, .75],
+         ['bushes/bush-snow-02', 86, 46, .75], ['crystals/crystal-cluster', 96, 34, .5]]
+    ).forEach(a => { h += spr(a[0], a[1], a[2], a[3], { m: !a[4] }); });
+    (xmas
+      ? [['snowman-tophat', 16, 74, .68, 1], ['snowman-santa', 72, 72, .7, 1], ['snowman-small', 88, 66, .75]]
+      : [['snowman-tophat', 20, 74, .68, 1], ['snowman-santa', 80, 72, .7, 1], ['snowman-small', 90, 66, .75]]
+    ).forEach(a => { h += spr('snowmen/' + a[0], a[1], a[2], a[3], { m: !a[4] }); });
     const FB = ['bank-03', 'bank-02', 'bank-04', 'bank-03', 'bank-02'].slice(0, small ? 3 : 5);
     FB.forEach((b, i) => { h += spr('snow/' + b, (i + .5) * (100 / FB.length) + rnd() * 2 - 1, -20 - Math.round(rnd() * 8), small ? 1 : 1.2); });
     h += '<div class="fm-floor"></div>';
     [['25%', 130], ['90%', 110]].forEach(l => { h += `<div class="fm-lantern" style="left:${l[0]}"><i style="height:${l[1]}px"></i>${spr('props/lantern', 0, 0, .42)}</div>`; });
-    if (document.documentElement.hasAttribute('data-fm-xmas')) h += christmasDecor(small);
+    if (xmas) h += christmasDecor(small);
     return h;
   }
   function pixelSnow(count) {
