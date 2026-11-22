@@ -31,7 +31,8 @@
     plus: svg('<path d="M12 5v14M5 12h14"/>'),
     search: svg('<circle cx="11" cy="11" r="6.5"/><path d="m20 20-3.8-3.8"/>'),
     back: svg('<path d="m15 18-6-6 6-6"/>'),
-    compass: svg('<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/>')
+    compass: svg('<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/>'),
+    advent: svg('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 9.5H20"/><path d="M8 3.5V6.5M16 3.5V6.5" stroke-linecap="round"/><circle cx="9" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.1" fill="currentColor" stroke="none"/><circle cx="9" cy="17.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="17.2" r="1.1" fill="currentColor" stroke="none"/>')
   };
   const NAV = [
     { id: 'home', label: 'Home', icon: ICON.home },
@@ -58,7 +59,9 @@
 
     const rail = document.createElement('nav'); rail.className = 'sb-rail'; rail.setAttribute('aria-label', 'Main navigation');
     rail.innerHTML = `<div class="sb-rail-top">${NAV.map((n) => `<button type="button" class="sb-nav" data-nav="${n.id}" data-tip="${n.label}" aria-label="${n.label}">${n.icon}<span class="sb-badge" aria-hidden="true"></span></button>`).join('')}</div>` +
-      `<div class="sb-rail-bottom"><button type="button" class="sb-nav sb-create" data-nav="create" data-tip="Create Hub" aria-label="Create Hub">${ICON.plus}</button><div class="sb-rail-user" data-tip="Your profile"></div></div>`;
+      `<div class="sb-rail-bottom"><button type="button" class="sb-nav sb-create" data-nav="create" data-tip="Create Hub" aria-label="Create Hub">${ICON.plus}</button>` +
+      `<button type="button" id="sb-advent-nav" class="sb-nav sb-advent" data-nav="advent" data-tip="Advent Calendar" aria-label="Winter Wonderland Advent Calendar" aria-expanded="false">${ICON.advent}</button>` +
+      `<div class="sb-rail-user" data-tip="Your profile"></div></div>`;
     $('.sb-rail-user', rail).append(avatar, ...[statusMenu, quickPop].filter(Boolean));
 
     const panel = document.createElement('div'); panel.className = 'sb-panel';
@@ -95,6 +98,7 @@
       if (id === 'home') { setActive('home'); g(() => goHome()); closeMobile(); }
       else if (id === 'saved') { pulse(b); g(() => openSavedMessages()); }
       else if (id === 'create') { pulse(b); g(() => openHubCreator()); }
+      else if (id === 'advent') { pulse(b); g(() => window.toggleAdventCalendar && window.toggleAdventCalendar()); }
       else { setActive(id); }
     });
     $('#sb-search', panel).addEventListener('input', (e) => { state.query = e.target.value.trim().toLowerCase(); applyFilter(); });
@@ -202,6 +206,9 @@
 @keyframes sbBar { from { height:6px; opacity:0; margin-top:-3px; } }
 .sb-create { color:var(--primary); border:1.5px dashed color-mix(in srgb, var(--primary) 55%, transparent); border-radius:14px; width:40px; height:40px; }
 .sb-create:hover { background:color-mix(in srgb, var(--primary) 14%, transparent); color:var(--primary); border-style:solid; }
+.sb-advent { color:#D9B66F; border:1.5px solid rgba(217,182,111,.45); border-radius:14px; width:40px; height:40px; background:linear-gradient(160deg, rgba(168,40,50,.1), rgba(32,91,64,.1)); }
+.sb-advent:hover { background:linear-gradient(160deg, rgba(168,40,50,.22), rgba(32,91,64,.22)); border-color:#D9B66F; color:#F4D98A; }
+.sb-advent.active { color:#F4D98A; background:linear-gradient(160deg, rgba(168,40,50,.3), rgba(32,91,64,.3)); }
 .sb-badge { position:absolute; top:3px; right:3px; min-width:17px; height:17px; padding:0 4px; display:none; place-items:center; border-radius:99px; font:700 10px/17px Inter,system-ui,sans-serif; text-align:center; color:#fff; background:var(--status-dnd,#ef4444); box-shadow:0 0 0 2px var(--bg-sidebar); pointer-events:none; }
 .sb-badge.show { display:block; animation:sbPop .25s cubic-bezier(.2,1.4,.3,1) both; }
 @keyframes sbPop { from { transform:scale(.4); opacity:0; } }
@@ -272,7 +279,7 @@
 /* the resize handle only makes sense on desktop */
 @media (max-width:720px) {
   .sidebar.sb-modern { --sb-rail:56px; min-width:0; width:min(92vw,380px); height:var(--mobile-app-height,100dvh); overflow:hidden; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
-  .sb-nav { width:42px; height:42px; } .sb-create { width:38px; height:38px; } .sb-nav.active::before { left:-7px; }
+  .sb-nav { width:42px; height:42px; } .sb-create { width:38px; height:38px; } .sb-advent { width:38px; height:38px; } .sb-nav.active::before { left:-7px; }
   .sb-rail-user .status-menu, .sb-rail-user .quick-status-popover { left:calc(var(--sb-rail) + 10px); bottom:calc(14px + env(safe-area-inset-bottom)); width:min(280px, calc(100vw - var(--sb-rail) - 24px)); }
   .sidebar.sb-modern .sb-panel-head { min-height:58px; padding:12px 12px 6px; position:relative; }
   .sb-title-text { font-size:19px; } .sb-search { margin:2px 12px 8px; height:42px; } .sb-search input { font-size:16px; }

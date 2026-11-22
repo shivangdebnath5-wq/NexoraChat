@@ -74,16 +74,58 @@
     }
     return h;
   }
-  const DECOR = ['', '', '', '❄️', '', '🎀', '', '', '✨', ''];   // sparse — a touch of variety, not clutter
+  // ---- SVG ornaments (replace the old emoji decorations entirely) ----
+  const ORNAMENT_SVG = {
+    holly: '<svg viewBox="0 0 28 20"><path d="M14 10 Q9 2 4 7 Q2 12 8 13 Q5 16 9 18 Q13 16 14 10Z" fill="#205B40" stroke="#123D2B" stroke-width=".6"/><path d="M14 10 Q19 2 24 7 Q26 12 20 13 Q23 16 19 18 Q15 16 14 10Z" fill="#205B40" stroke="#123D2B" stroke-width=".6"/><circle cx="11" cy="13" r="2" fill="#A82832"/><circle cx="17" cy="13" r="2" fill="#A82832"/><circle cx="14" cy="15.5" r="2" fill="#A82832"/></svg>',
+    bow: '<svg viewBox="0 0 28 20"><path d="M14 10 L4 3 Q1 9 7 12 Q3 14 6 18 L14 12Z" fill="#A82832"/><path d="M14 10 L24 3 Q27 9 21 12 Q25 14 22 18 L14 12Z" fill="#A82832"/><circle cx="14" cy="10" r="2.6" fill="#D9B66F"/></svg>',
+    bell: '<svg viewBox="0 0 20 24"><path d="M10 2a2 2 0 0 1 2 2 7 7 0 0 1 5 6.6V15l1.6 2.4H1.4L3 15v-4.4A7 7 0 0 1 8 2a2 2 0 0 1 2-2Z" fill="#D9B66F" stroke="#9C7A3C" stroke-width=".5"/><circle cx="10" cy="20" r="2.4" fill="#D9B66F"/></svg>'
+  };
+  const ORNAMENT_KINDS = ['holly', 'bow', 'bell'];
+  function ornamentFor(day) {
+    if (day % 3 !== 0) return '';   // sparse — "around selected doors", not every door
+    const kind = ORNAMENT_KINDS[(day / 3) % ORNAMENT_KINDS.length | 0];
+    return `<span class="ac-door-ornament" aria-hidden="true">${ORNAMENT_SVG[kind]}</span>`;
+  }
+  const ROOF_SVG = `<svg class="ac-door-roof" viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true">
+      <path class="ac-roof-fill" d="M2 46 L50 4 L98 46 Z"/>
+      <path d="M2 46 L50 4 L98 46" fill="none" stroke="rgba(244,241,232,.35)" stroke-width="2"/>
+      <path d="M14 36 L50 10" stroke="#F4F1E8" stroke-width="4" stroke-linecap="round" opacity=".5"/>
+    </svg>`;
   function doorHtml(day) {
     return `<button type="button" class="ac-door" data-day="${day}" aria-label="December ${day}">
+      ${ornamentFor(day)}
       <span class="ac-today-tag hidden" aria-hidden="true">Today</span>
-      ${DECOR[day % DECOR.length] ? `<span class="ac-door-deco" aria-hidden="true">${DECOR[day % DECOR.length]}</span>` : ''}
-      <span class="ac-door-num">${day}</span>
-      <span class="ac-door-knob" aria-hidden="true"></span>
+      ${ROOF_SVG}
+      <span class="ac-door-face">
+        <span class="ac-door-panel"></span>
+        <span class="ac-door-window"><span class="ac-door-num">${day}</span></span>
+        <span class="ac-door-knob" aria-hidden="true"></span>
+      </span>
       <span class="ac-door-frost hidden" aria-hidden="true"></span>
     </button>`;
   }
+  function lightsHtml(n) {
+    const colors = ['#A82832', '#205B40', '#D9B66F', '#F4F1E8'];
+    let h = '';
+    for (let i = 0; i < n; i++) {
+      const x = (i + .5) / n;
+      const sag = Math.sin(Math.PI * x) * 9;
+      const left = (2 + x * 96).toFixed(1);
+      const color = colors[i % colors.length];
+      h += `<span class="ac-bulb" style="left:${left}%;top:${(6 + sag).toFixed(1)}px;background:${color};box-shadow:0 0 6px 2px ${color}99;animation-delay:${(i * .18).toFixed(2)}s"></span>`;
+    }
+    return h;
+  }
+  function garlandHtml(n) {
+    let h = '';
+    for (let i = 0; i < n; i++) h += `<span aria-hidden="true">${ORNAMENT_SVG.holly}</span>`;
+    return h;
+  }
+  const CORNER_SPRIG_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <g fill="#205B40"><path d="M8 72 L48 22 L54 36 L70 16 L67 42 L90 26 L74 56 L52 50Z"/></g>
+      <g fill="#123D2B" opacity=".6"><path d="M8 72 L40 34 L44 46 L10 76Z"/></g>
+      <g fill="#F4F1E8" opacity=".9"><circle cx="34" cy="46" r="3.6"/><circle cx="54" cy="31" r="2.6"/><circle cx="20" cy="60" r="2.6"/><circle cx="66" cy="42" r="2.2"/></g>
+    </svg>`;
   function build() {
     if (root) return;
     root = document.createElement('div');
@@ -112,10 +154,14 @@
         </div>
         <div class="ac-intro-burst" aria-hidden="true"></div>
         <div class="ac-scene">
+          <div class="ac-corner-sprig left" aria-hidden="true">${CORNER_SPRIG_SVG}</div>
+          <div class="ac-corner-sprig right" aria-hidden="true">${CORNER_SPRIG_SVG}</div>
           <div class="ac-header">
             <h2 class="ac-title">Winter Wonderland Advent Calendar</h2>
             <p class="ac-subtitle">December 2026 · open a door each day</p>
           </div>
+          <div class="ac-lights" aria-hidden="true">${lightsHtml(16)}</div>
+          <div class="ac-garland" aria-hidden="true">${garlandHtml(13)}</div>
           <div class="ac-village-strip" aria-hidden="true">${village}</div>
           <div class="ac-grid" id="advent-grid">${doors}</div>
         </div>
@@ -190,7 +236,7 @@
     refreshDoors();
     lastFocus = document.activeElement;
     root.classList.remove('hidden');
-    document.getElementById('ac-tab-handle')?.setAttribute('aria-expanded', 'true');
+    document.getElementById('sb-advent-nav')?.setAttribute('aria-expanded', 'true');
     document.addEventListener('keydown', onKeydown);
 
     introEl.classList.remove('is-done', 'is-opening');
@@ -208,7 +254,7 @@
   function close() {
     if (!root) return;
     root.classList.add('hidden');
-    document.getElementById('ac-tab-handle')?.setAttribute('aria-expanded', 'false');
+    document.getElementById('sb-advent-nav')?.setAttribute('aria-expanded', 'false');
     document.removeEventListener('keydown', onKeydown);
     if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus({ preventScroll: true });
   }

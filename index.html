@@ -928,31 +928,9 @@
         </div>
       </aside>
 
-      <!-- Expandable Floating Winter Wonderland Advent Calendar Side Tab (built/bound by festive/advent-calendar.js) -->
-      <aside id="advent-calendar-tab" class="ac-floating-root" aria-label="Nexora Winter Wonderland Advent Calendar quick access">
-        <button type="button" id="ac-tab-handle" class="ac-tab-handle" onclick="toggleAdventCalendar()" aria-expanded="false" aria-controls="advent-overlay" title="Winter Wonderland Advent Calendar">
-          <span class="ac-handle-glow" aria-hidden="true"></span>
-          <span class="ac-handle-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
-              <rect x="7" y="10" width="10" height="9" rx="1.4" fill="url(#acGiftGrad)"/>
-              <path d="M7 13H17" stroke="#F4F1E8" stroke-width="1.3" opacity="0.85"/>
-              <path d="M11.3 10V19" stroke="#F4F1E8" stroke-width="1.3" opacity="0.85"/>
-              <path d="M6 10H18V12H6Z" fill="#A82832"/>
-              <path d="M9.6 10C8.6 10 7.8 9.3 7.8 8.5C7.8 7.7 8.6 7.3 9.4 7.7C10.1 8 10.8 8.8 11.3 10C9.8 10 9.6 10 9.6 10Z" fill="#205B40"/>
-              <path d="M13.4 10C14.4 10 15.2 9.3 15.2 8.5C15.2 7.7 14.4 7.3 13.6 7.7C12.9 8 12.2 8.8 11.7 10C13.2 10 13.4 10 13.4 10Z" fill="#205B40"/>
-              <defs>
-                <linearGradient id="acGiftGrad" x1="7" y1="10" x2="17" y2="19" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#D9B66F"/>
-                  <stop offset="100%" stop-color="#A82832"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </span>
-          <span class="ac-handle-pill-bar" aria-hidden="true"></span>
-        </button>
-      </aside>
-
-      <!-- Advent Calendar overlay is built by festive/advent-calendar.js on first open -->
+      <!-- Advent Calendar entry point now lives in the sidebar icon rail (sidebar-nav.js, #sb-advent-nav) instead of a
+           floating edge tab, so it has its own dedicated spot and never overlaps the Greeting Studio tab above.
+           The overlay itself is still built by festive/advent-calendar.js on first open. -->
 
       <!-- Greeting Card Studio workspace is built by wishing.js on first open -->
       <div id="hub-search-panel" class="hub-search-panel hidden" role="search">
