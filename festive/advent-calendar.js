@@ -74,32 +74,165 @@
     }
     return h;
   }
-  // ---- SVG ornaments (replace the old emoji decorations entirely) ----
-  const ORNAMENT_SVG = {
-    holly: '<svg viewBox="0 0 28 20"><path d="M14 10 Q9 2 4 7 Q2 12 8 13 Q5 16 9 18 Q13 16 14 10Z" fill="#205B40" stroke="#123D2B" stroke-width=".6"/><path d="M14 10 Q19 2 24 7 Q26 12 20 13 Q23 16 19 18 Q15 16 14 10Z" fill="#205B40" stroke="#123D2B" stroke-width=".6"/><circle cx="11" cy="13" r="2" fill="#A82832"/><circle cx="17" cy="13" r="2" fill="#A82832"/><circle cx="14" cy="15.5" r="2" fill="#A82832"/></svg>',
-    bow: '<svg viewBox="0 0 28 20"><path d="M14 10 L4 3 Q1 9 7 12 Q3 14 6 18 L14 12Z" fill="#A82832"/><path d="M14 10 L24 3 Q27 9 21 12 Q25 14 22 18 L14 12Z" fill="#A82832"/><circle cx="14" cy="10" r="2.6" fill="#D9B66F"/></svg>',
-    bell: '<svg viewBox="0 0 20 24"><path d="M10 2a2 2 0 0 1 2 2 7 7 0 0 1 5 6.6V15l1.6 2.4H1.4L3 15v-4.4A7 7 0 0 1 8 2a2 2 0 0 1 2-2Z" fill="#D9B66F" stroke="#9C7A3C" stroke-width=".5"/><circle cx="10" cy="20" r="2.4" fill="#D9B66F"/></svg>'
+  /* ---------------------------------------------------------------------
+     PIXEL-ART DOOR SYSTEM — every door is a hand-built pixel grid (crisp,
+     non-anti-aliased <rect>s on an integer viewBox, like a retro game sprite)
+     rather than smooth vector shapes. A static grid defines the *shape*
+     (frame, hinges, wood planks, raised panels, knob, number plate); only the
+     *colors* are swapped per door, computed from the same 5-way palette the
+     door frame's CSS already cycles through (see .ac-door:nth-child in
+     style.css), so the pixel art and the CSS frame always agree.
+     --------------------------------------------------------------------- */
+  function hexLighten(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    r = Math.round(r + (255 - r) * amt); g = Math.round(g + (255 - g) * amt); b = Math.round(b + (255 - b) * amt);
+    return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  // Renders a character grid (rows of equal-length strings) as crisp 1x1-unit
+  // <rect> pixels, keyed through a {char: color} palette ('.' / ' ' = transparent).
+  function gridSvg(rows, palette, cls, stretch) {
+    const h = rows.length, w = rows[0].length;
+    let cells = '';
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const ch = rows[y][x];
+        if (ch === '.' || ch === ' ') continue;
+        const color = palette[ch];
+        if (!color) continue;
+        cells += `<rect x="${x}" y="${y}" width="1" height="1" fill="${color}"/>`;
+      }
+    }
+    // The door leaf must fully cover its opening (a real closed door can't leave
+    // gaps the window glow peeks through), so it stretches to fill — everything
+    // else (roof, ornaments) keeps its true pixel aspect ratio via "meet".
+    const par = stretch ? 'none' : 'xMidYMid meet';
+    return `<svg${cls ? ` class="${cls}"` : ''} viewBox="0 0 ${w} ${h}" preserveAspectRatio="${par}" shape-rendering="crispEdges" aria-hidden="true">${cells}</svg>`;
+  }
+  // Matches the 5-way cycle .ac-door:nth-child(5n+2/3/4/5n) already defines in CSS.
+  function paletteFor(day) {
+    const m = day % 5;
+    if (m === 2) return { dc: '#205B40', dc2: '#184a33', df: '#D9B66F' };
+    if (m === 3) return { dc: '#163826', dc2: '#102c1c', df: '#F4F1E8' };
+    if (m === 4) return { dc: '#651E2B', dc2: '#4f1621', df: '#D9B66F' };
+    if (m === 0) return { dc: '#2B6B49', dc2: '#215438', df: '#F4D98A' };
+    return { dc: '#A82832', dc2: '#8a2029', df: '#D9B66F' };
+  }
+
+  // ---- door leaf: 14x21 grid — frame, 2 hinges, 2 raised panels, a number
+  //      plate between them (digits overlaid separately), and a knob. ----
+  const LEAF_W = 14, LEAF_H = 21;
+  const LEAF_PANELS = [[3, 7], [13, 17]]; // [topRow, bottomRow], always cols 2-11
+  function leafKey(x, y) {
+    if (y === 0 || y === LEAF_H - 1 || x === 0 || x === LEAF_W - 1) {
+      if (x === 0 && ((y >= 4 && y <= 5) || (y >= 14 && y <= 15))) return 'H'; // hinge plates
+      return 'F';
+    }
+    for (const [top, bottom] of LEAF_PANELS) {
+      if (y >= top && y <= bottom && x >= 2 && x <= 11) {
+        if (x === 2 || y === top) return 'L';
+        if (x === 11 || y === bottom) return 'D';
+        return 'P';
+      }
+    }
+    if (x === 12 && y === 10) return 'K'; // knob
+    if (x === 12 && y === 9) return 'k';  // knob highlight
+    if (y >= 8 && y <= 12 && x >= 2 && x <= 11) return 'N'; // number plate
+    return (Math.floor(x / 2) % 2 === 0) ? 'A' : 'B'; // plank stiles/rails
+  }
+  let LEAF_GRID = null;
+  function leafGrid() {
+    if (LEAF_GRID) return LEAF_GRID;
+    const rows = [];
+    for (let y = 0; y < LEAF_H; y++) {
+      let row = '';
+      for (let x = 0; x < LEAF_W; x++) row += leafKey(x, y);
+      rows.push(row);
+    }
+    return (LEAF_GRID = rows);
+  }
+  // ---- roof: 16x8 stepped-pyramid grid with a lit left edge + eave trim ----
+  const ROOF_W = 16, ROOF_H = 8;
+  function roofKey(x, y) {
+    if (y === ROOF_H - 1) return 'T';
+    const half = y + 1, left = 8 - half, right = 7 + half;
+    if (x < left || x > right) return '.';
+    return x === left ? 'r' : 'R';
+  }
+  let ROOF_GRID = null;
+  function roofGrid() {
+    if (ROOF_GRID) return ROOF_GRID;
+    const rows = [];
+    for (let y = 0; y < ROOF_H; y++) {
+      let row = '';
+      for (let x = 0; x < ROOF_W; x++) row += roofKey(x, y);
+      rows.push(row);
+    }
+    return (ROOF_GRID = rows);
+  }
+  // ---- 3x5 pixel digits, drawn straight into the leaf's number-plate band ----
+  const DIGIT_GLYPHS = {
+    '0': ['111', '101', '101', '101', '111'], '1': ['010', '110', '010', '010', '111'],
+    '2': ['111', '001', '111', '100', '111'], '3': ['111', '001', '111', '001', '111'],
+    '4': ['101', '101', '111', '001', '001'], '5': ['111', '100', '111', '001', '111'],
+    '6': ['111', '100', '111', '101', '111'], '7': ['111', '001', '010', '010', '010'],
+    '8': ['111', '101', '111', '101', '111'], '9': ['111', '101', '111', '001', '111']
   };
+  function numberRects(day, color) {
+    const str = String(day);
+    const w = str.length * 4 - 1;             // 3px digit + 1px gap, no trailing gap
+    let x0 = 2 + Math.floor((10 - w) / 2);     // center within the plate's x2..11 span
+    let out = '';
+    for (const ch of str) {
+      const g = DIGIT_GLYPHS[ch];
+      if (g) for (let ry = 0; ry < 5; ry++) for (let rx = 0; rx < 3; rx++)
+        if (g[ry][rx] === '1') out += `<rect x="${x0 + rx}" y="${8 + ry}" width="1" height="1" fill="${color}"/>`;
+      x0 += 4;
+    }
+    return out;
+  }
+  function doorLeafSvg(day, pal) {
+    const palette = {
+      F: pal.df, H: '#2b2016', A: pal.dc, B: pal.dc2,
+      L: hexLighten(pal.dc, .4), D: pal.dc2, P: pal.dc,
+      N: '#1b140d', K: '#F4D98A', k: '#FFF4D6'
+    };
+    const rows = leafGrid();
+    const base = gridSvg(rows, palette, 'ac-door-leaf-svg', true);
+    // splice the day's number pixels in just before the closing </svg>
+    return base.replace('</svg>', numberRects(day, '#F4E8C0') + '</svg>');
+  }
+  function doorRoofSvg(pal) {
+    const palette = { R: pal.dc2, r: hexLighten(pal.dc2, .45), T: pal.df };
+    return gridSvg(roofGrid(), palette, 'ac-door-roof');
+  }
+
+  // ---- hanging ornaments: hand-drawn pixel sprites (holly / bow / bell) ----
+  const HOLLY_GRID = ['....G....', '...GgG...', '..G.g.G..', '.G..g..G.', 'G...g...G', '.G..g..G.', '..G...G..', '...RrR...', '....R....'];
+  const BOW_GRID = ['RR.......RR', '.RR..K..RR.', '..RR.K.RR..', '...RKKKR...', '..RR.K.RR..', '.RR..K..RR.', 'RR.......RR'];
+  const BELL_GRID = ['...F...', '..FKF..', '.FKKKF.', '.FKKKF.', 'FKKKKKF', 'FFFFFFF', '...k...'];
+  const ORNAMENT_PALETTES = {
+    holly: { G: '#205B40', g: '#2d7a52', R: '#A82832', r: '#c23a46' },
+    bow: { R: '#A82832', K: '#D9B66F' },
+    bell: { F: '#9C7A3C', K: '#D9B66F', k: '#6b4e22' }
+  };
+  const ORNAMENT_GRIDS = { holly: HOLLY_GRID, bow: BOW_GRID, bell: BELL_GRID };
   const ORNAMENT_KINDS = ['holly', 'bow', 'bell'];
+  function ornamentSvg(kind) { return gridSvg(ORNAMENT_GRIDS[kind], ORNAMENT_PALETTES[kind]); }
   function ornamentFor(day) {
     if (day % 3 !== 0) return '';   // sparse — "around selected doors", not every door
     const kind = ORNAMENT_KINDS[(day / 3) % ORNAMENT_KINDS.length | 0];
-    return `<span class="ac-door-ornament" aria-hidden="true">${ORNAMENT_SVG[kind]}</span>`;
+    return `<span class="ac-door-ornament" aria-hidden="true">${ornamentSvg(kind)}</span>`;
   }
-  const ROOF_SVG = `<svg class="ac-door-roof" viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true">
-      <path class="ac-roof-fill" d="M2 46 L50 4 L98 46 Z"/>
-      <path d="M2 46 L50 4 L98 46" fill="none" stroke="rgba(244,241,232,.35)" stroke-width="2"/>
-      <path d="M14 36 L50 10" stroke="#F4F1E8" stroke-width="4" stroke-linecap="round" opacity=".5"/>
-    </svg>`;
   function doorHtml(day) {
+    const pal = paletteFor(day);
     return `<button type="button" class="ac-door" data-day="${day}" aria-label="December ${day}">
       ${ornamentFor(day)}
       <span class="ac-today-tag hidden" aria-hidden="true">Today</span>
-      ${ROOF_SVG}
-      <span class="ac-door-face">
-        <span class="ac-door-panel"></span>
-        <span class="ac-door-window"><span class="ac-door-num">${day}</span></span>
-        <span class="ac-door-knob" aria-hidden="true"></span>
+      ${doorRoofSvg(pal)}
+      <span class="ac-door-opening">
+        <span class="ac-door-window" aria-hidden="true"></span>
+        <span class="ac-door-leaf">${doorLeafSvg(day, pal)}</span>
       </span>
       <span class="ac-door-frost hidden" aria-hidden="true"></span>
     </button>`;
@@ -118,7 +251,7 @@
   }
   function garlandHtml(n) {
     let h = '';
-    for (let i = 0; i < n; i++) h += `<span aria-hidden="true">${ORNAMENT_SVG.holly}</span>`;
+    for (let i = 0; i < n; i++) h += `<span aria-hidden="true">${ornamentSvg('holly')}</span>`;
     return h;
   }
   const CORNER_SPRIG_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true">
