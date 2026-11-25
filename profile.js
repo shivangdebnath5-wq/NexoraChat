@@ -25,7 +25,7 @@
    removeBanner below and the banner editor in index.html's classic script.
    ========================================================================= */
 import { getApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 
@@ -191,6 +191,148 @@ import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "htt
       console.warn('[profile] Banner removal failed', err);
       return { ok: false, message: 'Could not remove the banner. Please try again.' };
     }
+  }
+
+  /* ---------- Generic cloud media storage ------------------------------
+     Shared by every upload flow that used to stash a base64 data: URL
+     straight into localStorage (profile photo, Hub icon/banner/background,
+     chat file/image attachments, chat wallpaper). One Storage object per
+     `path`, overwritten on re-upload — same pattern as uploadBanner above.
+     Verifies the upload by resolving a download URL before handing it back,
+     so a caller never discards an original data: URL until this succeeds. */
+  async function uploadMedia(path, dataUrl) {
+    if (!fb) return { ok: false, message: 'Cloud storage is unavailable right now.' };
+    try {
+      const fileRef = ref(fb.storage, path);
+      await uploadString(fileRef, dataUrl, 'data_url');
+      const url = await getDownloadURL(fileRef); // throws if the upload didn't really land — our verification step
+      return { ok: true, url };
+    } catch (err) {
+      console.warn('[profile] Media upload failed for', path, err);
+      const message = err && err.code === 'storage/unauthorized'
+        ? 'Upload blocked by Storage rules.'
+        : 'Could not upload to cloud storage right now.';
+      return { ok: false, message };
+    }
+  }
+  async function deleteMedia(path) {
+    if (!fb) return;
+    try { await deleteObject(ref(fb.storage, path)); } catch (e) { /* nothing to delete — fine */ }
+  }
+
+  /* ---------- Profile photo (avatar) ------------------------------------
+     Mirrors uploadBanner: uploaded to Firebase Storage at avatars/{uid},
+     the download URL replaces the base64 that handlePfpChange (index.html)
+     used to write straight into users[currentUser].pfp. Also mirrored to
+     Firestore users/{uid}.photoURL so other people's profile views (which
+     already read remote.photoURL, see buildModel above) pick it up too. */
+  async function uploadAvatar(dataUrl) {
+    const user = fb && fb.auth.currentUser;
+    if (!fb || !user) return { ok: false, message: 'You need to be signed in to upload a photo.' };
+    const res = await uploadMedia(`avatars/${user.uid}`, dataUrl);
+    if (!res.ok) return res;
+    try { await updateDoc(doc(fb.db, 'users', user.uid), { photoURL: res.url, updatedAt: serverTimestamp() }); }
+    catch (err) { console.warn('[profile] photoURL Firestore sync failed', err); }
+    try { const users = DB.getUsers(); users[currentUser] = users[currentUser] || {}; users[currentUser].pfp = res.url; DB.saveUsers(users); }
+    catch (e) { /* storage may be unavailable */ }
+    cache.delete(String(currentUser).toLowerCase());
+    return { ok: true, url: res.url };
+  }
+
+  /* ---------- Chat file/image attachments --------------------------------
+     Used by handleFileSelect (index.html) for the "attach a file" send
+     flow — resolves the signed-in uid itself so every upload path this
+     module writes to (avatars/, banners/, attachments/) stays scoped the
+     same way Storage rules would expect: under the uploader's own uid. */
+  async function uploadAttachment(dataUrl, filename) {
+    const user = fb && fb.auth.currentUser;
+    if (!fb || !user) return { ok: false, message: 'You need to be signed in to attach images.' };
+    const safeName = String(filename || 'file').replace(/[^\w.\-]+/g, '_').slice(-80);
+    return uploadMedia(`attachments/${user.uid}/${Date.now()}-${safeName}`, dataUrl);
+  }
+
+  /* ---------- One-time-per-session migration of legacy base64 media -----
+     Older builds wrote base64 data: URLs straight into localStorage (and,
+     for messages/Hubs, mirrored those into Firestore documents, which is
+     what was blowing the Firebase Storage/Firestore quota). This walks the
+     signed-in user's OWN data once per session, after Firebase Auth is
+     ready (Storage paths are keyed by uid), uploads anything still base64,
+     and only overwrites the local copy once the cloud upload is verified —
+     never deletes anything if the upload fails. Only ever touches this
+     user's own avatar, Hubs they own, and messages they sent — never
+     another account's data (we have no Storage path for someone else's
+     uid, and rewriting messages we didn't send could race their device). */
+  let migrationRan = false;
+  async function migrateAvatar() {
+    try {
+      const users = DB.getUsers();
+      const mine = users[currentUser];
+      if (!mine || typeof mine.pfp !== 'string' || !mine.pfp.startsWith('data:')) return;
+      const res = await uploadAvatar(mine.pfp);
+      if (!res.ok) console.warn('[profile] Avatar migration deferred:', res.message);
+    } catch (e) { /* best-effort */ }
+  }
+  async function migrateHubAppearance() {
+    try {
+      if (typeof getHubs !== 'function' || typeof saveHubs !== 'function') return;
+      const hubs = getHubs();
+      let changed = false;
+      for (const hub of hubs) {
+        if (!hub || hub.owner !== currentUser) continue; // only the owner's session migrates a Hub's appearance
+        for (const field of ['icon', 'banner', 'background']) {
+          const value = hub[field];
+          if (typeof value !== 'string' || !value.startsWith('data:')) continue;
+          const res = await uploadMedia(`hubs/${hub.id}/${field}`, value);
+          if (res.ok) { hub[field] = res.url; changed = true; }
+          else console.warn('[profile] Hub appearance migration deferred:', hub.id, field, res.message);
+        }
+      }
+      if (changed) saveHubs(hubs);
+    } catch (e) { /* best-effort */ }
+  }
+  async function migrateAttachments() {
+    try {
+      const user = fb && fb.auth.currentUser;
+      if (!user || typeof DB === 'undefined') return;
+      const isLegacyImage = (m) => m && m.attachment && m.attachment.type === 'image' && !m.attachment.sticker &&
+        typeof m.attachment.data === 'string' && m.attachment.data.startsWith('data:');
+
+      // Direct messages
+      const dms = DB.getMessages();
+      let dmChanged = false;
+      for (const m of dms) {
+        if (m.sender !== currentUser || !isLegacyImage(m)) continue;
+        const res = await uploadMedia(`attachments/${user.uid}/${m.id}`, m.attachment.data);
+        if (res.ok) { m.attachment.data = res.url; dmChanged = true; }
+        else console.warn('[profile] DM attachment migration deferred:', m.id, res.message);
+      }
+      if (dmChanged) DB.saveMessages(dms);
+
+      // Hub messages
+      if (typeof getHubs === 'function' && typeof saveHubs === 'function') {
+        const hubs = getHubs();
+        let hubsChanged = false;
+        for (const hub of hubs) {
+          if (!Array.isArray(hub.messages)) continue;
+          for (const m of hub.messages) {
+            if (m.sender !== currentUser || !isLegacyImage(m)) continue;
+            const res = await uploadMedia(`attachments/${user.uid}/hub-${hub.id}-${m.id}`, m.attachment.data);
+            if (res.ok) { m.attachment.data = res.url; hubsChanged = true; }
+            else console.warn('[profile] Hub message attachment migration deferred:', hub.id, m.id, res.message);
+          }
+        }
+        if (hubsChanged) saveHubs(hubs);
+      }
+    } catch (e) { /* best-effort */ }
+  }
+  if (fb) {
+    onAuthStateChanged(fb.auth, (user) => {
+      if (!user || migrationRan) return;
+      migrationRan = true;
+      // Staggered and sequential: these touch Storage, Firestore and localStorage
+      // one user/Hub/message at a time, so they never block first paint.
+      setTimeout(() => { migrateAvatar().then(migrateHubAppearance).then(migrateAttachments); }, 1500);
+    });
   }
 
   /* ---------- Model ---------- */
@@ -655,5 +797,5 @@ import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "htt
   wrap('logout', closeProfile);
   wrap('onPresenceChange', null, refreshStatusOnly);
 
-  window.NexoraProfile = { open: openProfile, close: closeProfile, refresh: refreshOpenProfile, uploadBanner, removeBanner, _userFromElement: userFromElement, _sanitize: sanitizeProfileInput, registerBadge, awardBadge };
+  window.NexoraProfile = { open: openProfile, close: closeProfile, refresh: refreshOpenProfile, uploadBanner, removeBanner, uploadAvatar, uploadMedia, deleteMedia, uploadAttachment, _userFromElement: userFromElement, _sanitize: sanitizeProfileInput, registerBadge, awardBadge };
 })();

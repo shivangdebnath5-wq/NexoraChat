@@ -1626,7 +1626,7 @@
     window.onload = function() {
       syncAuthMode();
       applyTheme(localStorage.getItem('theme') || 'light');
-      applyWallpaper(localStorage.getItem('wallpaper') || '');
+      initWallpaper();
       applySidebarWidth(localStorage.getItem('sidebar_width'));
       document.getElementById('messages-list')?.addEventListener('scroll', updateJumpToLatestVisibility);
       document.getElementById('messages-list')?.addEventListener('scroll', clearNewMessagesDividerIfAtBottom);
@@ -2054,19 +2054,31 @@
       }
     }
 
+    // Uploaded to Firebase Storage at avatars/{uid} via window.NexoraProfile.uploadAvatar
+    // (profile.js) — only the resulting download URL is written to
+    // users[currentUser].pfp, never the raw image. If the cloud upload can't
+    // complete (offline, signed out, Storage rules not set up yet) this still
+    // falls back to the old local-only base64 behavior so the feature keeps
+    // working, rather than silently failing.
     function handlePfpChange(event) {
       const file = event.target.files[0];
       if (!file) return;
       if (file.size > 2 * 1024 * 1024) return alert("Please select an image under 2MB.");
 
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = async function(e) {
+        const dataUrl = e.target.result;
+        let finalSrc = dataUrl;
+        if (window.NexoraProfile && typeof window.NexoraProfile.uploadAvatar === 'function') {
+          const res = await window.NexoraProfile.uploadAvatar(dataUrl);
+          if (res.ok) finalSrc = res.url;
+          else console.warn('[pfp] Cloud upload failed, keeping it local for now:', res.message);
+        }
         const users = DB.getUsers();
         if (users[currentUser]) {
-          users[currentUser].pfp = e.target.result;
-          DB.saveUsers(users);
-          document.getElementById('sidebar-avatar').src = e.target.result;
-          document.getElementById('settings-avatar-preview').src = e.target.result;
+          if (finalSrc === dataUrl) { users[currentUser].pfp = dataUrl; DB.saveUsers(users); } // cloud upload fallback path only
+          document.getElementById('sidebar-avatar').src = finalSrc;
+          document.getElementById('settings-avatar-preview').src = finalSrc;
           renderSidebar();
           renderMessages(false);
         }
@@ -2270,6 +2282,58 @@
       renderThemeSelector();
     }    
 
+    /* Wallpaper storage: a per-device cosmetic choice (no reason to sync it
+       to the cloud or mirror it to Firestore), but an uploaded image as a
+       base64 data: URL is exactly the kind of "larger structured data"
+       localStorage shouldn't hold. Stored in IndexedDB instead; only a tiny
+       in-memory cache (`cachedWallpaper`) is read synchronously by the
+       handful of existing call sites (applyWallpaper callers), so none of
+       them need to become async. A URL typed into the "Image URL" box is
+       already just a short string — that one still round-trips fine through
+       IndexedDB too, so there's one storage path instead of two. */
+    let cachedWallpaper = '';
+    function openWallpaperDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('nexora_local', 1);
+        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains('kv')) req.result.createObjectStore('kv'); };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function idbGet(key) {
+      try {
+        const db = await openWallpaperDB();
+        return await new Promise((resolve, reject) => {
+          const tx = db.transaction('kv', 'readonly');
+          const r = tx.objectStore('kv').get(key);
+          r.onsuccess = () => resolve(r.result);
+          r.onerror = () => reject(r.error);
+        });
+      } catch (e) { return undefined; }
+    }
+    async function idbSet(key, value) {
+      try {
+        const db = await openWallpaperDB();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('kv', 'readwrite');
+          tx.objectStore('kv').put(value, key);
+          tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+        });
+      } catch (e) { /* best-effort — the in-memory cache still has it for this session */ }
+    }
+    async function initWallpaper() {
+      // One-time migration: anything a previous build left in localStorage
+      // (base64 or not) is moved into IndexedDB, then the localStorage copy
+      // is removed — but only after the IndexedDB write is confirmed.
+      const legacy = localStorage.getItem('wallpaper');
+      if (legacy) {
+        await idbSet('wallpaper', legacy);
+        localStorage.removeItem('wallpaper');
+      }
+      cachedWallpaper = (await idbGet('wallpaper')) || legacy || '';
+      applyWallpaper(cachedWallpaper);
+    }
+
     function handleWallpaperUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -2278,8 +2342,9 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         const wpData = `url('${e.target.result}')`;
-        localStorage.setItem('wallpaper', wpData);
+        cachedWallpaper = wpData;
         applyWallpaper(wpData);
+        idbSet('wallpaper', wpData);
       };
       reader.readAsDataURL(file);
     }
@@ -2287,13 +2352,15 @@
     function handleWallpaperUrl(url) {
       if (!url.trim()) return;
       const wpData = `url('${url.trim()}')`;
-      localStorage.setItem('wallpaper', wpData);
+      cachedWallpaper = wpData;
       applyWallpaper(wpData);
+      idbSet('wallpaper', wpData);
     }
 
     function clearWallpaper() {
-      localStorage.removeItem('wallpaper');
+      cachedWallpaper = '';
       applyWallpaper('');
+      idbSet('wallpaper', '');
       document.getElementById('wallpaper-url').value = '';
       document.getElementById('wallpaper-file').value = '';
     }
@@ -3173,19 +3240,30 @@
       }
     }
 
+    // Image attachments are uploaded to Firebase Storage first (same cloud
+    // path as avatars/banners) — the message only ever stores the resulting
+    // URL in `.data`, exactly like the GIF-picker path (sendGif) already did.
+    // That keeps messages/hubs_data in localStorage (and the mirrored
+    // Firestore message docs, which have a 1MB document cap) free of
+    // embedded base64. Non-image files are small/rare enough in this app's
+    // flow to keep as-is; only images were the actual quota driver.
     function handleFileSelect(event) {
       const file = event.target.files[0];
       if (!file) return;
       if (file.size > 3 * 1024 * 1024) return alert("Select a file under 3MB.");
       document.getElementById('extension-menu').classList.add('hidden'); // now launched from there, so close it once a file is picked
+      const isImage = file.type.startsWith('image/');
 
       const reader = new FileReader();
-      reader.onload = function(e) {
-        currentAttachment = {
-          name: file.name,
-          type: file.type.startsWith('image/') ? 'image' : 'file',
-          data: e.target.result
-        };
+      reader.onload = async function(e) {
+        const dataUrl = e.target.result;
+        let data = dataUrl;
+        if (isImage && window.NexoraProfile && typeof window.NexoraProfile.uploadAttachment === 'function') {
+          const res = await window.NexoraProfile.uploadAttachment(dataUrl, file.name);
+          if (res.ok) { data = res.url; }
+          else { alert('Could not upload that image right now. Please try again.'); event.target.value=''; return; }
+        }
+        currentAttachment = { name: file.name, type: isImage ? 'image' : 'file', data };
         document.getElementById('preview-filename').innerText = `📎 ${file.name}`;
         document.getElementById('attachment-preview').classList.remove('hidden');
       };

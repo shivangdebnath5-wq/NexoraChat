@@ -338,7 +338,22 @@ function hubWizardNext() {
   if (hubWizardStep < HUB_WIZARD_STEP_NAMES.length) { hubWizardStep += 1; hubWizardRender(); }
 }
 function hubWizardBack() { if (hubWizardStep > 1) { hubWizardStep -= 1; hubWizardRender(); } }
-function hubWizardFinish() {
+// Icon/banner/background live only in-memory as base64 (hubWizard[key])
+// while the wizard is open — nothing is persisted yet, so an abandoned
+// wizard never orphans a cloud upload. Once the Hub is actually created,
+// any of those that are still a data: URL get uploaded to Firebase Storage
+// at hubs/{hubId}/{field} and only the download URL is written into the
+// Hub object that lands in hubs_data — same pattern as the profile banner.
+// If a given image can't be uploaded right now (offline, Storage rules not
+// ready), it's kept locally as base64 rather than lost, same fallback the
+// avatar/attachment uploads use.
+async function uploadHubImageField(hubId, field, value) {
+  if (typeof value !== 'string' || !value.startsWith('data:')) return value;
+  if (!window.NexoraProfile || typeof window.NexoraProfile.uploadMedia !== 'function') return value;
+  const res = await window.NexoraProfile.uploadMedia(`hubs/${hubId}/${field}`, value);
+  return res.ok ? res.url : value;
+}
+async function hubWizardFinish() {
   if (hubCreationInProgress) return;
   if (!hubWizard.name.trim()) { hubWizardGoTo(1); return alert('Give your Hub a name.'); }
   if (!hubWizard.category) { hubWizardGoTo(2); return alert('Choose a category for your Hub.'); }
@@ -353,6 +368,12 @@ function hubWizardFinish() {
     features: hubWizard.features.slice(), permissions: { ...hubWizard.permissions },
     primaryContext: hubWizard.primaryContext.trim(), messages: []
   };
+  const [icon, background, banner] = await Promise.all([
+    uploadHubImageField(hub.id, 'icon', hub.icon),
+    uploadHubImageField(hub.id, 'background', hub.background),
+    uploadHubImageField(hub.id, 'banner', hub.banner)
+  ]);
+  hub.icon = icon; hub.background = background; hub.banner = banner;
   hubs.push(hub);
   try { saveHubs(hubs); } catch (error) { hubCreationInProgress = false; return alert('Hub storage is full. Choose smaller images or remove an old Hub.'); }
   hubCreationInProgress = false;
@@ -370,7 +391,7 @@ function selectHub(id) {
 }
 function ensureHubBanner() { if (document.getElementById('hub-banner-info')) return; const banner=document.createElement('div'); banner.id='hub-banner-info'; banner.className='hub-banner-info'; document.getElementById('mobile-conversations').insertAdjacentElement('afterend', banner); }
 const selectFriendWithHubBanner = selectFriend;
-selectFriend = function(friend) { if (typeof window.unsubscribeFromHub === 'function') window.unsubscribeFromHub(); activeHub = null; const banner = document.getElementById('hub-banner-info'); if (banner) banner.classList.remove('visible'); document.querySelector('.main-chat').classList.remove('hub-active'); const header = document.getElementById('chat-header'); header.style.backgroundImage = ''; header.style.backgroundSize = ''; header.style.backgroundPosition = ''; const messages = document.getElementById('messages-list'); messages.classList.remove('hub-chat-bg'); applyWallpaper(localStorage.getItem('wallpaper') || ''); document.getElementById('hub-settings-btn').classList.add('hidden'); document.getElementById('hub-invite-btn').classList.add('hidden'); document.getElementById('hub-pinned-messages-btn')?.classList.add('hidden'); document.getElementById('hub-pinned-messages-menu')?.classList.add('hidden'); document.getElementById('hub-search-btn').classList.add('hidden'); closeHubSearch(); document.getElementById('pinned-messages-btn').classList.remove('hidden'); selectFriendWithHubBanner(friend); };
+selectFriend = function(friend) { if (typeof window.unsubscribeFromHub === 'function') window.unsubscribeFromHub(); activeHub = null; const banner = document.getElementById('hub-banner-info'); if (banner) banner.classList.remove('visible'); document.querySelector('.main-chat').classList.remove('hub-active'); const header = document.getElementById('chat-header'); header.style.backgroundImage = ''; header.style.backgroundSize = ''; header.style.backgroundPosition = ''; const messages = document.getElementById('messages-list'); messages.classList.remove('hub-chat-bg'); applyWallpaper(typeof cachedWallpaper !== 'undefined' ? cachedWallpaper : ''); document.getElementById('hub-settings-btn').classList.add('hidden'); document.getElementById('hub-invite-btn').classList.add('hidden'); document.getElementById('hub-pinned-messages-btn')?.classList.add('hidden'); document.getElementById('hub-pinned-messages-menu')?.classList.add('hidden'); document.getElementById('hub-search-btn').classList.add('hidden'); closeHubSearch(); document.getElementById('pinned-messages-btn').classList.remove('hidden'); selectFriendWithHubBanner(friend); };
 function renderHubMessages(scroll) {
   const hub = hubById(activeHub); if (!hub) return; const list = document.getElementById('messages-list'); const query = document.getElementById('hub-message-search')?.value.trim().toLowerCase() || ''; if (typeof trackNewMessages === 'function') trackNewMessages('hub:' + activeHub, hub.messages, list, scroll); list.innerHTML = '';
   const visibleMessages = hub.messages.filter(message => !query || `${message.sender} ${message.text || ''}`.toLowerCase().includes(query));
@@ -591,26 +612,28 @@ function copyHubInviteLink(hubId) {
   }
 }
 window.copyHubInviteLink = copyHubInviteLink;
-function saveHubSettings() {
+async function saveHubSettings() {
   const hubs=getHubs(), hub=hubs.find(item=>item.id===activeHub); if (!hub) return;
   hub.name=document.getElementById('hub-edit-name').value.trim() || hub.name;
   hub.description=document.getElementById('hub-edit-description').value.trim();
   const contextField = document.getElementById('hub-edit-context'); if (contextField) hub.primaryContext = contextField.value.trim();
   const accentField = document.getElementById('hub-edit-accent-value'); if (accentField) hub.accent = accentField.value || '';
-  const updateAppearance = (inputId, property, done) => {
+  // Each picked file is read to a data URL, uploaded to Storage at
+  // hubs/{hubId}/{field} (overwriting any previous image there), and only
+  // the resulting URL is kept on the Hub object — never the base64 itself.
+  const updateAppearance = (inputId, property) => new Promise((resolve) => {
     const file=document.getElementById(inputId)?.files[0];
-    if (!file) return done();
-    if (!file.type.startsWith('image/') || file.size > 900 * 1024) return alert('Use a PNG, JPG, or WebP image under 900 KB.');
-    const reader=new FileReader(); reader.onload=e=>{hub[property]=e.target.result; done();}; reader.readAsDataURL(file);
-  };
-  updateAppearance('hub-edit-icon','icon', () => {
-    updateAppearance('hub-edit-background','background', () => {
-      updateAppearance('hub-edit-banner','banner', () => {
-        try { saveHubs(hubs); } catch (error) { return alert('Hub storage is full. Choose smaller images.'); }
-        closeHubModal('hub-settings-modal'); selectHub(hub.id);
-      });
-    });
+    if (!file) return resolve();
+    if (!file.type.startsWith('image/') || file.size > 900 * 1024) { alert('Use a PNG, JPG, or WebP image under 900 KB.'); return resolve(); }
+    const reader=new FileReader();
+    reader.onload = async (e) => { hub[property] = await uploadHubImageField(hub.id, property, e.target.result); resolve(); };
+    reader.readAsDataURL(file);
   });
+  await updateAppearance('hub-edit-icon','icon');
+  await updateAppearance('hub-edit-background','background');
+  await updateAppearance('hub-edit-banner','banner');
+  try { saveHubs(hubs); } catch (error) { return alert('Hub storage is full. Choose smaller images.'); }
+  closeHubModal('hub-settings-modal'); selectHub(hub.id);
 }
 const sidebarWithHubs = renderSidebar;
 renderSidebar = function() {
@@ -1142,7 +1165,7 @@ function goHome() {
   header.style.backgroundImage = ''; header.style.backgroundSize = ''; header.style.backgroundPosition = '';
   const messages = document.getElementById('messages-list');
   messages.classList.remove('hub-chat-bg');
-  applyWallpaper(localStorage.getItem('wallpaper') || '');
+  applyWallpaper(typeof cachedWallpaper !== 'undefined' ? cachedWallpaper : '');
   ['hub-settings-btn', 'hub-invite-btn', 'hub-pinned-messages-btn', 'hub-search-btn'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
   document.getElementById('hub-pinned-messages-menu')?.classList.add('hidden');
   closeHubSearch();
