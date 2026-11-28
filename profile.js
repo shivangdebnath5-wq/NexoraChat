@@ -27,15 +27,25 @@
 import { getApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 
 (function nexoraProfile() {
   'use strict';
 
-  /* ---------- Firebase (same app instance created by index.html) ---------- */
+  /* ---------- Firebase (same app instance created by index.html) ----------
+     Auth + Firestore only — Firebase Storage is no longer used (creating a
+     new Storage bucket now requires Firebase's paid Blaze plan). Media
+     uploads (avatar/banner/Hub images/attachments) go through this app's own
+     backend (server.js, see NEXORA_BACKEND_URL below), which forwards them
+     to Supabase Storage instead. */
   let fb = null;
-  try { const app = getApp(); fb = { auth: getAuth(app), db: getFirestore(app), storage: getStorage(app) }; }
+  try { const app = getApp(); fb = { auth: getAuth(app), db: getFirestore(app) }; }
   catch (err) { console.warn('[profile] Firebase unavailable — using local profile data only.', err); }
+
+  // Same backend Nexora already uses for Pinterest/GIPHY proxying (server.js
+  // on Render) — it now also exposes POST/DELETE /api/upload, forwarding to
+  // Supabase Storage with the service_role key, which must never reach the
+  // browser directly.
+  const NEXORA_BACKEND_URL = 'https://nexora-i2z9.onrender.com';
 
   /* ---------- Fonts: "Creepster" (Google Fonts) for the featured badge title ---------- */
   if (document.head && !document.getElementById('nexora-creepster')) {
@@ -149,33 +159,62 @@ import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "htt
     return { remote, code, clean };
   }
 
+  /* ---------- Generic cloud media storage ------------------------------
+     Shared by every upload flow that used to stash a base64 data: URL
+     straight into localStorage (profile photo, Hub icon/banner/background,
+     chat file/image attachments, chat wallpaper). Uploaded via this app's
+     own backend (server.js → Supabase Storage) rather than talking to a
+     storage SDK directly from the browser — the backend holds the one
+     secret (Supabase's service_role key) this needs, same posture as the
+     existing Pinterest/GIPHY proxying. `path` keeps the same shape callers
+     already use (e.g. `avatars/{uid}`, `hubs/{hubId}/icon`) — the first
+     segment becomes the storage "folder", and the whole path is used
+     as-is so re-uploads overwrite rather than pile up. The server only
+     hands back a URL once the file is actually confirmed stored, so a
+     caller never discards an original data: URL until this succeeds. */
+  async function uploadMedia(path, dataUrl) {
+    try {
+      const folder = String(path).split('/')[0];
+      const name = String(path).split('/').pop() || 'file';
+      const blob = await (await fetch(dataUrl)).blob();
+      const form = new FormData();
+      form.append('file', blob, name);
+      form.append('folder', folder);
+      form.append('path', path);
+      const res = await fetch(`${NEXORA_BACKEND_URL}/api/upload`, { method: 'POST', body: form });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok) return { ok: false, message: json.error || 'Could not upload to cloud storage right now.' };
+      return { ok: true, url: json.url };
+    } catch (err) {
+      console.warn('[profile] Media upload failed for', path, err);
+      return { ok: false, message: 'Could not upload to cloud storage right now.' };
+    }
+  }
+  async function deleteMedia(path) {
+    try { await fetch(`${NEXORA_BACKEND_URL}/api/upload?path=${encodeURIComponent(path)}`, { method: 'DELETE' }); }
+    catch (e) { /* nothing to delete, or server unreachable — fine, this is best-effort cleanup */ }
+  }
+
   /* ---------- Profile Banner (Settings → General → "Profile Banner") -------
-     Uploaded to Firebase Storage at banners/{uid} (replacing any previous
-     file there), then the public download URL is written to the signed-in
-     user's own users/{uid}.bannerURL — the same pattern saveOwnProfile uses
-     above — so every device, and everyone viewing this profile, sees the
-     same banner. The crop/reposition/zoom editor (Settings markup + pointer
-     handling) lives in index.html's classic script, right next to the
-     existing avatar uploader (handlePfpChange); it hands this function a
-     single already-cropped data URL to upload. */
+     Uploaded via uploadMedia() to banners/{uid} (replacing any previous
+     file there), then the public URL is written to the signed-in user's own
+     users/{uid}.bannerURL — the same pattern saveOwnProfile uses above — so
+     every device, and everyone viewing this profile, sees the same banner.
+     The crop/reposition/zoom editor (Settings markup + pointer handling)
+     lives in index.html's classic script, right next to the existing avatar
+     uploader (handlePfpChange); it hands this function a single
+     already-cropped data URL to upload. */
   async function uploadBanner(dataUrl) {
     const user = fb && fb.auth.currentUser;
     if (!fb || !user) return { ok: false, message: 'You need to be signed in to upload a banner.' };
+    const res = await uploadMedia(`banners/${user.uid}`, dataUrl);
+    if (!res.ok) return res;
     try {
-      const bannerRef = ref(fb.storage, `banners/${user.uid}`);
-      await uploadString(bannerRef, dataUrl, 'data_url');
-      const url = await getDownloadURL(bannerRef);
-      await updateDoc(doc(fb.db, 'users', user.uid), { bannerURL: url, updatedAt: serverTimestamp() });
-      try { const users = DB.getUsers(); users[currentUser] = users[currentUser] || {}; users[currentUser].banner = url; DB.saveUsers(users); } catch (e) { /* storage may be unavailable */ }
-      cache.delete(String(currentUser).toLowerCase());
-      return { ok: true, url };
-    } catch (err) {
-      console.warn('[profile] Banner upload failed', err);
-      const message = err && err.code === 'storage/unauthorized'
-        ? 'Upload blocked by Storage rules — ask the project owner to allow writes to banners/{uid}.'
-        : 'Could not upload the banner. Please try again.';
-      return { ok: false, message };
-    }
+      await updateDoc(doc(fb.db, 'users', user.uid), { bannerURL: res.url, updatedAt: serverTimestamp() });
+      const users = DB.getUsers(); users[currentUser] = users[currentUser] || {}; users[currentUser].banner = res.url; DB.saveUsers(users);
+    } catch (e) { /* storage/Firestore may be unavailable */ }
+    cache.delete(String(currentUser).toLowerCase());
+    return { ok: true, url: res.url };
   }
 
   async function removeBanner() {
@@ -183,7 +222,7 @@ import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "htt
     if (!fb || !user) return { ok: false, message: 'You need to be signed in.' };
     try {
       await updateDoc(doc(fb.db, 'users', user.uid), { bannerURL: '', updatedAt: serverTimestamp() });
-      try { await deleteObject(ref(fb.storage, `banners/${user.uid}`)); } catch (e) { /* no file to delete — fine */ }
+      await deleteMedia(`banners/${user.uid}`);
       try { const users = DB.getUsers(); if (users[currentUser]) { delete users[currentUser].banner; DB.saveUsers(users); } } catch (e) { /* storage may be unavailable */ }
       cache.delete(String(currentUser).toLowerCase());
       return { ok: true };
@@ -191,33 +230,6 @@ import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "htt
       console.warn('[profile] Banner removal failed', err);
       return { ok: false, message: 'Could not remove the banner. Please try again.' };
     }
-  }
-
-  /* ---------- Generic cloud media storage ------------------------------
-     Shared by every upload flow that used to stash a base64 data: URL
-     straight into localStorage (profile photo, Hub icon/banner/background,
-     chat file/image attachments, chat wallpaper). One Storage object per
-     `path`, overwritten on re-upload — same pattern as uploadBanner above.
-     Verifies the upload by resolving a download URL before handing it back,
-     so a caller never discards an original data: URL until this succeeds. */
-  async function uploadMedia(path, dataUrl) {
-    if (!fb) return { ok: false, message: 'Cloud storage is unavailable right now.' };
-    try {
-      const fileRef = ref(fb.storage, path);
-      await uploadString(fileRef, dataUrl, 'data_url');
-      const url = await getDownloadURL(fileRef); // throws if the upload didn't really land — our verification step
-      return { ok: true, url };
-    } catch (err) {
-      console.warn('[profile] Media upload failed for', path, err);
-      const message = err && err.code === 'storage/unauthorized'
-        ? 'Upload blocked by Storage rules.'
-        : 'Could not upload to cloud storage right now.';
-      return { ok: false, message };
-    }
-  }
-  async function deleteMedia(path) {
-    if (!fb) return;
-    try { await deleteObject(ref(fb.storage, path)); } catch (e) { /* nothing to delete — fine */ }
   }
 
   /* ---------- Profile photo (avatar) ------------------------------------

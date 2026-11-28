@@ -27,6 +27,8 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
+const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 
 const {
   PINTEREST_CLIENT_ID: RAW_PINTEREST_CLIENT_ID,
@@ -425,6 +427,98 @@ app.get('/api/giphy/trending', async (req, res) => {
   } catch (err) {
     console.error('GIPHY trending error:', err.message);
     res.status(err.status || 500).json({ ok: false, error: 'Failed to load trending GIFs' });
+  }
+});
+
+// --- Media uploads (Supabase Storage) ---------------------------------------
+// Replaces the earlier Firebase Storage plan (that required upgrading to
+// Firebase's paid Blaze plan just to create a bucket). Nexora's frontend
+// (profile.js's uploadMedia/uploadAvatar/uploadAttachment, and script.js's
+// hub image uploads, which all route through profile.js) now POST the file
+// here instead of talking to a storage SDK directly from the browser — same
+// "secrets/keys never touch the frontend" posture as the Pinterest/GIPHY
+// proxying above, since the Supabase service_role key must never be
+// shipped to the browser.
+const {
+  SUPABASE_URL: RAW_SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY: RAW_SUPABASE_SERVICE_ROLE_KEY,
+  SUPABASE_BUCKET: RAW_SUPABASE_BUCKET
+} = process.env;
+const SUPABASE_URL = RAW_SUPABASE_URL?.trim();
+const SUPABASE_SERVICE_ROLE_KEY = RAW_SUPABASE_SERVICE_ROLE_KEY?.trim();
+const SUPABASE_BUCKET = (RAW_SUPABASE_BUCKET?.trim()) || 'nexora-media';
+
+let supabase = null;
+if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+} else {
+  console.warn('⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set — /api/upload will return 503 until they are.');
+}
+
+// Buffered in memory (files here are small — capped below) then handed
+// straight to Supabase; never written to this server's disk.
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
+
+// Mirrors the folder names the frontend already uses in its storage `path`
+// values (avatars/{uid}, banners/{uid}, hubs/{hubId}/{field},
+// attachments/{uid}/{id}) — this just validates the shape, it doesn't trust
+// any uid/hubId beyond basic character/length sanitization, same trust
+// model the rest of this app already has (no server-side auth token
+// verification exists anywhere else in Nexora today either).
+const ALLOWED_FOLDERS = new Set(['avatars', 'banners', 'hubs', 'attachments']);
+const ALLOWED_MIME = /^image\/(png|jpe?g|jpg|webp|gif)$/i;
+
+function sanitizePath(rawPath, folder) {
+  if (typeof rawPath !== 'string') return null;
+  const cleaned = rawPath.replace(/\\/g, '/').replace(/\.\.+/g, '').replace(/[^\w\-./]+/g, '_').replace(/^\/+/, '');
+  if (!cleaned || cleaned.length > 180 || !cleaned.startsWith(`${folder}/`)) return null;
+  return cleaned;
+}
+
+app.use('/api/upload', rateLimit({ windowMs: 60 * 1000, max: 30 }));
+
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  if (!supabase) return res.status(503).json({ ok: false, error: 'Storage is not configured on the server yet.' });
+  if (!req.file) return res.status(400).json({ ok: false, error: 'No file uploaded.' });
+  if (!ALLOWED_MIME.test(req.file.mimetype)) return res.status(400).json({ ok: false, error: 'Unsupported file type — only images are accepted.' });
+
+  const folder = req.body.folder;
+  if (!ALLOWED_FOLDERS.has(folder)) return res.status(400).json({ ok: false, error: 'Invalid folder.' });
+
+  let objectPath = sanitizePath(req.body.path, folder);
+  if (!objectPath) {
+    // No usable deterministic path given (or it failed sanitization) — fall
+    // back to a random, collision-free name under the requested folder.
+    const safeName = String(req.body.name || req.file.originalname || 'file').replace(/[^\w.\-]+/g, '_').slice(-80);
+    objectPath = `${folder}/${Date.now()}-${crypto.randomBytes(4).toString('hex')}-${safeName}`;
+  }
+
+  try {
+    const { error } = await supabase.storage.from(SUPABASE_BUCKET).upload(objectPath, req.file.buffer, {
+      contentType: req.file.mimetype,
+      upsert: true // deterministic paths (avatar/banner/hub fields) should replace the old file, not accumulate
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(objectPath);
+    res.json({ ok: true, url: data.publicUrl, path: objectPath });
+  } catch (err) {
+    console.error('[upload] Supabase upload failed:', err.message || err);
+    res.status(500).json({ ok: false, error: 'Upload failed. Please try again.' });
+  }
+});
+
+// Best-effort cleanup (e.g. clearing a banner/avatar) — mirrors the old
+// deleteObject() calls this replaced. Never treated as fatal by any caller.
+app.delete('/api/upload', async (req, res) => {
+  if (!supabase) return res.status(503).json({ ok: false, error: 'Storage is not configured on the server yet.' });
+  const folder = String(req.query.path || '').split('/')[0];
+  const objectPath = sanitizePath(req.query.path, folder);
+  if (!objectPath || !ALLOWED_FOLDERS.has(folder)) return res.status(400).json({ ok: false, error: 'Invalid path.' });
+  try {
+    await supabase.storage.from(SUPABASE_BUCKET).remove([objectPath]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(200).json({ ok: true }); // deletion is cleanup, not a feature — never block the caller on it
   }
 });
 
